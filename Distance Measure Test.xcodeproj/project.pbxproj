@@ -9,20 +9,26 @@
 /* Begin PBXBuildFile section */
 		C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD6292A687790002A58BA /* AppDelegate.swift */; };
 		C0CDD62C2A687790002A58BA /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD62B2A687790002A58BA /* art.scnassets */; };
-		C0CDD62E2A687790002A58BA /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD62D2A687790002A58BA /* ViewController.swift */; };
+		C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */; };
 		C0CDD6312A687790002A58BA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD62F2A687790002A58BA /* Main.storyboard */; };
 		C0CDD6332A687792002A58BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD6322A687792002A58BA /* Assets.xcassets */; };
 		C0CDD6362A687792002A58BA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */; };
+		C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EA2A81B87500CAD336 /* Main Menu.swift */; };
+		C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EC2A81B89300CAD336 /* Instructions.swift */; };
+		C94D36EF2A81B91500CAD336 /* Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EE2A81B91500CAD336 /* Test.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		C0CDD6262A687790002A58BA /* Distance Measure Test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Distance Measure Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0CDD6292A687790002A58BA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C0CDD62B2A687790002A58BA /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
-		C0CDD62D2A687790002A58BA /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceOptimization.swift; sourceTree = "<group>"; };
 		C0CDD6302A687790002A58BA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		C0CDD6322A687792002A58BA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C0CDD6352A687792002A58BA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		C94D36EA2A81B87500CAD336 /* Main Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Main Menu.swift"; sourceTree = "<group>"; };
+		C94D36EC2A81B89300CAD336 /* Instructions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instructions.swift; sourceTree = "<group>"; };
+		C94D36EE2A81B91500CAD336 /* Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Test.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,7 +63,10 @@
 			children = (
 				C0CDD6292A687790002A58BA /* AppDelegate.swift */,
 				C0CDD62B2A687790002A58BA /* art.scnassets */,
-				C0CDD62D2A687790002A58BA /* ViewController.swift */,
+				C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */,
+				C94D36EA2A81B87500CAD336 /* Main Menu.swift */,
+				C94D36EC2A81B89300CAD336 /* Instructions.swift */,
+				C94D36EE2A81B91500CAD336 /* Test.swift */,
 				C0CDD62F2A687790002A58BA /* Main.storyboard */,
 				C0CDD6322A687792002A58BA /* Assets.xcassets */,
 				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
@@ -137,7 +146,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C0CDD62E2A687790002A58BA /* ViewController.swift in Sources */,
+				C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */,
+				C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */,
+				C94D36EF2A81B91500CAD336 /* Test.swift in Sources */,
+				C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */,
 				C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
