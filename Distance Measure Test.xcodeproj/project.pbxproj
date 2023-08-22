@@ -16,6 +16,8 @@
 		C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EA2A81B87500CAD336 /* Main Menu.swift */; };
 		C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EC2A81B89300CAD336 /* Instructions.swift */; };
 		C94D36EF2A81B91500CAD336 /* Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EE2A81B91500CAD336 /* Test.swift */; };
+		D19933C52A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf in Resources */ = {isa = PBXBuildFile; fileRef = D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */; };
+		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +31,9 @@
 		C94D36EA2A81B87500CAD336 /* Main Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Main Menu.swift"; sourceTree = "<group>"; };
 		C94D36EC2A81B89300CAD336 /* Instructions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instructions.swift; sourceTree = "<group>"; };
 		C94D36EE2A81B91500CAD336 /* Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Test.swift; sourceTree = "<group>"; };
+		D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "OpticiansansRegular-0pnR.otf"; sourceTree = "<group>"; };
+		D19933C42A955CCF0050CF92 /* info.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = info.txt; sourceTree = "<group>"; };
+		D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Distance-Measure-Test-Info.plist"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +50,7 @@
 		C0CDD61D2A687790002A58BA = {
 			isa = PBXGroup;
 			children = (
+				D19933C22A955CCF0050CF92 /* optician-sans-font */,
 				C0CDD6282A687790002A58BA /* Distance Measure Test */,
 				C0CDD6272A687790002A58BA /* Products */,
 			);
@@ -61,6 +67,7 @@
 		C0CDD6282A687790002A58BA /* Distance Measure Test */ = {
 			isa = PBXGroup;
 			children = (
+				D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */,
 				C0CDD6292A687790002A58BA /* AppDelegate.swift */,
 				C0CDD62B2A687790002A58BA /* art.scnassets */,
 				C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */,
@@ -72,6 +79,15 @@
 				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
 			);
 			path = "Distance Measure Test";
+			sourceTree = "<group>";
+		};
+		D19933C22A955CCF0050CF92 /* optician-sans-font */ = {
+			isa = PBXGroup;
+			children = (
+				D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */,
+				D19933C42A955CCF0050CF92 /* info.txt */,
+			);
+			path = "optician-sans-font";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -136,6 +152,8 @@
 				C0CDD6362A687792002A58BA /* LaunchScreen.storyboard in Resources */,
 				C0CDD6332A687792002A58BA /* Assets.xcassets in Resources */,
 				C0CDD6312A687790002A58BA /* Main.storyboard in Resources */,
+				D19933C62A955CCF0050CF92 /* info.txt in Resources */,
+				D19933C52A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -298,6 +316,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -327,6 +346,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;

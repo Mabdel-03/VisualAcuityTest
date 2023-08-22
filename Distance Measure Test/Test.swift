@@ -2,17 +2,19 @@
 //  Test.swift
 //  Distance Measure Test
 //
-//  Created by Anderson Men on 8/7/23.
+//  Created by Anderson Men on 8/7/23. Edited by Maggie Bao 8/21/23.
 //
 
 import UIKit
 
 class Test: UIViewController {
-
+    var scaleFactor: CGFloat = 50;
+    var letterText: String = "hi";
+    @IBOutlet weak var oneLetter: UILabel!
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
+        oneLetter.text = letterText;
+        oneLetter.font = oneLetter.font.withSize(scaleFactor);
     }
     
 
