@@ -23,10 +23,13 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         sceneView.showsStatistics = true
         
         // Create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
+        let scene = SCNScene(named: "/ship.scn")!
         
         // Set the scene to the view
         sceneView.scene = scene
+       // guard let myScene = SCNScene(named: "MyScene")
+           // else { fatalError("Unable to load scene file.") }
+        //sceneView.scene = myScene // Your app's SCNView
     }
     
     override func viewWillAppear(_ animated: Bool) {
