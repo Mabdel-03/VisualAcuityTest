@@ -1,4 +1,4 @@
-/*
+/* Impported by Maggie Bao 8/24/23. From Apple Developer Voice Recognition Article
  See LICENSE folder for this sample’s licensing information.
  */
 

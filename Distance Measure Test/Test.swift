@@ -9,7 +9,7 @@ import UIKit
 
 class Test: UIViewController {
     var scaleFactor: CGFloat = 50;
-    var letterText: String = "hi";
+    var letterText: String = "e";
     var speechRecognizer = SpeechRecognizer();
     @IBOutlet weak var oneLetter: UILabel!
     @IBOutlet weak var tempVoiceText: UILabel!

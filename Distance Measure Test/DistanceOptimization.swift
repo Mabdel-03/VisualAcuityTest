@@ -2,7 +2,7 @@
 //  ViewController.swift
 //  Distance Measure Test
 //
-//  Created by Mahmoud Abdelmoneum on 7/19/23.
+//  Created by Mahmoud Abdelmoneum on 7/19/23. Edited by Maggie Bao 8/30/23
 //
 
 import UIKit
@@ -22,7 +22,8 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
         
-        // Create a new scene
+        // Create a new scene https://stackoverflow.com/questions/76025180/xcode-arkit-project-fatal-error-unexpectedly-found-nil-while-unwrapping-an-opt
+        
         let scene = SCNScene(named: "/ship.scn")!
         
         // Set the scene to the view
