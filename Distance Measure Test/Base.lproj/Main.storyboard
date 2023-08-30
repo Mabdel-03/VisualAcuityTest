@@ -198,7 +198,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="SZV-WD-TEh" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1747.3282442748091" y="3.5211267605633805"/>
+            <point key="canvasLocation" x="1725" y="3"/>
         </scene>
         <!--Test-->
         <scene sceneID="vtf-sL-1IK">
@@ -227,19 +227,45 @@
                                 </buttonConfiguration>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="ETDRS Letter" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8T7-GQ-bQy">
-                                <rect key="frame" x="16" y="167" width="361" height="331"/>
+                                <rect key="frame" x="16" y="176" width="361" height="272"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="27"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Transcript" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yYh-cJ-q6a">
+                                <rect key="frame" x="58" y="485" width="277" height="48"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XwX-G3-dCN">
+                                <rect key="frame" x="35" y="133" width="62" height="35"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="gray" title="Start"/>
+                                <connections>
+                                    <action selector="isPressed:" destination="lE4-BY-6W3" eventType="touchUpInside" id="TQU-Sw-QfJ"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="x7l-Cf-HME">
+                                <rect key="frame" x="300" y="133" width="60" height="35"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="gray" title="Stop"/>
+                                <connections>
+                                    <action selector="stopIsPressed:" destination="lE4-BY-6W3" eventType="touchUpInside" id="bEj-Ze-1FO"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="uXA-aQ-46x"/>
                         <color key="backgroundColor" red="0.85490196939999996" green="0.84313726430000002" blue="0.8078432083" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                     </view>
                     <navigationItem key="navigationItem" id="lGM-IY-6nO"/>
                     <connections>
-                        <outlet property="oneLetter" destination="8T7-GQ-bQy" id="4Ba-yf-g1a"/>
+                        <outlet property="oneLetter" destination="8T7-GQ-bQy" id="diP-Ch-xGs"/>
+                        <outlet property="tempVoiceText" destination="yYh-cJ-q6a" id="py2-88-gHY"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="blV-t4-Ysm" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
