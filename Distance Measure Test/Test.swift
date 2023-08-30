@@ -19,7 +19,7 @@ class Test: UIViewController {
         oneLetter.font = oneLetter.font.withSize(scaleFactor);
     }
     
-    @IBAction func isPressed(_ sender: Any) {
+    @IBAction func startIsPressed(_ sender: Any) {
         speechRecognizer.startTranscribing();
     }
     

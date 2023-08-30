@@ -246,7 +246,7 @@
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="gray" title="Start"/>
                                 <connections>
-                                    <action selector="isPressed:" destination="lE4-BY-6W3" eventType="touchUpInside" id="TQU-Sw-QfJ"/>
+                                    <action selector="startIsPressed:" destination="lE4-BY-6W3" eventType="touchUpInside" id="TQU-Sw-QfJ"/>
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="x7l-Cf-HME">
