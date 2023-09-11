@@ -18,6 +18,7 @@
 		D12072E62A9F12BA00B92792 /* texture.png in Resources */ = {isa = PBXBuildFile; fileRef = D12072E42A9F12BA00B92792 /* texture.png */; };
 		D12072E72A9F12BA00B92792 /* ship.scn in Resources */ = {isa = PBXBuildFile; fileRef = D12072E52A9F12BA00B92792 /* ship.scn */; };
 		D12072E92A9F132000B92792 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = D12072E82A9F132000B92792 /* art.scnassets */; };
+		D12072EB2AAEA14900B92792 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12072EA2AAEA14900B92792 /* ViewController.swift */; };
 		D12A74502A9EBB4E006F3D08 /* SpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12A744F2A9EBB4E006F3D08 /* SpeechRecognizer.swift */; };
 		D19933C52A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf in Resources */ = {isa = PBXBuildFile; fileRef = D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */; };
 		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
@@ -36,6 +37,7 @@
 		D12072E42A9F12BA00B92792 /* texture.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = texture.png; path = art.scnassets/texture.png; sourceTree = "<group>"; };
 		D12072E52A9F12BA00B92792 /* ship.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = ship.scn; path = art.scnassets/ship.scn; sourceTree = "<group>"; };
 		D12072E82A9F132000B92792 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
+		D12072EA2AAEA14900B92792 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		D12A744F2A9EBB4E006F3D08 /* SpeechRecognizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpeechRecognizer.swift; sourceTree = "<group>"; };
 		D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "OpticiansansRegular-0pnR.otf"; sourceTree = "<group>"; };
 		D19933C42A955CCF0050CF92 /* info.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = info.txt; sourceTree = "<group>"; };
@@ -76,6 +78,7 @@
 				D12072E82A9F132000B92792 /* art.scnassets */,
 				D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */,
 				C0CDD6292A687790002A58BA /* AppDelegate.swift */,
+				D12072EA2AAEA14900B92792 /* ViewController.swift */,
 				C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */,
 				C94D36EA2A81B87500CAD336 /* Main Menu.swift */,
 				C94D36EC2A81B89300CAD336 /* Instructions.swift */,
@@ -179,6 +182,7 @@
 				C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */,
 				C94D36EF2A81B91500CAD336 /* Test.swift in Sources */,
 				C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */,
+				D12072EB2AAEA14900B92792 /* ViewController.swift in Sources */,
 				C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */,
 				D12A74502A9EBB4E006F3D08 /* SpeechRecognizer.swift in Sources */,
 			);
