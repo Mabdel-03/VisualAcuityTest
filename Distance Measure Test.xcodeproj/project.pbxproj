@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		71836BF72ABAB580006CD4E3 /* ResultScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71836BF62ABAB580006CD4E3 /* ResultScreen.swift */; };
 		C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD6292A687790002A58BA /* AppDelegate.swift */; };
 		C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */; };
 		C0CDD6312A687790002A58BA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD62F2A687790002A58BA /* Main.storyboard */; };
@@ -25,6 +26,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		71836BF62ABAB580006CD4E3 /* ResultScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScreen.swift; sourceTree = "<group>"; };
 		C0CDD6262A687790002A58BA /* Distance Measure Test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Distance Measure Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0CDD6292A687790002A58BA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceOptimization.swift; sourceTree = "<group>"; };
@@ -84,6 +86,7 @@
 				C94D36EC2A81B89300CAD336 /* Instructions.swift */,
 				C94D36EE2A81B91500CAD336 /* Test.swift */,
 				D12A744F2A9EBB4E006F3D08 /* SpeechRecognizer.swift */,
+				71836BF62ABAB580006CD4E3 /* ResultScreen.swift */,
 				C0CDD62F2A687790002A58BA /* Main.storyboard */,
 				C0CDD6322A687792002A58BA /* Assets.xcassets */,
 				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
@@ -182,6 +185,7 @@
 				C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */,
 				C94D36EF2A81B91500CAD336 /* Test.swift in Sources */,
 				C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */,
+				71836BF72ABAB580006CD4E3 /* ResultScreen.swift in Sources */,
 				D12072EB2AAEA14900B92792 /* ViewController.swift in Sources */,
 				C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */,
 				D12A74502A9EBB4E006F3D08 /* SpeechRecognizer.swift in Sources */,
