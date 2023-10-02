@@ -21,6 +21,7 @@
 		D12072E92A9F132000B92792 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = D12072E82A9F132000B92792 /* art.scnassets */; };
 		D12072EB2AAEA14900B92792 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12072EA2AAEA14900B92792 /* ViewController.swift */; };
 		D12A74502A9EBB4E006F3D08 /* SpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12A744F2A9EBB4E006F3D08 /* SpeechRecognizer.swift */; };
+		D13F546D2ACA7C2A00673C13 /* DevicePpi in Frameworks */ = {isa = PBXBuildFile; productRef = D13F546C2ACA7C2A00673C13 /* DevicePpi */; };
 		D19933C52A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf in Resources */ = {isa = PBXBuildFile; fileRef = D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */; };
 		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
 /* End PBXBuildFile section */
@@ -51,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D13F546D2ACA7C2A00673C13 /* DevicePpi in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -121,6 +123,9 @@
 			dependencies = (
 			);
 			name = "Distance Measure Test";
+			packageProductDependencies = (
+				D13F546C2ACA7C2A00673C13 /* DevicePpi */,
+			);
 			productName = "Distance Measure Test";
 			productReference = C0CDD6262A687790002A58BA /* Distance Measure Test.app */;
 			productType = "com.apple.product-type.application";
@@ -149,6 +154,9 @@
 				Base,
 			);
 			mainGroup = C0CDD61D2A687790002A58BA;
+			packageReferences = (
+				D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */,
+			);
 			productRefGroup = C0CDD6272A687790002A58BA /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -335,6 +343,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L4924K5F8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
@@ -367,6 +376,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L4924K5F8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
@@ -414,6 +424,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Clafou/DevicePpi";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D13F546C2ACA7C2A00673C13 /* DevicePpi */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */;
+			productName = DevicePpi;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C0CDD61E2A687790002A58BA /* Project object */;
 }
