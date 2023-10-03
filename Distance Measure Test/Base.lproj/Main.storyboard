@@ -158,11 +158,18 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="Button" translatesAutoresizingMaskIntoConstraints="NO" id="Tep-Hj-DUp">
-                                <rect key="frame" x="16" y="662" width="361" height="155"/>
+                                <rect key="frame" x="16" y="580" width="361" height="155"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             </imageView>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="TargetImage" translatesAutoresizingMaskIntoConstraints="NO" id="cWB-iE-6yw">
+                                <rect key="frame" x="-76" y="122" width="393" height="344"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            </imageView>
+                            <arscnView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="BrB-h1-WRS">
+                                <rect key="frame" x="-14" y="135" width="420" height="359"/>
+                            </arscnView>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="yAS-Eh-WKX">
-                                <rect key="frame" x="75" y="714" width="242" height="50"/>
+                                <rect key="frame" x="75" y="632" width="242" height="50"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="filled" title="Start Test">
@@ -174,13 +181,6 @@
                                     <segue destination="lE4-BY-6W3" kind="show" id="lV4-yD-Itr"/>
                                 </connections>
                             </button>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="TargetImage" translatesAutoresizingMaskIntoConstraints="NO" id="cWB-iE-6yw">
-                                <rect key="frame" x="-65" y="103" width="393" height="344"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            </imageView>
-                            <arscnView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="BrB-h1-WRS">
-                                <rect key="frame" x="0.0" y="103" width="393" height="578"/>
-                            </arscnView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="fQZ-KI-GVf"/>
                         <color key="backgroundColor" red="0.85490196939999996" green="0.84313726430000002" blue="0.8078432083" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>

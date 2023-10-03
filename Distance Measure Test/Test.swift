@@ -140,11 +140,11 @@ class Test: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         //print(modelName)
-        let pointsFor1Inch = 1 * ppi
-        print(pointsFor1Inch)
+        let pointsFor1Inch = ppi
+        print("ppi:",ppi)
         oneLetter.text = letterText;
         oneLetter.frame.size = CGSize(width: pointsFor1Inch, height: pointsFor1Inch)
-        oneLetter.font = oneLetter.font.withSize(oneLetter.frame.height)
+        oneLetter.font = oneLetter.font.withSize(2/3*(oneLetter.frame.height))
         //center letter
         oneLetter.translatesAutoresizingMaskIntoConstraints = false
         oneLetter.lineBreakMode = .byWordWrapping
@@ -161,8 +161,15 @@ class Test: UIViewController {
     
     @IBAction func stopIsPressed(_ sender: Any) {
         speechRecognizer.stopTranscribing();
-        tempVoiceText.text = speechRecognizer.transcript;
-        speechRecognizer.resetTranscript();
+        let transcriptString = speechRecognizer.transcript;
+        if (transcriptString == "He"){
+            tempVoiceText.text = "Correct";
+            speechRecognizer.resetTranscript();
+        }
+        else{
+            tempVoiceText.text = "You are wrong";
+            speechRecognizer.resetTranscript();
+        }
     }
     /*
     // MARK: - Navigation
