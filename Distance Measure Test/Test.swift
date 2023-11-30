@@ -17,54 +17,65 @@ let ppi: Double = {
         return bestGuessPpi
     }
 }()
+func set_ETDRS(_ oneLetter: inout UILabel!, desired_acuity: Int, letterText: String){
+    let visual_angle = tan(((Double(desired_acuity/20)*5.0)/60) * Double.pi/180)
+    let scale_factor = 2 * Double(averageDistanceCM) * visual_angle
+    oneLetter.text = letterText;
+    oneLetter.frame.size = CGSize(width: (scale_factor * ppi), height: (scale_factor * ppi))
+    oneLetter.font = oneLetter.font.withSize(2/3*(oneLetter.frame.height))
+    print(scale_factor * ppi)
+/*
+    //center letter
+    oneLetter.translatesAutoresizingMaskIntoConstraints = false
+    oneLetter.lineBreakMode = .byWordWrapping
+    oneLetter.textAlignment = .center
+    self.view.addSubview(oneLetter)
+    oneLetter.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
+    oneLetter.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+    oneLetter.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+*/
+}
 
 class Test: UIViewController {
-    var scaleFactor: CGFloat = 1;
-    var letterText: String = "e";
-    var speechRecognizer = SpeechRecognizer();
-    @IBOutlet weak var oneLetter: UILabel!
-    @IBOutlet weak var tempVoiceText: UILabel!
+    @IBOutlet weak var B200: UILabel!
+    @IBOutlet weak var B160: UILabel!
+    @IBOutlet weak var B100: UILabel!
+    @IBOutlet weak var B125: UILabel!
+    @IBOutlet weak var B80: UILabel!
+    @IBOutlet weak var B63: UILabel!
+    @IBOutlet weak var B50: UILabel!
+    @IBOutlet weak var B40: UILabel!
+    var randomLetter: String = "E";
+    //var speechRecognizer = SpeechRecognizer();
+    //@IBOutlet weak var oneLetter: UILabel!
+    //@IBOutlet weak var tempVoiceText: UILabel!
     override func viewDidLoad() {
         super.viewDidLoad()
-        let pointsFor1Inch = ppi
-        //print("ppi:",ppi)
-        oneLetter.text = letterText;
-        oneLetter.frame.size = CGSize(width: pointsFor1Inch, height: pointsFor1Inch)
-        oneLetter.font = oneLetter.font.withSize(2/3*(oneLetter.frame.height))
-        //center letter
-        oneLetter.translatesAutoresizingMaskIntoConstraints = false
-        oneLetter.lineBreakMode = .byWordWrapping
-        oneLetter.textAlignment = .center
-        self.view.addSubview(oneLetter)
-        oneLetter.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
-        oneLetter.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        oneLetter.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
+        set_ETDRS(&B200, desired_acuity: 200, letterText: randomLetter)
+        set_ETDRS(&B160, desired_acuity: 160, letterText: randomLetter)
+        set_ETDRS(&B100, desired_acuity: 100, letterText: randomLetter)
+        set_ETDRS(&B125, desired_acuity: 125, letterText: randomLetter)
+        set_ETDRS(&B80, desired_acuity: 80, letterText: randomLetter)
+        set_ETDRS(&B63, desired_acuity: 63, letterText: randomLetter)
+        set_ETDRS(&B50, desired_acuity: 50, letterText: randomLetter)
+        set_ETDRS(&B40, desired_acuity: 40, letterText: randomLetter)
     }
-    
+}
+/*
     @IBAction func startIsPressed(_ sender: Any) {
         speechRecognizer.startTranscribing();
     }
-    
+
     @IBAction func stopIsPressed(_ sender: Any) {
         speechRecognizer.stopTranscribing();
         let transcriptString = speechRecognizer.transcript;
         if (transcriptString == "He"){
             tempVoiceText.text = "Correct";
-            speechRecognizer.resetTranscript();
         }
         else{
             tempVoiceText.text = "You are wrong";
-            speechRecognizer.resetTranscript();
         }
+        speechRecognizer.resetTranscript();
     }
-    /*
-    // MARK: - Navigation
 
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
-}
+}*/

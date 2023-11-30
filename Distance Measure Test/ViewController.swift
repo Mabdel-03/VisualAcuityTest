@@ -12,7 +12,7 @@ import ARKit
 //------------------------------
 // MARK: - SCNVector3 Extensions
 //------------------------------
-
+var averageDistanceCM = 40
 extension SCNVector3{
 
     ///Get The Length Of Our Vector
@@ -25,7 +25,6 @@ extension SCNVector3{
 //--------------------------
 // MARK: - ARSCNViewDelegate
 //--------------------------
-
 extension ViewController: ARSCNViewDelegate{
 
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
@@ -67,8 +66,8 @@ extension ViewController: ARSCNViewDelegate{
 
             //5. Calculate The Average Distance Of The Eyes To The Camera
             let averageDistance = (leftEyeDistanceFromCamera.length() + rightEyeDistanceFromCamera.length()) / 2
-            let averageDistanceCM = (Int(round(averageDistance * 100)))
-            print("Approximate Distance Of Face From Camera = \(averageDistanceCM)")
+             averageDistanceCM = (Int(round(averageDistance * 100)))
+            //print("Approximate Distance Of Face From Camera = \(averageDistanceCM)")
         }
     }
 }
