@@ -12,7 +12,6 @@ import ARKit
 //------------------------------
 // MARK: - SCNVector3 Extensions
 //------------------------------
-var averageDistanceCM = 40
 extension SCNVector3{
 
     ///Get The Length Of Our Vector
@@ -21,7 +20,7 @@ extension SCNVector3{
     ///Allow Us To Subtract Two SCNVector3's
     static func - (l: SCNVector3, r: SCNVector3) -> SCNVector3 { return SCNVector3Make(l.x - r.x, l.y - r.y, l.z - r.z) }
 }
-
+var averageDistanceCM = 40
 //--------------------------
 // MARK: - ARSCNViewDelegate
 //--------------------------
@@ -36,7 +35,7 @@ extension ViewController: ARSCNViewDelegate{
         faceNode.transform = node.transform
 
         //2. Get The Distance Of The Eyes From The Camera
-        trackDistance()
+        averageDistanceCM = trackDistance()
     }
 
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
@@ -51,24 +50,19 @@ extension ViewController: ARSCNViewDelegate{
         rightEye.simdTransform = faceAnchor.rightEyeTransform
 
         //4. Get The Distance Of The Eyes From The Camera
-        trackDistance()
+        averageDistanceCM = trackDistance()
     }
 
 
     /// Tracks The Distance Of The Eyes From The Camera
-    func trackDistance(){
-
-        DispatchQueue.main.async {
-
-            //4. Get The Distance Of The Eyes From The Camera
-            let leftEyeDistanceFromCamera = self.leftEye.worldPosition - SCNVector3Zero
-            let rightEyeDistanceFromCamera = self.rightEye.worldPosition - SCNVector3Zero
-
-            //5. Calculate The Average Distance Of The Eyes To The Camera
-            let averageDistance = (leftEyeDistanceFromCamera.length() + rightEyeDistanceFromCamera.length()) / 2
-             averageDistanceCM = (Int(round(averageDistance * 100)))
-            //print("Approximate Distance Of Face From Camera = \(averageDistanceCM)")
-        }
+    func trackDistance() -> Int {
+        let leftEyeDistanceFromCamera = self.leftEye.worldPosition - SCNVector3Zero
+        let rightEyeDistanceFromCamera = self.rightEye.worldPosition - SCNVector3Zero
+        // Calculate The Average Distance Of The Eyes To The Camera
+        let averageDistance = (leftEyeDistanceFromCamera.length() + rightEyeDistanceFromCamera.length()) / 2
+        averageDistanceCM = Int(round(averageDistance * 100))
+        // Return the approximate distance of face from camera in centimeters
+        return averageDistanceCM
     }
 }
 

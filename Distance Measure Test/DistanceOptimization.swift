@@ -57,6 +57,10 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         return node
     }
 */
+    @IBAction func captureDistance(_ sender: Any){
+        let distance = ViewController.trackDistance
+        print("Distance: \(distance) cm");
+    }
     
     func session(_ session: ARSession, didFailWithError error: Error) {
         // Present an error message to the user
