@@ -24,6 +24,7 @@
 		D13F546D2ACA7C2A00673C13 /* DevicePpi in Frameworks */ = {isa = PBXBuildFile; productRef = D13F546C2ACA7C2A00673C13 /* DevicePpi */; };
 		D19933C52A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf in Resources */ = {isa = PBXBuildFile; fileRef = D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */; };
 		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
+		D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +46,7 @@
 		D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "OpticiansansRegular-0pnR.otf"; sourceTree = "<group>"; };
 		D19933C42A955CCF0050CF92 /* info.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = info.txt; sourceTree = "<group>"; };
 		D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Distance-Measure-Test-Info.plist"; sourceTree = SOURCE_ROOT; };
+		D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Select_Acuity.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,6 +92,7 @@
 				D12A744F2A9EBB4E006F3D08 /* SpeechRecognizer.swift */,
 				71836BF62ABAB580006CD4E3 /* ResultScreen.swift */,
 				C0CDD62F2A687790002A58BA /* Main.storyboard */,
+				D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */,
 				C0CDD6322A687792002A58BA /* Assets.xcassets */,
 				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
 				D12072E52A9F12BA00B92792 /* ship.scn */,
@@ -194,6 +197,7 @@
 				C94D36EF2A81B91500CAD336 /* Test.swift in Sources */,
 				C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */,
 				71836BF72ABAB580006CD4E3 /* ResultScreen.swift in Sources */,
+				D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */,
 				D12072EB2AAEA14900B92792 /* ViewController.swift in Sources */,
 				C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */,
 				D12A74502A9EBB4E006F3D08 /* SpeechRecognizer.swift in Sources */,
