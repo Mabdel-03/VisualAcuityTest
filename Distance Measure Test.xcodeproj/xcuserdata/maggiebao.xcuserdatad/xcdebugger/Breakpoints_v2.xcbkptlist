@@ -7,7 +7,223 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "8D11E7E3-17C4-4B41-BAC1-09C052F912EE"
+            uuid = "AE216338-0150-4A93-8CB2-0BE37C2EF0A7"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Distance Measure Test/Test.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "81"
+            endingLineNumber = "81"
+            landmarkName = "Test"
+            landmarkType = "3">
+            <Locations>
+               <Location
+                  uuid = "AE216338-0150-4A93-8CB2-0BE37C2EF0A7 - 9e12a56a65157de1"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.tempVoiceText.getter : Swift.Optional&lt;__C.UILabel&gt;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "88"
+                  endingLineNumber = "88"
+                  offsetFromSymbolStart = "88">
+               </Location>
+               <Location
+                  uuid = "AE216338-0150-4A93-8CB2-0BE37C2EF0A7 - 7b8c39bac0fc19ed"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.tempVoiceText.setter : Swift.Optional&lt;__C.UILabel&gt;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "88"
+                  endingLineNumber = "88"
+                  offsetFromSymbolStart = "108">
+               </Location>
+               <Location
+                  uuid = "AE216338-0150-4A93-8CB2-0BE37C2EF0A7 - 75f12819bc3236fc"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.tempVoiceText.modify : Swift.Optional&lt;__C.UILabel&gt;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "88"
+                  endingLineNumber = "88"
+                  offsetFromSymbolStart = "0">
+               </Location>
+               <Location
+                  uuid = "AE216338-0150-4A93-8CB2-0BE37C2EF0A7 - ae536db5a8d64067"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.tempVoiceText.modify : Swift.Optional&lt;__C.UILabel&gt; with unmangled suffix &quot;.resume.0&quot;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "88"
+                  endingLineNumber = "88"
+                  offsetFromSymbolStart = "28">
+               </Location>
+               <Location
+                  uuid = "AE216338-0150-4A93-8CB2-0BE37C2EF0A7 - d9bb7ee212d41e7d"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.init(nibName: Swift.Optional&lt;Swift.String&gt;, bundle: Swift.Optional&lt;__C.NSBundle&gt;) -&gt; Distance_Measure_Test.Test"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "88"
+                  endingLineNumber = "88"
+                  offsetFromSymbolStart = "1092">
+               </Location>
+               <Location
+                  uuid = "AE216338-0150-4A93-8CB2-0BE37C2EF0A7 - 39a23b5e68b49fe4"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.init(coder: __C.NSCoder) -&gt; Swift.Optional&lt;Distance_Measure_Test.Test&gt;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "88"
+                  endingLineNumber = "88"
+                  offsetFromSymbolStart = "1068">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F07F0AB2-682E-4945-BB4F-D2C7BB3CF0AD"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Distance Measure Test/Test.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "84"
+            endingLineNumber = "84"
+            landmarkName = "Test"
+            landmarkType = "3">
+            <Locations>
+               <Location
+                  uuid = "F07F0AB2-682E-4945-BB4F-D2C7BB3CF0AD - d5c22471450096e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.transcriptString.getter : Swift.String"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "91"
+                  endingLineNumber = "91"
+                  offsetFromSymbolStart = "100">
+               </Location>
+               <Location
+                  uuid = "F07F0AB2-682E-4945-BB4F-D2C7BB3CF0AD - 5d3e0de08197590a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.transcriptString.setter : Swift.String"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "91"
+                  endingLineNumber = "91"
+                  offsetFromSymbolStart = "140">
+               </Location>
+               <Location
+                  uuid = "F07F0AB2-682E-4945-BB4F-D2C7BB3CF0AD - 15a1006b066f8d65"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.transcriptString.modify : Swift.String"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "91"
+                  endingLineNumber = "91"
+                  offsetFromSymbolStart = "0">
+               </Location>
+               <Location
+                  uuid = "F07F0AB2-682E-4945-BB4F-D2C7BB3CF0AD - 2d4cfbaff727bc04"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.transcriptString.modify : Swift.String with unmangled suffix &quot;.resume.0&quot;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "91"
+                  endingLineNumber = "91"
+                  offsetFromSymbolStart = "16">
+               </Location>
+               <Location
+                  uuid = "F07F0AB2-682E-4945-BB4F-D2C7BB3CF0AD - d9bb7ee212d41f98"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.init(nibName: Swift.Optional&lt;Swift.String&gt;, bundle: Swift.Optional&lt;__C.NSBundle&gt;) -&gt; Distance_Measure_Test.Test"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "91"
+                  endingLineNumber = "91"
+                  offsetFromSymbolStart = "1172">
+               </Location>
+               <Location
+                  uuid = "F07F0AB2-682E-4945-BB4F-D2C7BB3CF0AD - 39a23b5e68b49e01"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.init(coder: __C.NSCoder) -&gt; Swift.Optional&lt;Distance_Measure_Test.Test&gt;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "91"
+                  endingLineNumber = "91"
+                  offsetFromSymbolStart = "1148">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "27977FA5-CF37-4181-84E6-7B4DC8E0FC89"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
@@ -18,6 +234,98 @@
             endingLineNumber = "80"
             landmarkName = "Test"
             landmarkType = "3">
+            <Locations>
+               <Location
+                  uuid = "27977FA5-CF37-4181-84E6-7B4DC8E0FC89 - f2b40cd88d347105"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.LetterRow1.getter : Swift.Optional&lt;__C.UILabel&gt;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "87"
+                  endingLineNumber = "87"
+                  offsetFromSymbolStart = "88">
+               </Location>
+               <Location
+                  uuid = "27977FA5-CF37-4181-84E6-7B4DC8E0FC89 - b5b811860e8e5d31"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.LetterRow1.setter : Swift.Optional&lt;__C.UILabel&gt;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "87"
+                  endingLineNumber = "87"
+                  offsetFromSymbolStart = "108">
+               </Location>
+               <Location
+                  uuid = "27977FA5-CF37-4181-84E6-7B4DC8E0FC89 - 40367b4cea169602"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.LetterRow1.modify : Swift.Optional&lt;__C.UILabel&gt;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "87"
+                  endingLineNumber = "87"
+                  offsetFromSymbolStart = "0">
+               </Location>
+               <Location
+                  uuid = "27977FA5-CF37-4181-84E6-7B4DC8E0FC89 - aec626ac0d4f7a00"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.LetterRow1.modify : Swift.Optional&lt;__C.UILabel&gt; with unmangled suffix &quot;.resume.0&quot;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "87"
+                  endingLineNumber = "87"
+                  offsetFromSymbolStart = "28">
+               </Location>
+               <Location
+                  uuid = "27977FA5-CF37-4181-84E6-7B4DC8E0FC89 - d9bb7ee212d41e1c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.init(nibName: Swift.Optional&lt;Swift.String&gt;, bundle: Swift.Optional&lt;__C.NSBundle&gt;) -&gt; Distance_Measure_Test.Test"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "87"
+                  endingLineNumber = "87"
+                  offsetFromSymbolStart = "1052">
+               </Location>
+               <Location
+                  uuid = "27977FA5-CF37-4181-84E6-7B4DC8E0FC89 - 39a23b5e68b49f85"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Distance_Measure_Test.Test.init(coder: __C.NSCoder) -&gt; Swift.Optional&lt;Distance_Measure_Test.Test&gt;"
+                  moduleName = "Distance Measure Test"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/maggiebao/Documents/GitHub/VisualAcuityTest/Distance%20Measure%20Test/Test.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "87"
+                  endingLineNumber = "87"
+                  offsetFromSymbolStart = "1028">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
