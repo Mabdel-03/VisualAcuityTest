@@ -205,15 +205,15 @@
         <scene sceneID="vtf-sL-1IK">
             <objects>
                 <viewController id="lE4-BY-6W3" customClass="Select_Acuity" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="bhr-7z-xGe">
+                    <view key="view" contentMode="scaleToFill" ambiguous="YES" id="bhr-7z-xGe">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="8A1-Qz-zkx">
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8A1-Qz-zkx">
                                 <rect key="frame" x="0.0" y="59" width="393" height="759"/>
                                 <subviews>
-                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dOG-av-p3N">
-                                        <rect key="frame" x="0.0" y="0.0" width="393" height="2000"/>
+                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dOG-av-p3N">
+                                        <rect key="frame" x="0.0" y="-256" width="393" height="2000"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="B200" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rom-pT-ckN">
                                                 <rect key="frame" x="147" y="275" width="42" height="62"/>
@@ -318,7 +318,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="blV-t4-Ysm" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3378" y="2"/>
+            <point key="canvasLocation" x="3015" y="504"/>
         </scene>
         <!--Test-->
         <scene sceneID="YJQ-dk-beo">
@@ -328,17 +328,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HCS-9w-SYp">
-                                <rect key="frame" x="116" y="431" width="143" height="35"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Start Recording"/>
-                                <connections>
-                                    <action selector="startIsPressed:" destination="7pg-0Y-Jqf" eventType="touchUpInside" id="UzJ-bC-GR9"/>
-                                </connections>
-                            </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6Be-mi-5Dh">
-                                <rect key="frame" x="117" y="489" width="142" height="35"/>
+                                <rect key="frame" x="126" y="728" width="142" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="filled" title="Stop Recording"/>
@@ -353,20 +344,15 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" usesAttributedText="YES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="uoF-oU-MbC">
-                                <rect key="frame" x="95" y="234" width="239" height="94"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <attributedString key="attributedText">
-                                    <fragment content="H">
-                                        <attributes>
-                                            <font key="NSFont" metaFont="system" size="17"/>
-                                        </attributes>
-                                    </fragment>
-                                </attributedString>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" layoutMarginsFollowReadableWidth="YES" text="H" lineBreakMode="characterWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="360" translatesAutoresizingMaskIntoConstraints="NO" id="uoF-oU-MbC">
+                                <rect key="frame" x="106" y="403" width="181.00000000005377" height="47.000000000007049"/>
+                                <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="17"/>
+                                <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
+                                <lineBreakStrategy key="lineBreakStrategy"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3rm-TL-NWZ">
-                                <rect key="frame" x="140" y="553" width="96" height="35"/>
+                                <rect key="frame" x="148" y="771" width="96" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="filled" title="Next Line"/>
@@ -374,9 +360,22 @@
                                     <action selector="nextLineIsPressed:" destination="7pg-0Y-Jqf" eventType="touchUpInside" id="QtQ-ST-h4E"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HCS-9w-SYp">
+                                <rect key="frame" x="125" y="685" width="143" height="35"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Start Recording"/>
+                                <connections>
+                                    <action selector="startIsPressed:" destination="7pg-0Y-Jqf" eventType="touchUpInside" id="UzJ-bC-GR9"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="xsX-2p-HnY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="uoF-oU-MbC" firstAttribute="centerY" secondItem="j4X-MU-R16" secondAttribute="centerY" id="k99-b2-jFD"/>
+                            <constraint firstItem="uoF-oU-MbC" firstAttribute="centerX" secondItem="j4X-MU-R16" secondAttribute="centerX" id="pFW-2T-uyU"/>
+                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="x7Y-Xr-IGY"/>
                     <connections>
@@ -386,7 +385,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Ocm-32-3Tv" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2572" y="4"/>
+            <point key="canvasLocation" x="3768.7022900763359" y="3.5211267605633805"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="l1m-AW-ZSb">
