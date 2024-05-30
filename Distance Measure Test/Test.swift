@@ -83,9 +83,9 @@ func getIndex(numList: [Int], value: Int) -> Int {
 var transcriptString = "hi"
 
 class Test: UIViewController {
-    let averageDistanceCM = 40
+    //let averageDistanceCM = 40
     let acuityList = [200, 160, 125, 100, 80, 63, 50, 40, 32, 25, 20, 16, 12, 10]
-    var currentAcuityIndex = 5
+    var currentAcuityIndex = 1
     var trial = 1
     var displayLetters: [Int: String] = [:]
     var userResponses: [Int: String] = [:]
@@ -105,6 +105,17 @@ class Test: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Safely unwrap selectedAcuity
+        if let currentAcuity = selectedAcuity {
+            currentAcuityIndex = currentAcuity
+            print("Current acuity index: \(currentAcuityIndex)")
+            // Further processing with currentAcuityIndex
+        } else {
+            // Handle the case where selectedAcuity is nil
+            print("selectedAcuity is nil")
+        }
+        
         initializeLabels()
     }
     

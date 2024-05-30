@@ -11,7 +11,7 @@ class Instructions: UIViewController {
     @IBOutlet weak var instructionText: UILabel!
     override func viewDidLoad() {
         super.viewDidLoad()
-        instructionText.text = "While traveling to California for the dispute of the final race of the Piston Cup against The King and Chick Hicks, the famous Lightning McQueen accidentally damages the road of the small town Radiator Springs and is sentenced to repair it. Lightning McQueen has to work hard and finds friendship and love in the simple locals, changing its values during his stay in the small town and becoming a true winner.";
+        instructionText.text = "Welcome to our app based ETDRS Visual Acuity Test. To perform the test, we must first find the optimal distance for you to take the test at. To do so, in the next screen, you must hold the phone at a distance in which the displayed image of the white flower is clear and easy to see. Once you find a comfortable distance, hold your phone there, press the 'capture distance' button, and then click begin test;"
     }
 
     /*
