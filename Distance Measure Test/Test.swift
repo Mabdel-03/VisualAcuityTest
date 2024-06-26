@@ -71,7 +71,7 @@ func assessInput(inputSeq: String, outputSeq: String) -> Int {
     return 1
 }
 
-func getIndex(numList: [Int], value: Int) -> Int {
+func getIndex(numList: [Int], value: Int) -> Int? {
     for (index, val) in numList.enumerated() {
         if val == value {
             return index
@@ -83,7 +83,6 @@ func getIndex(numList: [Int], value: Int) -> Int {
 var transcriptString = "hi"
 
 class Test: UIViewController {
-    //let averageDistanceCM = 40
     let acuityList = [200, 160, 125, 100, 80, 63, 50, 40, 32, 25, 20, 16, 12, 10]
     var currentAcuityIndex = 1
     var trial = 1
@@ -105,17 +104,16 @@ class Test: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Safely unwrap selectedAcuity
-        if let currentAcuity = selectedAcuity {
-            currentAcuityIndex = currentAcuity
-            print("Current acuity index: \(currentAcuityIndex)")
-            // Further processing with currentAcuityIndex
+        print(selectedAcuity)
+        if let selectedAcuity = selectedAcuity {
+            if let currentAcuityIndex = getIndex(numList: acuityList, value: selectedAcuity) {
+                print("The 1-based index of \(selectedAcuity) is \(currentAcuityIndex).")
+            } else {
+                print("\(selectedAcuity) is not in the list.")
+            }
         } else {
-            // Handle the case where selectedAcuity is nil
-            print("selectedAcuity is nil")
+            print("Selected acuity is nil.")
         }
-        
         initializeLabels()
     }
     

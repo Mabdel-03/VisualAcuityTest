@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="J9j-Di-vhq">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="J9j-Di-vhq">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21679"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
+    <customFonts key="customFonts">
+        <array key="OpticiansansRegular-0pnR.otf">
+            <string>OpticianSans-Regular</string>
+        </array>
+    </customFonts>
     <scenes>
         <!--Main Menu-->
         <scene sceneID="wgt-x0-plc">
@@ -315,7 +319,7 @@
                             </label>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" layoutMarginsFollowReadableWidth="YES" text="H" textAlignment="center" lineBreakMode="characterWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="360" translatesAutoresizingMaskIntoConstraints="NO" id="uoF-oU-MbC">
                                 <rect key="frame" x="106" y="403" width="181.00000000005377" height="47.000000000007049"/>
-                                <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="17"/>
+                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                                 <lineBreakStrategy key="lineBreakStrategy"/>
@@ -428,9 +432,13 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="fBJ-VB-CxN"/>
                                                 </constraints>
+                                                <color key="tintColor" systemColor="labelColor"/>
                                                 <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="B200"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="E">
+                                                    <fontDescription key="titleFontDescription" type="system" pointSize="17"/>
+                                                </buttonConfiguration>
                                                 <connections>
+                                                    <action selector="option1:" destination="yoH-g8-Akd" eventType="touchUpInside" id="qZg-1X-OAC"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="obF-ze-OoZ"/>
                                                 </connections>
                                             </button>
@@ -439,9 +447,11 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="jq2-no-s7y"/>
                                                 </constraints>
+                                                <color key="tintColor" systemColor="labelColor"/>
                                                 <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="B160"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
                                                 <connections>
+                                                    <action selector="option2:" destination="yoH-g8-Akd" eventType="touchUpInside" id="Ox5-rg-jlX"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="DMm-Ua-3Vl"/>
                                                 </connections>
                                             </button>
@@ -450,9 +460,11 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="WAi-IJ-Fh1"/>
                                                 </constraints>
+                                                <color key="tintColor" systemColor="labelColor"/>
                                                 <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="B125"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
                                                 <connections>
+                                                    <action selector="option3:" destination="yoH-g8-Akd" eventType="touchUpInside" id="xId-tV-1jn"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="Kr0-FL-PaW"/>
                                                 </connections>
                                             </button>
@@ -461,9 +473,11 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="whl-by-MCP"/>
                                                 </constraints>
+                                                <color key="tintColor" systemColor="labelColor"/>
                                                 <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="B100"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
                                                 <connections>
+                                                    <action selector="option4:" destination="yoH-g8-Akd" eventType="touchUpInside" id="dvA-3a-c2K"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="sw1-Z8-HSH"/>
                                                 </connections>
                                             </button>
@@ -472,9 +486,11 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="O2S-m5-4Wt"/>
                                                 </constraints>
+                                                <color key="tintColor" systemColor="labelColor"/>
                                                 <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="B80"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
                                                 <connections>
+                                                    <action selector="option5:" destination="yoH-g8-Akd" eventType="touchUpInside" id="fLW-Xz-Inz"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="lTA-y8-t1A"/>
                                                 </connections>
                                             </button>
@@ -483,9 +499,11 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="QDm-y5-6EA"/>
                                                 </constraints>
+                                                <color key="tintColor" systemColor="labelColor"/>
                                                 <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="B63"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
                                                 <connections>
+                                                    <action selector="option6:" destination="yoH-g8-Akd" eventType="touchUpInside" id="TJy-ZQ-zU7"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="J23-KX-j6i"/>
                                                 </connections>
                                             </button>
@@ -494,9 +512,11 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="Aat-jk-bB1"/>
                                                 </constraints>
+                                                <color key="tintColor" systemColor="labelColor"/>
                                                 <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="B50"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
                                                 <connections>
+                                                    <action selector="option7:" destination="yoH-g8-Akd" eventType="touchUpInside" id="XDM-4v-Vf1"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="AIJ-zI-HIb"/>
                                                 </connections>
                                             </button>
@@ -505,9 +525,11 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="vw4-fJ-Nuv"/>
                                                 </constraints>
+                                                <color key="tintColor" systemColor="labelColor"/>
                                                 <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="B40"/>
+                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
                                                 <connections>
+                                                    <action selector="option8:" destination="yoH-g8-Akd" eventType="touchUpInside" id="JFM-Kl-eBM"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="t5w-jH-VlN"/>
                                                 </connections>
                                             </button>
@@ -562,6 +584,9 @@
         <image name="AiAppLogo" width="1024" height="1024"/>
         <image name="Button" width="320" height="128"/>
         <image name="TargetImage" width="426.66665649414062" height="277.66665649414062"/>
+        <systemColor name="labelColor">
+            <color red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
