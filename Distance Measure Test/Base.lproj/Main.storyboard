@@ -302,10 +302,10 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6Be-mi-5Dh">
-                                <rect key="frame" x="126" y="728" width="142" height="35"/>
+                                <rect key="frame" x="128" y="728" width="139" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Stop Recording"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Rerecord(stop)"/>
                                 <connections>
                                     <action selector="stopIsPressed:" destination="7pg-0Y-Jqf" eventType="touchUpInside" id="2tV-SC-jJE"/>
                                 </connections>
@@ -334,10 +334,10 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HCS-9w-SYp">
-                                <rect key="frame" x="125" y="685" width="143" height="35"/>
+                                <rect key="frame" x="126" y="685" width="141" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Start Recording"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Rerecord(start)"/>
                                 <connections>
                                     <action selector="startIsPressed:" destination="7pg-0Y-Jqf" eventType="touchUpInside" id="UzJ-bC-GR9"/>
                                 </connections>
@@ -427,109 +427,131 @@
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="Zgg-gm-L5e">
                                         <rect key="frame" x="0.0" y="0.0" width="393" height="1600"/>
                                         <subviews>
-                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="b8R-Hp-Jzj">
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="b8R-Hp-Jzj">
                                                 <rect key="frame" x="0.0" y="0.0" width="393" height="200"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="fBJ-VB-CxN"/>
                                                 </constraints>
+                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
-                                                <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="E">
-                                                    <fontDescription key="titleFontDescription" type="system" pointSize="17"/>
-                                                </buttonConfiguration>
+                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                <state key="normal" title="E">
+                                                    <color key="titleColor" systemColor="labelColor"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="option1:" destination="yoH-g8-Akd" eventType="touchUpInside" id="qZg-1X-OAC"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="obF-ze-OoZ"/>
                                                 </connections>
                                             </button>
-                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="BRf-c2-1wi">
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="BRf-c2-1wi">
                                                 <rect key="frame" x="0.0" y="200" width="393" height="200"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="jq2-no-s7y"/>
                                                 </constraints>
+                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
-                                                <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
+                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                <state key="normal" title="E">
+                                                    <color key="titleColor" systemColor="labelColor"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="option2:" destination="yoH-g8-Akd" eventType="touchUpInside" id="Ox5-rg-jlX"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="DMm-Ua-3Vl"/>
                                                 </connections>
                                             </button>
-                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hft-Mq-dAO">
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hft-Mq-dAO">
                                                 <rect key="frame" x="0.0" y="400" width="393" height="200"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="WAi-IJ-Fh1"/>
                                                 </constraints>
+                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
-                                                <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
+                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                <state key="normal" title="E">
+                                                    <color key="titleColor" systemColor="labelColor"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="option3:" destination="yoH-g8-Akd" eventType="touchUpInside" id="xId-tV-1jn"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="Kr0-FL-PaW"/>
                                                 </connections>
                                             </button>
-                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ZQe-Ay-lCU">
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ZQe-Ay-lCU">
                                                 <rect key="frame" x="0.0" y="600" width="393" height="200"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="whl-by-MCP"/>
                                                 </constraints>
+                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
-                                                <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
+                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                <state key="normal" title="E">
+                                                    <color key="titleColor" systemColor="labelColor"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="option4:" destination="yoH-g8-Akd" eventType="touchUpInside" id="dvA-3a-c2K"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="sw1-Z8-HSH"/>
                                                 </connections>
                                             </button>
-                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tmq-GW-PHJ">
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tmq-GW-PHJ">
                                                 <rect key="frame" x="0.0" y="800" width="393" height="200"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="O2S-m5-4Wt"/>
                                                 </constraints>
+                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
-                                                <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
+                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                <state key="normal" title="E">
+                                                    <color key="titleColor" systemColor="labelColor"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="option5:" destination="yoH-g8-Akd" eventType="touchUpInside" id="fLW-Xz-Inz"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="lTA-y8-t1A"/>
                                                 </connections>
                                             </button>
-                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6l4-Ab-jUs">
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6l4-Ab-jUs">
                                                 <rect key="frame" x="0.0" y="1000" width="393" height="200"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="QDm-y5-6EA"/>
                                                 </constraints>
+                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
-                                                <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
+                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                <state key="normal" title="E">
+                                                    <color key="titleColor" systemColor="labelColor"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="option6:" destination="yoH-g8-Akd" eventType="touchUpInside" id="TJy-ZQ-zU7"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="J23-KX-j6i"/>
                                                 </connections>
                                             </button>
-                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AXf-Fr-moD">
+                                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AXf-Fr-moD">
                                                 <rect key="frame" x="0.0" y="1200" width="393" height="200"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="Aat-jk-bB1"/>
                                                 </constraints>
+                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
-                                                <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
+                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                <state key="normal" title="E">
+                                                    <color key="titleColor" systemColor="labelColor"/>
+                                                </state>
                                                 <connections>
                                                     <action selector="option7:" destination="yoH-g8-Akd" eventType="touchUpInside" id="XDM-4v-Vf1"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="AIJ-zI-HIb"/>
                                                 </connections>
                                             </button>
-                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vwp-NZ-fXd">
+                                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vwp-NZ-fXd">
                                                 <rect key="frame" x="0.0" y="1400" width="393" height="200"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="200" id="vw4-fJ-Nuv"/>
                                                 </constraints>
+                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
-                                                <state key="normal" title="Button"/>
-                                                <buttonConfiguration key="configuration" style="plain" title="E"/>
+                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                <state key="normal" title="E">
+                                                    <color key="titleColor" systemColor="labelColor"/>
+                                                </state>
                                                 <connections>
-                                                    <action selector="option8:" destination="yoH-g8-Akd" eventType="touchUpInside" id="JFM-Kl-eBM"/>
+                                                    <action selector="option8:" destination="yoH-g8-Akd" eventType="touchUpInside" id="iKh-gA-8qV"/>
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="t5w-jH-VlN"/>
                                                 </connections>
                                             </button>

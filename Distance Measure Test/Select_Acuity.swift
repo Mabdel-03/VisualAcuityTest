@@ -37,9 +37,11 @@ class Select_Acuity: UIViewController {
     func Button_ETDRS(_ button: UIButton, dAcuity: Int, letText: String) {
         let visual_angle = tan(((Double(dAcuity) / 20) * 5.0 / 60) * Double.pi / 180)
         let scale_factor = 2 * Double(averageDistanceCM) * visual_angle
-        let fontSize = scale_factor * 2 * Double(ppi)
-        print(fontSize)
-        button.titleLabel!.font = UIFont(name: "OpticianSans-Regular", size: CGFloat(fontSize))
+        let buttonHeight = scale_factor * Double(ppi)
+        let fontSize = 2 / 3 * buttonHeight // Using the same ratio as set_ETDRS
+        //button.setTitle(letText, for: .normal)
+        button.titleLabel?.font = UIFont(name: "OpticianSans-Regular", size: CGFloat(fontSize))
+        button.frame.size = CGSize(width: buttonHeight * 6, height: buttonHeight) // Assuming button width should be 6 times the height
     }
 
     @IBAction func option1(_ sender: Any) {
