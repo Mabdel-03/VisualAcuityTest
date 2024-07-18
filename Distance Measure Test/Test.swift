@@ -180,35 +180,41 @@ class Test: UIViewController {
     
     @IBAction func stopIsPressed(_ sender: Any) {
         speechRecognizer.stopTranscribing()
-        transcriptString = speechRecognizer.transcript
-        getCorrectLetter(transcription: transcriptString) { correctedLetter in
-            if let correctedLetter = correctedLetter {
-                print("Corrected Letter: \(correctedLetter)")
-            } else {
-                print("Failed to get corrected letter.")
+            let transcriptString = speechRecognizer.transcript
+            getCorrectLetter(transcription: transcriptString) { correctedLetter in
+                DispatchQueue.main.async {
+                    if let correctedLetter = correctedLetter {
+                        print("Corrected Letter: \(correctedLetter)")
+                        self.tempVoiceText.text = correctedLetter
+                        transcriptString = correctedLetter
+                    } else {
+                        print("Failed to get corrected letter.")
+                        self.tempVoiceText.text = "Error"
+                    }
+                }
             }
+            speechRecognizer.resetTranscript()
+            hasTranscript = true
         }
-        tempVoiceText.text = transcriptString
-        speechRecognizer.resetTranscript()
-        hasTranscript = true
-        
-    }
     
     @IBAction func nextLineIsPressed(_ sender: Any) {
-        
         //take input
         speechRecognizer.stopTranscribing()
-        transcriptString = speechRecognizer.transcript
-        getCorrectLetter(transcription: transcriptString) { correctedLetter in
-            if let correctedLetter = correctedLetter {
-                print("Corrected Letter: \(correctedLetter)")
-            } else {
-                print("Failed to get corrected letter.")
+            let transcriptString = speechRecognizer.transcript
+            getCorrectLetter(transcription: transcriptString) { correctedLetter in
+                DispatchQueue.main.async {
+                    if let correctedLetter = correctedLetter {
+                        print("Corrected Letter: \(correctedLetter)")
+                        self.tempVoiceText.text = correctedLetter
+                        transcriptString = correctedLetter
+                    } else {
+                        print("Failed to get corrected letter.")
+                        self.tempVoiceText.text = "Error"
+                    }
+                }
             }
-        }
-        tempVoiceText.text = transcriptString
-        speechRecognizer.resetTranscript()
-        hasTranscript = true
+            speechRecognizer.resetTranscript()
+            hasTranscript = true
         
         setNextLetter()
         if counter % 5 == 0 && counter != 0 {
