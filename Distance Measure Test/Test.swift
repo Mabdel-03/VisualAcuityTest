@@ -98,6 +98,7 @@ class Test: UIViewController {
     
     var speechRecognizer = SpeechRecognizer()
     var transcriptString = ""
+    var gptTranscript = ""
     var hasTranscript: Bool = false
     var transcriptTrial = ""
     
@@ -180,6 +181,13 @@ class Test: UIViewController {
     @IBAction func stopIsPressed(_ sender: Any) {
         speechRecognizer.stopTranscribing()
         transcriptString = speechRecognizer.transcript
+        getCorrectLetter(transcription: transcriptString) { correctedLetter in
+            if let correctedLetter = correctedLetter {
+                print("Corrected Letter: \(correctedLetter)")
+            } else {
+                print("Failed to get corrected letter.")
+            }
+        }
         tempVoiceText.text = transcriptString
         speechRecognizer.resetTranscript()
         hasTranscript = true
@@ -191,6 +199,13 @@ class Test: UIViewController {
         //take input
         speechRecognizer.stopTranscribing()
         transcriptString = speechRecognizer.transcript
+        getCorrectLetter(transcription: transcriptString) { correctedLetter in
+            if let correctedLetter = correctedLetter {
+                print("Corrected Letter: \(correctedLetter)")
+            } else {
+                print("Failed to get corrected letter.")
+            }
+        }
         tempVoiceText.text = transcriptString
         speechRecognizer.resetTranscript()
         hasTranscript = true

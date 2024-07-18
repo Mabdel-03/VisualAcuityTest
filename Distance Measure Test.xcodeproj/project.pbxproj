@@ -20,6 +20,7 @@
 		D12072E72A9F12BA00B92792 /* ship.scn in Resources */ = {isa = PBXBuildFile; fileRef = D12072E52A9F12BA00B92792 /* ship.scn */; };
 		D12072E92A9F132000B92792 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = D12072E82A9F132000B92792 /* art.scnassets */; };
 		D12A74502A9EBB4E006F3D08 /* SpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12A744F2A9EBB4E006F3D08 /* SpeechRecognizer.swift */; };
+		D13E35252C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13E35242C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift */; };
 		D13F546D2ACA7C2A00673C13 /* DevicePpi in Frameworks */ = {isa = PBXBuildFile; productRef = D13F546C2ACA7C2A00673C13 /* DevicePpi */; };
 		D19933C52A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf in Resources */ = {isa = PBXBuildFile; fileRef = D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */; };
 		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
@@ -41,6 +42,7 @@
 		D12072E52A9F12BA00B92792 /* ship.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = ship.scn; path = art.scnassets/ship.scn; sourceTree = "<group>"; };
 		D12072E82A9F132000B92792 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
 		D12A744F2A9EBB4E006F3D08 /* SpeechRecognizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpeechRecognizer.swift; sourceTree = "<group>"; };
+		D13E35242C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpenAI_API_CorrectLetters.swift; sourceTree = "<group>"; };
 		D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "OpticiansansRegular-0pnR.otf"; sourceTree = "<group>"; };
 		D19933C42A955CCF0050CF92 /* info.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = info.txt; sourceTree = "<group>"; };
 		D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Distance-Measure-Test-Info.plist"; sourceTree = SOURCE_ROOT; };
@@ -81,6 +83,7 @@
 			children = (
 				D12072E82A9F132000B92792 /* art.scnassets */,
 				D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */,
+				D13E35242C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift */,
 				C0CDD6292A687790002A58BA /* AppDelegate.swift */,
 				C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */,
 				C94D36EA2A81B87500CAD336 /* Main Menu.swift */,
@@ -189,6 +192,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D13E35252C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift in Sources */,
 				C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */,
 				C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */,
 				C94D36EF2A81B91500CAD336 /* Test.swift in Sources */,
