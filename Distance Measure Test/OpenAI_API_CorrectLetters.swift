@@ -2,7 +2,7 @@ import Foundation
 import AVFoundation
 
 func getCorrectLetter(transcription: String, completion: @escaping (String?) -> Void) {
-    let apiKey = "sk-proj-BeUPea8G5QnWIqpukCp1T3BlbkFJJ6U0ZpanciCSZCe6V22c"
+    let apiKey = "REPLACE_W_YOURS"
     let url = URL(string: "https://api.openai.com/v1/completions")!
     
     var request = URLRequest(url: url)
