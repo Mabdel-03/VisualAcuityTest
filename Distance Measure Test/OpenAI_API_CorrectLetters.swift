@@ -12,7 +12,7 @@ func getCorrectLetter(transcription: String, completion: @escaping (String?) -> 
     
     let prompt = "Transcribe the following spoken word to the nearest corresponding single letter when spoken aloud: \(transcription), and respond with only the letter"
     let parameters: [String: Any] = [
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4o",
         "messages": [["role": "user", "content": prompt]],
         "max_tokens": 1,
         "temperature": 0

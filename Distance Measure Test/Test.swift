@@ -79,7 +79,7 @@ func getIndex(numList: [Int], value: Int) -> Int {
     }
     return -1
 }
-
+var gptTranscript = ""
 class Test: UIViewController {
     ///Test screen
     ///
@@ -98,7 +98,6 @@ class Test: UIViewController {
     
     var speechRecognizer = SpeechRecognizer()
     var transcriptString = ""
-    var gptTranscript = ""
     var hasTranscript: Bool = false
     var transcriptTrial = ""
     
@@ -131,7 +130,7 @@ class Test: UIViewController {
     }
     func setNextLetter() {
             counter += 1 // update counter
-            transcriptTrial += transcriptString // update transcript for trial
+            transcriptTrial += gptTranscript // update transcript for trial
             print("current Acuity Index",currentAcuityIndex)
             let tempLetter = randomLetters(size: 1)
             set_ETDRS(&LetterRow1, desired_acuity: acuityList[currentAcuityIndex], letterText: tempLetter)
@@ -180,13 +179,15 @@ class Test: UIViewController {
     
     @IBAction func stopIsPressed(_ sender: Any) {
         speechRecognizer.stopTranscribing()
-            let transcriptString = speechRecognizer.transcript
+        let transcriptString = speechRecognizer.transcript
+        print("HELSKFNLAF", transcriptString)
             getCorrectLetter(transcription: transcriptString) { correctedLetter in
                 DispatchQueue.main.async {
                     if let correctedLetter = correctedLetter {
                         print("Corrected Letter: \(correctedLetter)")
                         self.tempVoiceText.text = correctedLetter
-                        transcriptString = correctedLetter
+                        gptTranscript = correctedLetter
+                        
                     } else {
                         print("Failed to get corrected letter.")
                         self.tempVoiceText.text = "Error"
@@ -200,21 +201,20 @@ class Test: UIViewController {
     @IBAction func nextLineIsPressed(_ sender: Any) {
         //take input
         speechRecognizer.stopTranscribing()
-            let transcriptString = speechRecognizer.transcript
-            getCorrectLetter(transcription: transcriptString) { correctedLetter in
-                DispatchQueue.main.async {
-                    if let correctedLetter = correctedLetter {
-                        print("Corrected Letter: \(correctedLetter)")
-                        self.tempVoiceText.text = correctedLetter
-                        transcriptString = correctedLetter
-                    } else {
-                        print("Failed to get corrected letter.")
-                        self.tempVoiceText.text = "Error"
-                    }
-                }
+        transcriptString = speechRecognizer.transcript
+        print("KJFNKJWF",transcriptString)
+        getCorrectLetter(transcription: transcriptString) { correctedLetter in
+            if let correctedLetter = correctedLetter {
+                print("Corrected Letter: \(correctedLetter)")
+                self.tempVoiceText.text = correctedLetter
+                gptTranscript = correctedLetter
+            } else {
+                print("Failed to get corrected letter.")
+                self.tempVoiceText.text = "Error"
             }
-            speechRecognizer.resetTranscript()
-            hasTranscript = true
+        }
+        speechRecognizer.resetTranscript()
+        hasTranscript = true
         
         setNextLetter()
         if counter % 5 == 0 && counter != 0 {
