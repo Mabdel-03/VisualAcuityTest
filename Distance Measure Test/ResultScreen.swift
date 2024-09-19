@@ -8,15 +8,14 @@
 import UIKit
 
 class ResultScreen: UIViewController {
-
-    @IBOutlet weak var EnterResult: UILabel!
     
+    var finalAcuity = 0.0
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
         
-        EnterResult.text = "20/200"
+        
     }
     
 

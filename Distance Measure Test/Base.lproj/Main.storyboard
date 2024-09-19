@@ -302,7 +302,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6Be-mi-5Dh">
-                                <rect key="frame" x="128" y="728" width="139" height="35"/>
+                                <rect key="frame" x="126" y="647" width="139" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="filled" title="Rerecord(stop)"/>
@@ -311,7 +311,7 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Voice Transcription" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GC9-yi-3Bk">
-                                <rect key="frame" x="51" y="607" width="146" height="21"/>
+                                <rect key="frame" x="51" y="503" width="146" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
@@ -324,22 +324,28 @@
                                 <nil key="highlightedColor"/>
                                 <lineBreakStrategy key="lineBreakStrategy"/>
                             </label>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3rm-TL-NWZ">
-                                <rect key="frame" x="148" y="771" width="96" height="35"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Next Line"/>
-                                <connections>
-                                    <action selector="nextLineIsPressed:" destination="7pg-0Y-Jqf" eventType="touchUpInside" id="QtQ-ST-h4E"/>
-                                </connections>
-                            </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HCS-9w-SYp">
-                                <rect key="frame" x="126" y="685" width="141" height="35"/>
+                                <rect key="frame" x="126" y="595" width="141" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="filled" title="Rerecord(start)"/>
                                 <connections>
                                     <action selector="startIsPressed:" destination="7pg-0Y-Jqf" eventType="touchUpInside" id="UzJ-bC-GR9"/>
+                                </connections>
+                            </button>
+                            <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="User Input" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Nva-UO-px1">
+                                <rect key="frame" x="51" y="168" width="97" height="34"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3rm-TL-NWZ">
+                                <rect key="frame" x="147" y="272" width="96" height="35"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Next Line"/>
+                                <connections>
+                                    <action selector="nextLineIsPressed:" destination="7pg-0Y-Jqf" eventType="touchUpInside" id="QtQ-ST-h4E"/>
                                 </connections>
                             </button>
                         </subviews>
@@ -353,7 +359,9 @@
                     <navigationItem key="navigationItem" id="x7Y-Xr-IGY"/>
                     <connections>
                         <outlet property="LetterRow1" destination="uoF-oU-MbC" id="nkS-j9-dCa"/>
+                        <outlet property="UserInput" destination="Nva-UO-px1" id="5Lh-cZ-j7l"/>
                         <outlet property="tempVoiceText" destination="GC9-yi-3Bk" id="Gd2-J1-vTz"/>
+                        <segue destination="CRk-bY-9UF" kind="show" id="t2y-f6-v96"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Ocm-32-3Tv" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -393,10 +401,10 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Enter Result" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mC9-qg-S5P">
-                                <rect key="frame" x="111" y="574" width="170" height="36"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="myResult" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zvk-Zb-lIw">
+                                <rect key="frame" x="161" y="447" width="71" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="boldSystem" pointSize="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
@@ -405,13 +413,10 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                     </view>
                     <navigationItem key="navigationItem" id="Afe-q5-ut5"/>
-                    <connections>
-                        <outlet property="EnterResult" destination="mC9-qg-S5P" id="QlK-aR-YMH"/>
-                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Wpv-Pq-Cik" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="4866" y="20"/>
+            <point key="canvasLocation" x="4864.8854961832058" y="19.718309859154932"/>
         </scene>
         <!--Acuity Selection-->
         <scene sceneID="gxi-oz-ony">
