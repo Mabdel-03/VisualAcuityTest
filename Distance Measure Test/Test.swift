@@ -91,11 +91,11 @@ func getIndex(numList: [Int], value: Int) -> Int {
     }
     return -1
 }
-var gptTranscript = ""
+var userTranscript = ""
 class Test: UIViewController {
     ///Test screen
     ///
-    let acuityList = [200, 160, 125, 100, 80, 63, 50, 40, 32, 25, 20, 16, 12, 10]
+    let acuityList = [200, 160, 125, 100, 80, 63, 50, 40, 32, 20, 16]
     var currentAcuityIndex = 0
     var trial = 1
     var displayLetters: [Int: String] = [:]
@@ -108,9 +108,8 @@ class Test: UIViewController {
     @IBOutlet weak var LetterRow1: UILabel!
     @IBOutlet weak var UserInput: UITextField!
     
-    var speechRecognizer = SpeechRecognizer()
+    //var speechRecognizer = SpeechRecognizer()
     var transcriptString = ""
-    var hasTranscript: Bool = false
     var transcriptTrial = ""
     var displayLetter = ""
     
@@ -119,7 +118,7 @@ class Test: UIViewController {
     override func viewDidLoad() { //upon opening page
         super.viewDidLoad()
 
-        speechRecognizer.startTranscribing(); //enable speech
+        //speechRecognizer.startTranscribing(); //enable speech
         if let selectedAcuity = selectedAcuity {
             currentAcuityIndex = getIndex(numList: acuityList, value: selectedAcuity)
             print("The index of \(selectedAcuity) is \(currentAcuityIndex).")
@@ -163,18 +162,17 @@ class Test: UIViewController {
         // Assess input correctness
         let numCharCorrect = assessInput(inputSeq: displayLetters[trial]!, outputSeq: userResponses[trial]!)
         if numCharCorrect >= 3 { //if the user gets 3 or more letters correct
-            endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
-//            if acuityVisits[acuity]! >= 2 { //if user already visited that acuity twice
-//                endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
-//            }
-//            else { //if they have not, can progress to next size
-//                if currentAcuityIndex < (acuityList.count-1) {
-//                    currentAcuityIndex += 1
-//                }
-//                else{
-//                    endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
-//                }
-//            }
+            if acuityVisits[acuity]! >= 2 { //if user already visited that acuity twice
+                endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
+            }
+            else { //if they have not, can progress to next size
+                if currentAcuityIndex < (acuityList.count-1) {
+                    currentAcuityIndex += 1
+                }
+                else{
+                    endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
+                }
+            }
         } else { //if user cannot get at least 3 letters
             if currentAcuityIndex <= 0 { //if you are at largest letter size
                 endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
@@ -234,59 +232,55 @@ class Test: UIViewController {
         counter += 1
         //take input
         //debugging
-//        if let uinput = UserInput.text {
-//                    // Optionally display the captured input in a label or do something with it
-//                    gptTranscript = uinput.uppercased()
-//                    // Perform any additional actions with the captured input here
-//        }
-    
-        // FOR SPEECH & GPT
-        displayTrial += LetterRow1.text ?? ""
-        speechRecognizer.stopTranscribing()
-        transcriptString = speechRecognizer.transcript
-        getCorrectLetter(transcription: transcriptString) { correctedLetter in
-            // Ensure UI updates happen on the main thread
-            DispatchQueue.main.async {
-                if let correctedLetter = correctedLetter {
-                    // Update gptTranscript with the corrected letter
-                    self.transcriptTrial += correctedLetter // Accumulate transcript for trial
-                    self.transcriptTrial += gptTranscript // Accumulate transcript for trial
-                    print("Correct letters so far:",self.displayTrial)
-                    print("Your letters so far:",self.transcriptTrial)
-                    if self.counter % 5 == 0 {
-                        self.processTranscription()
-                        self.counter = 0
-                    }
-                    print("Correct Letters across all trials:", self.displayLetters)
-                    print("Your responses across all trials:", self.userResponses)
-                    print("Number of acuity visits:", self.acuityVisits)
-                } else {
-                    print("Failed to get corrected letter.")
-                }
-                self.UserInput.text = ""
-                self.setNextLetter()
-                self.speechRecognizer.resetTranscript()
-                self.hasTranscript = true
-                self.speechRecognizer.startTranscribing()
-            }
+        if let uinput = UserInput.text {
+                    // Optionally display the captured input in a label or do something with it
+                    userTranscript = uinput.uppercased()
+                    // Perform any additional actions with the captured input here
         }
-        // FOR DEBUGGING
-//        print("gptTranscript: ", gptTranscript)
-//        transcriptTrial += gptTranscript // Accumulate transcript for trial
+//        // FOR SPEECH & GPT
 //        displayTrial += LetterRow1.text ?? ""
-//        print("Correct letters so far:",displayTrial)
-//        print("Your letters so far:",transcriptTrial)
-//        if counter % 5 == 0 {
-//            processTranscription()
-//            counter = 0
+//        speechRecognizer.stopTranscribing()
+//        transcriptString = speechRecognizer.transcript
+//        getCorrectLetter(transcription: transcriptString) { correctedLetter in
+//            // Ensure UI updates happen on the main thread
+//            DispatchQueue.main.async {
+//                if let correctedLetter = correctedLetter {
+//                    // Update gptTranscript with the corrected letter
+//                    self.transcriptTrial += correctedLetter // Accumulate transcript for trial
+//                    self.transcriptTrial += gptTranscript // Accumulate transcript for trial
+//                    print("Correct letters so far:",self.displayTrial)
+//                    print("Your letters so far:",self.transcriptTrial)
+//                    if self.counter % 5 == 0 {
+//                        self.processTranscription()
+//                        self.counter = 0
+//                    }
+//                    print("Correct Letters across all trials:", self.displayLetters)
+//                    print("Your responses across all trials:", self.userResponses)
+//                    print("Number of acuity visits:", self.acuityVisits)
+//                } else {
+//                    print("Failed to get corrected letter.")
+//                }
+//                self.UserInput.text = ""
+//                self.setNextLetter()
+//                self.speechRecognizer.resetTranscript()
+//                self.hasTranscript = true
+//                self.speechRecognizer.startTranscribing()
+//            }
 //        }
-//        print("Correct Letters across all trials:",displayLetters)
-//        print("Your responses across all trials:",userResponses)
-//        print("Number of acuity visits:",acuityVisits)
-//        UserInput.text = ""
-//        setNextLetter()
-//        speechRecognizer.resetTranscript()
-//        hasTranscript = true
-//        speechRecognizer.startTranscribing()
+        // FOR DEBUGGING
+        print("userTranscript: ", userTranscript)
+        transcriptTrial += userTranscript // Accumulate transcript for trial
+        displayTrial += LetterRow1.text ?? ""
+        print("Correct letters so far:",displayTrial)
+        print("Your letters so far:",transcriptTrial)
+        if counter % 5 == 0 {
+            processTranscription()
+            counter = 0
+        }
+        print("Correct Letters across all trials:",displayLetters)
+        print("Your responses across all trials:",userResponses)
+        print("Number of acuity visits:",acuityVisits)
+        UserInput.text = ""
+        setNextLetter()
     }
 }
