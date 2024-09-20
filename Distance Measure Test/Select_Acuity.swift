@@ -34,8 +34,8 @@ class Select_Acuity: UIViewController {
         Button_ETDRS(B63, dAcuity: 63, letText: "E")
         Button_ETDRS(B50, dAcuity: 50, letText: "E")
         Button_ETDRS(B40, dAcuity: 40, letText: "E")
-        Button_ETDRS(B20, dAcuity: 20, letText: "E")
-        Button_ETDRS(B10, dAcuity: 10, letText: "E")
+        Button_ETDRS(B20, dAcuity: 32, letText: "E")
+        Button_ETDRS(B10, dAcuity: 20, letText: "E")
     }
     
     func Button_ETDRS(_ button: UIButton, dAcuity: Int, letText: String) {
@@ -78,10 +78,10 @@ class Select_Acuity: UIViewController {
     }
     
     @IBAction func option9(_ sender: Any) {
-        selectedAcuity = 20
+        selectedAcuity = 32
     }
     
     @IBAction func option10(_ sender: Any) {
-        selectedAcuity = 10
+        selectedAcuity = 20
     }
 }
