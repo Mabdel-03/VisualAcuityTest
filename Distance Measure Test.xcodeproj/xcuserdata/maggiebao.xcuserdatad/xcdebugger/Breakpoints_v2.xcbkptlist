@@ -3,22 +3,4 @@
    uuid = "D578D755-304F-4137-BA49-36B8A29A0006"
    type = "1"
    version = "2.0">
-   <Breakpoints>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "48D11DC7-07CC-4CBA-B352-901F4B987147"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "Distance Measure Test/Test.swift"
-            startingColumnNumber = "87"
-            endingColumnNumber = "87"
-            startingLineNumber = "161"
-            endingLineNumber = "161"
-            landmarkName = "processTranscription()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-   </Breakpoints>
 </Bucket>

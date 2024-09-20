@@ -106,21 +106,20 @@ class Test: UIViewController {
     
     
     @IBOutlet weak var LetterRow1: UILabel!
-    @IBOutlet weak var tempVoiceText: UILabel!
     @IBOutlet weak var UserInput: UITextField!
     
     var speechRecognizer = SpeechRecognizer()
     var transcriptString = ""
     var hasTranscript: Bool = false
     var transcriptTrial = ""
-    
+    var displayLetter = ""
     
     var randomLetter: String = "E";
     
     override func viewDidLoad() { //upon opening page
         super.viewDidLoad()
 
-//        speechRecognizer.startTranscribing(); //enable speech
+        speechRecognizer.startTranscribing(); //enable speech
         if let selectedAcuity = selectedAcuity {
             currentAcuityIndex = getIndex(numList: acuityList, value: selectedAcuity)
             print("The index of \(selectedAcuity) is \(currentAcuityIndex).")
@@ -144,8 +143,13 @@ class Test: UIViewController {
     }
 
     func setNextLetter() {
-        let tempLetter = randomLetters(size: 1)
-        set_ETDRS(&LetterRow1, desired_acuity: acuityList[currentAcuityIndex], letterText: tempLetter)
+        var tempLetter = randomLetters(size: 1)
+        while displayLetter == tempLetter {
+            print("choosing another number!")
+            tempLetter = randomLetters(size: 1)
+        }
+        displayLetter = tempLetter
+        set_ETDRS(&LetterRow1, desired_acuity: acuityList[currentAcuityIndex], letterText: displayLetter)
     }
 
     func processTranscription() {
@@ -156,21 +160,21 @@ class Test: UIViewController {
         userResponses[trial] = transcriptTrial
         displayLetters[trial] = displayTrial
         acuityVisits[acuity, default: 0] += 1
-        
         // Assess input correctness
         let numCharCorrect = assessInput(inputSeq: displayLetters[trial]!, outputSeq: userResponses[trial]!)
         if numCharCorrect >= 3 { //if the user gets 3 or more letters correct
-            if acuityVisits[acuity]! >= 2 { //if user already visited that acuity twice
-                endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
-            }
-            else { //if they have not, can progress to next size
-                if currentAcuityIndex < 13 {
-                    currentAcuityIndex += 1
-                }
-                else{
-                    endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
-                }
-            }
+            endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
+//            if acuityVisits[acuity]! >= 2 { //if user already visited that acuity twice
+//                endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
+//            }
+//            else { //if they have not, can progress to next size
+//                if currentAcuityIndex < (acuityList.count-1) {
+//                    currentAcuityIndex += 1
+//                }
+//                else{
+//                    endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
+//                }
+//            }
         } else { //if user cannot get at least 3 letters
             if currentAcuityIndex <= 0 { //if you are at largest letter size
                 endTest(withAcuity: acuity, amtCorrect: numCharCorrect)
@@ -204,6 +208,7 @@ class Test: UIViewController {
         // Exit or navigate to the results screen
         let myAcuity = "20/" + String(Int(finalAcuityScore.rounded()))
         print(myAcuity)
+
 //        let storyboard = UIStoryboard(name: "Test", bundle: nil) // Replace "Main" with your storyboard name if different
 //            if let ResultScreen = storyboard.instantiateViewController(withIdentifier: "ResultScreen") as? ResultScreen {
 //                ResultScreen.finalAcuity = finalAcuityScore // Pass data if needed
@@ -224,71 +229,64 @@ class Test: UIViewController {
         // Return the final acuity score
         return finalAcuity
     }
-
-    
-    @IBAction func startIsPressed(_ sender: Any) {
-//        speechRecognizer.startTranscribing();
-    }
-    
-    @IBAction func stopIsPressed(_ sender: Any) {
-//        speechRecognizer.stopTranscribing()
-//        let transcriptString = speechRecognizer.transcript
-//        print("HELSKFNLAF", transcriptString)
-//            getCorrectLetter(transcription: transcriptString) { correctedLetter in
-//                DispatchQueue.main.async {
-//                    if let correctedLetter = correctedLetter {
-//                        print("Corrected Letter: \(correctedLetter)")
-//                        self.tempVoiceText.text = correctedLetter
-//                        gptTranscript = correctedLetter
-//
-//                    } else {
-//                        print("Failed to get corrected letter.")
-//                        self.tempVoiceText.text = "Error"
-//                    }
-//                }
-//            }
-//            speechRecognizer.resetTranscript()
-//            hasTranscript = true
-        }
     
     @IBAction func nextLineIsPressed(_ sender: Any) {
         counter += 1
         //take input
         //debugging
-        if let uinput = UserInput.text {
-                    // Optionally display the captured input in a label or do something with it
-                    gptTranscript = uinput.uppercased()
-                    // Perform any additional actions with the captured input here
-        }
-        transcriptTrial += gptTranscript // Accumulate transcript for trial
-        displayTrial += LetterRow1.text ?? ""
-//        speechRecognizer.stopTranscribing()
-//        transcriptString = speechRecognizer.transcript
-//        print("KJFNKJWF",transcriptString)
-//        getCorrectLetter(transcription: transcriptString) { correctedLetter in
-//            if let correctedLetter = correctedLetter {
-//                print("Corrected Letter: \(correctedLetter)")
-//                self.tempVoiceText.text = correctedLetter
-//                gptTranscript = correctedLetter
-//            } else {
-//                print("Failed to get corrected letter.")
-//                self.tempVoiceText.text = "Error"
-//            }
+//        if let uinput = UserInput.text {
+//                    // Optionally display the captured input in a label or do something with it
+//                    gptTranscript = uinput.uppercased()
+//                    // Perform any additional actions with the captured input here
 //        }
+    
+        // FOR SPEECH & GPT
+        displayTrial += LetterRow1.text ?? ""
+        speechRecognizer.stopTranscribing()
+        transcriptString = speechRecognizer.transcript
+        getCorrectLetter(transcription: transcriptString) { correctedLetter in
+            // Ensure UI updates happen on the main thread
+            DispatchQueue.main.async {
+                if let correctedLetter = correctedLetter {
+                    // Update gptTranscript with the corrected letter
+                    self.transcriptTrial += correctedLetter // Accumulate transcript for trial
+                    self.transcriptTrial += gptTranscript // Accumulate transcript for trial
+                    print("Correct letters so far:",self.displayTrial)
+                    print("Your letters so far:",self.transcriptTrial)
+                    if self.counter % 5 == 0 {
+                        self.processTranscription()
+                        self.counter = 0
+                    }
+                    print("Correct Letters across all trials:", self.displayLetters)
+                    print("Your responses across all trials:", self.userResponses)
+                    print("Number of acuity visits:", self.acuityVisits)
+                } else {
+                    print("Failed to get corrected letter.")
+                }
+                self.UserInput.text = ""
+                self.setNextLetter()
+                self.speechRecognizer.resetTranscript()
+                self.hasTranscript = true
+                self.speechRecognizer.startTranscribing()
+            }
+        }
+        // FOR DEBUGGING
+//        print("gptTranscript: ", gptTranscript)
+//        transcriptTrial += gptTranscript // Accumulate transcript for trial
+//        displayTrial += LetterRow1.text ?? ""
+//        print("Correct letters so far:",displayTrial)
+//        print("Your letters so far:",transcriptTrial)
+//        if counter % 5 == 0 {
+//            processTranscription()
+//            counter = 0
+//        }
+//        print("Correct Letters across all trials:",displayLetters)
+//        print("Your responses across all trials:",userResponses)
+//        print("Number of acuity visits:",acuityVisits)
+//        UserInput.text = ""
+//        setNextLetter()
 //        speechRecognizer.resetTranscript()
 //        hasTranscript = true
-        setNextLetter()
-        print("Correct letters so far:",displayTrial)
-        print("Your letters so far:",transcriptTrial)
-        if counter % 5 == 0 {
-            processTranscription()
-            counter = 0
-        }
-        print("Correct Letters across all trials:",displayLetters)
-        print("Your responses across all trials:",userResponses)
-        print("Number of acuity visits:",acuityVisits)
-        UserInput.text = ""
-        //start transcribing again
 //        speechRecognizer.startTranscribing()
-        }
     }
+}

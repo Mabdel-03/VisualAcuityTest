@@ -2,7 +2,7 @@ import Foundation
 import AVFoundation
 
 func getCorrectLetter(transcription: String, completion: @escaping (String?) -> Void) {
-    let apiKey = "sk-proj-BeUPea8G5QnWIqpukCp1T3BlbkFJJ6U0ZpanciCSZCe6V22c"
+    let apiKey = "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"
     let url = URL(string: "https://api.openai.com/v1/chat/completions")!
     
     var request = URLRequest(url: url)
@@ -10,7 +10,7 @@ func getCorrectLetter(transcription: String, completion: @escaping (String?) -> 
     request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     
-    let prompt = "Transcribe the following spoken word to the nearest corresponding single letter when spoken aloud: \(transcription), and respond with only the letter"
+    let prompt = "Transcribe the following spoken word to the nearest corresponding single letter when spoken aloud: \(transcription), and respond with only the letter. Some example conversions include 'aye' to 'A', 'see' to 'C', 'oh' to 'O', 'yes' to 'S', 'ok' to 'K', 'and' to 'N', 'Z' to 'Z', 'are' to 'R'. This is for an ETDRS visual acuity test, so limit conversions to only ETDRS letters."
     let parameters: [String: Any] = [
         "model": "gpt-4o",
         "messages": [["role": "user", "content": prompt]],

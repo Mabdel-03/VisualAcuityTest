@@ -179,7 +179,7 @@
                                 <rect key="frame" x="0.0" y="115" width="420" height="359"/>
                             </arscnView>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="SXd-GQ-EUg">
-                                <rect key="frame" x="119" y="528" width="156" height="35"/>
+                                <rect key="frame" x="62" y="521" width="268" height="51"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="filled" title="Capture Distance"/>
@@ -265,6 +265,18 @@
                                         <state key="normal" title="Button"/>
                                         <buttonConfiguration key="configuration" style="plain" title="B40"/>
                                     </button>
+                                    <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DLS-mU-aAC">
+                                        <rect key="frame" x="160" y="408" width="55" height="35"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="B20"/>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Biq-t8-65S">
+                                        <rect key="frame" x="161" y="408" width="53" height="35"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="B10"/>
+                                    </button>
                                 </subviews>
                                 <viewLayoutGuide key="safeArea" id="2Lq-I4-Y9V"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -301,22 +313,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6Be-mi-5Dh">
-                                <rect key="frame" x="126" y="647" width="139" height="35"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Rerecord(stop)"/>
-                                <connections>
-                                    <action selector="stopIsPressed:" destination="7pg-0Y-Jqf" eventType="touchUpInside" id="2tV-SC-jJE"/>
-                                </connections>
-                            </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Voice Transcription" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GC9-yi-3Bk">
-                                <rect key="frame" x="51" y="503" width="146" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" layoutMarginsFollowReadableWidth="YES" text="H" textAlignment="center" lineBreakMode="characterWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="360" translatesAutoresizingMaskIntoConstraints="NO" id="uoF-oU-MbC">
                                 <rect key="frame" x="106" y="403" width="181.00000000005377" height="47.000000000007049"/>
                                 <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="17"/>
@@ -324,23 +320,14 @@
                                 <nil key="highlightedColor"/>
                                 <lineBreakStrategy key="lineBreakStrategy"/>
                             </label>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HCS-9w-SYp">
-                                <rect key="frame" x="126" y="595" width="141" height="35"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Rerecord(start)"/>
-                                <connections>
-                                    <action selector="startIsPressed:" destination="7pg-0Y-Jqf" eventType="touchUpInside" id="UzJ-bC-GR9"/>
-                                </connections>
-                            </button>
-                            <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="User Input" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Nva-UO-px1">
-                                <rect key="frame" x="51" y="168" width="97" height="34"/>
+                            <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="User Input (debugging)" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Nva-UO-px1">
+                                <rect key="frame" x="51" y="168" width="179" height="34"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits"/>
                             </textField>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3rm-TL-NWZ">
-                                <rect key="frame" x="147" y="272" width="96" height="35"/>
+                                <rect key="frame" x="84" y="592" width="224" height="59"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="filled" title="Next Line"/>
@@ -360,7 +347,6 @@
                     <connections>
                         <outlet property="LetterRow1" destination="uoF-oU-MbC" id="nkS-j9-dCa"/>
                         <outlet property="UserInput" destination="Nva-UO-px1" id="5Lh-cZ-j7l"/>
-                        <outlet property="tempVoiceText" destination="GC9-yi-3Bk" id="Gd2-J1-vTz"/>
                         <segue destination="CRk-bY-9UF" kind="show" id="t2y-f6-v96"/>
                     </connections>
                 </viewController>
@@ -430,7 +416,7 @@
                                 <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="Zgg-gm-L5e">
-                                        <rect key="frame" x="0.0" y="0.0" width="393" height="1600"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="393" height="2000"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="b8R-Hp-Jzj">
                                                 <rect key="frame" x="0.0" y="0.0" width="393" height="200"/>
@@ -560,6 +546,37 @@
                                                     <segue destination="7pg-0Y-Jqf" kind="show" id="t5w-jH-VlN"/>
                                                 </connections>
                                             </button>
+                                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="PP0-V0-Z3J">
+                                                <rect key="frame" x="0.0" y="1600" width="393" height="200"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="200" id="6dj-i6-CER"/>
+                                                </constraints>
+                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
+                                                <color key="tintColor" systemColor="labelColor"/>
+                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                <state key="normal" title="E">
+                                                    <color key="titleColor" systemColor="labelColor"/>
+                                                </state>
+                                                <connections>
+                                                    <action selector="option9:" destination="yoH-g8-Akd" eventType="touchUpInside" id="7CI-3l-96M"/>
+                                                    <segue destination="7pg-0Y-Jqf" kind="show" id="CUF-23-2ev"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cgv-xa-pPB">
+                                                <rect key="frame" x="0.0" y="1800" width="393" height="200"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="200" id="WaG-vE-fwg"/>
+                                                </constraints>
+                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
+                                                <color key="tintColor" systemColor="labelColor"/>
+                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                <state key="normal" title="E">
+                                                    <color key="titleColor" systemColor="labelColor"/>
+                                                </state>
+                                                <connections>
+                                                    <action selector="option10:" destination="yoH-g8-Akd" eventType="touchUpInside" id="BQA-ck-Vnl"/>
+                                                </connections>
+                                            </button>
                                         </subviews>
                                         <constraints>
                                             <constraint firstAttribute="trailing" secondItem="b8R-Hp-Jzj" secondAttribute="trailing" id="Nr6-z8-Nr9"/>
@@ -589,9 +606,11 @@
                     </view>
                     <navigationItem key="navigationItem" id="Bd8-4p-3rn"/>
                     <connections>
+                        <outlet property="B10" destination="cgv-xa-pPB" id="HYm-ec-lW2"/>
                         <outlet property="B100" destination="ZQe-Ay-lCU" id="JkM-OX-FTI"/>
                         <outlet property="B125" destination="hft-Mq-dAO" id="TjV-ZD-SZ1"/>
                         <outlet property="B160" destination="BRf-c2-1wi" id="LHb-Ys-OGl"/>
+                        <outlet property="B20" destination="PP0-V0-Z3J" id="3RH-m2-ooq"/>
                         <outlet property="B200" destination="b8R-Hp-Jzj" id="AI7-t6-yts"/>
                         <outlet property="B40" destination="vwp-NZ-fXd" id="nVp-9M-m7l"/>
                         <outlet property="B50" destination="AXf-Fr-moD" id="GGL-0J-MiU"/>

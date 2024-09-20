@@ -20,6 +20,8 @@ class Select_Acuity: UIViewController {
     @IBOutlet weak var B63: UIButton!
     @IBOutlet weak var B50: UIButton!
     @IBOutlet weak var B40: UIButton!
+    @IBOutlet weak var B20: UIButton!
+    @IBOutlet weak var B10: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,6 +34,8 @@ class Select_Acuity: UIViewController {
         Button_ETDRS(B63, dAcuity: 63, letText: "E")
         Button_ETDRS(B50, dAcuity: 50, letText: "E")
         Button_ETDRS(B40, dAcuity: 40, letText: "E")
+        Button_ETDRS(B20, dAcuity: 20, letText: "E")
+        Button_ETDRS(B10, dAcuity: 10, letText: "E")
     }
     
     func Button_ETDRS(_ button: UIButton, dAcuity: Int, letText: String) {
@@ -71,5 +75,13 @@ class Select_Acuity: UIViewController {
 
     @IBAction func option8(_ sender: Any) {
         selectedAcuity = 40
+    }
+    
+    @IBAction func option9(_ sender: Any) {
+        selectedAcuity = 20
+    }
+    
+    @IBAction func option10(_ sender: Any) {
+        selectedAcuity = 10
     }
 }
