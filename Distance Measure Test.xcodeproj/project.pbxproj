@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		71836BF72ABAB580006CD4E3 /* ResultScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71836BF62ABAB580006CD4E3 /* ResultScreen.swift */; };
+		C0C987052CC9F141003EEEFF /* TumblingEViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */; };
+		C0C9870A2CC9F413003EEEFF /* ResultViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987092CC9F413003EEEFF /* ResultViewController.swift */; };
 		C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD6292A687790002A58BA /* AppDelegate.swift */; };
 		C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */; };
 		C0CDD6312A687790002A58BA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD62F2A687790002A58BA /* Main.storyboard */; };
@@ -29,6 +31,8 @@
 
 /* Begin PBXFileReference section */
 		71836BF62ABAB580006CD4E3 /* ResultScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScreen.swift; sourceTree = "<group>"; };
+		C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TumblingEViewController.swift; sourceTree = "<group>"; };
+		C0C987092CC9F413003EEEFF /* ResultViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultViewController.swift; sourceTree = "<group>"; };
 		C0CDD6262A687790002A58BA /* Distance Measure Test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Distance Measure Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0CDD6292A687790002A58BA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceOptimization.swift; sourceTree = "<group>"; };
@@ -81,6 +85,8 @@
 		C0CDD6282A687790002A58BA /* Distance Measure Test */ = {
 			isa = PBXGroup;
 			children = (
+				C0C987092CC9F413003EEEFF /* ResultViewController.swift */,
+				C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */,
 				D12072E82A9F132000B92792 /* art.scnassets */,
 				D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */,
 				D13E35242C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift */,
@@ -195,9 +201,11 @@
 				D13E35252C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift in Sources */,
 				C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */,
 				C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */,
+				C0C9870A2CC9F413003EEEFF /* ResultViewController.swift in Sources */,
 				C94D36EF2A81B91500CAD336 /* Test.swift in Sources */,
 				C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */,
 				71836BF72ABAB580006CD4E3 /* ResultScreen.swift in Sources */,
+				C0C987052CC9F141003EEEFF /* TumblingEViewController.swift in Sources */,
 				D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */,
 				C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */,
 				D12A74502A9EBB4E006F3D08 /* SpeechRecognizer.swift in Sources */,
@@ -347,7 +355,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = L4924K5F8S;
+				DEVELOPMENT_TEAM = HW8LWQ35S9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
@@ -380,7 +388,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = L4924K5F8S;
+				DEVELOPMENT_TEAM = HW8LWQ35S9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
