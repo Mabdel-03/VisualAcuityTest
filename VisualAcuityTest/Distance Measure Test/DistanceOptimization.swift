@@ -52,15 +52,15 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
             // Pause the view's session
             sceneView.session.pause()
         }
-        
-        @IBAction func captureDistance(_ sender: Any) {
-            let leftEyeDistance = leftEye.worldPosition.length()
-            let rightEyeDistance = rightEye.worldPosition.length()
-            let averageDistance = (leftEyeDistance + rightEyeDistance) / 2
-            averageDistanceCM = Double(100*averageDistance)
-            print("Distance: \(averageDistanceCM) cm")
-        }
-        
+//        
+    @IBAction func capDistance(_ sender: Any) {
+        let leftEyeDistance = leftEye.worldPosition.length()
+        let rightEyeDistance = rightEye.worldPosition.length()
+        let averageDistance = (leftEyeDistance + rightEyeDistance) / 2
+        averageDistanceCM = Double(100*averageDistance)
+        print("Distance: \(averageDistanceCM) cm")
+    }
+    
         func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
             faceNode = node
             faceNode.addChildNode(leftEye)
