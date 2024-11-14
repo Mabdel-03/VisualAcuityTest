@@ -2,7 +2,7 @@
 //import AVFoundation
 //
 //func getCorrectLetter(transcription: String, completion: @escaping (String?) -> Void) {
-//    let apiKey = MYAPIKEY
+//    let apiKey = "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"
 //    let url = URL(string: "https://api.openai.com/v1/chat/completions")!
 //
 //    var request = URLRequest(url: url)
