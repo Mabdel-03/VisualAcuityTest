@@ -66,9 +66,9 @@
 		C0CDD61D2A687790002A58BA = {
 			isa = PBXGroup;
 			children = (
-				D19933C22A955CCF0050CF92 /* optician-sans-font */,
 				C0CDD6282A687790002A58BA /* Distance Measure Test */,
 				C0CDD6272A687790002A58BA /* Products */,
+				D19933C22A955CCF0050CF92 /* optician-sans-font */,
 			);
 			sourceTree = "<group>";
 		};

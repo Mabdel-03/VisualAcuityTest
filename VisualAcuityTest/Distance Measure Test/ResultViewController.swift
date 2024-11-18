@@ -4,7 +4,7 @@ class ResultViewController: UIViewController {
     // MARK: - Properties
     var score: Int = 0
     var totalAttempts: Int = 0
-    
+    var logMARValue: Double = 0
     // MARK: - UI Elements
     private lazy var scoreLabel: UILabel = {
         let label = UILabel()
@@ -24,17 +24,17 @@ class ResultViewController: UIViewController {
         return label
     }()
     
-    private lazy var recommendationLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 24)
-        label.textAlignment = .center
-        label.textColor = UIColor.black
-        label.numberOfLines = 0
-        label.backgroundColor = UIColor.systemGray6
-        label.clipsToBounds = true
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
+//    private lazy var recommendationLabel: UILabel = {
+//        let label = UILabel()
+//        label.font = UIFont.systemFont(ofSize: 24)
+//        label.textAlignment = .center
+//        label.textColor = UIColor.black
+//        label.numberOfLines = 0
+//        label.backgroundColor = UIColor.systemGray6
+//        label.clipsToBounds = true
+//        label.translatesAutoresizingMaskIntoConstraints = false
+//        return label
+//    }()
     
 //    private lazy var doneButton: UIButton = {
 //        let button = UIButton(type: .system)
@@ -74,7 +74,7 @@ class ResultViewController: UIViewController {
         // Add subviews
         view.addSubview(scoreLabel)
         view.addSubview(acuityLabel)
-        view.addSubview(recommendationLabel)
+//        view.addSubview(recommendationLabel)
         
         // Setup constraints
         NSLayoutConstraint.activate([
@@ -90,47 +90,50 @@ class ResultViewController: UIViewController {
             scoreLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
             scoreLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
             
-            // Center horizontally
-               recommendationLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-               
-               // Place it below the score label
-               recommendationLabel.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 20),
-               
-               // Set flexible width constraints with some padding from the edges
-               recommendationLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
-               recommendationLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
-               
-               // Increase the height to allow more text
-               recommendationLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 150)
+//            // Center horizontally
+//               recommendationLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+//               
+//               // Place it below the score label
+//               recommendationLabel.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 20),
+//               
+//               // Set flexible width constraints with some padding from the edges
+//               recommendationLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
+//               recommendationLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
+//               
+//               // Increase the height to allow more text
+//               recommendationLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 150)
         ])
         
         // Calculate and display results
-        let percentage = (Double(score) / Double(totalAttempts)) * 100
-        scoreLabel.text = String(format: "Score: %d/%d (%.1f%%)", score, totalAttempts, percentage)
+//        let percentage = (Double(score) / Double(totalAttempts)) * 100
         
+        logMARValue = snellenToLogMAR(numerator: 20, denominator: finalAcuityScore)!
+        scoreLabel.text = String(format: "LogMAR Score: %.4f",logMARValue)
+
         // Display the final acuity score
-        acuityLabel.text = String(format: "Final Acuity: 20/%.0f", finalAcuityScore.rounded())
+        acuityLabel.text = String(format: "Snellen Final Acuity: 20/%.0f", finalAcuityScore.rounded())
         
-        // Display the recommendation
-        recommendationLabel.text = getRecommendation(acuity: finalAcuityScore)
+        
+//        // Display the recommendation
+//        recommendationLabel.text = getRecommendation(acuity: finalAcuityScore)
     }
 
 
     // MARK: - Private Methods
 
-    private func getRecommendation(acuity: Double) -> String {
-        switch acuity {
-        case 16..<40:
-            return "Your vision appears to be normal. Continue with regular eye check-ups."
-        case 40..<85:
-            return "Minor vision issues may be present. Consider scheduling an eye examination."
-        case 85..<150:
-            return "Moderate vision issues detected. We recommend consulting an eye care professional."
-        default:
-            return "Significant vision issues detected. Please schedule an appointment with an eye care professional as soon as possible."
-        }
-    }
-    
+//    private func getRecommendation(acuity: Double) -> String {
+//        switch acuity {
+//        case 16..<40:
+//            return "Your vision appears to be normal. Continue with regular eye check-ups."
+//        case 40..<85:
+//            return "Minor vision issues may be present. Consider scheduling an eye examination."
+//        case 85..<150:
+//            return "Moderate vision issues detected. We recommend consulting an eye care professional."
+//        default:
+//            return "Significant vision issues detected. Please schedule an appointment with an eye care professional as soon as possible."
+//        }
+//    }
+//    
     // MARK: - Actions
     @IBAction func redoTest(_ sender: Any) {
         navigationController?.popViewController(animated: true)
@@ -138,5 +141,15 @@ class ResultViewController: UIViewController {
     
     @IBAction func tapDone(_ sender: Any) {
         navigationController?.popToRootViewController(animated: true)
+    }
+    
+    func snellenToLogMAR(numerator: Double, denominator: Double) -> Double? {
+        guard denominator != 0 else {
+            print("Denominator cannot be zero.")
+            return nil
+        }
+        
+        let logMAR = log10(denominator / numerator)
+        return logMAR
     }
 }
