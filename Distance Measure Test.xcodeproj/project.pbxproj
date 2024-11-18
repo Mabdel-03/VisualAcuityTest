@@ -1,0 +1,456 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C0C987052CC9F141003EEEFF /* TumblingEViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */; };
+		C0C9870A2CC9F413003EEEFF /* ResultViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987092CC9F413003EEEFF /* ResultViewController.swift */; };
+		C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD6292A687790002A58BA /* AppDelegate.swift */; };
+		C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */; };
+		C0CDD6312A687790002A58BA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD62F2A687790002A58BA /* Main.storyboard */; };
+		C0CDD6332A687792002A58BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD6322A687792002A58BA /* Assets.xcassets */; };
+		C0CDD6362A687792002A58BA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */; };
+		C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EA2A81B87500CAD336 /* Main Menu.swift */; };
+		C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EC2A81B89300CAD336 /* Instructions.swift */; };
+		C94D36EF2A81B91500CAD336 /* Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EE2A81B91500CAD336 /* Test.swift */; };
+		D12072E62A9F12BA00B92792 /* texture.png in Resources */ = {isa = PBXBuildFile; fileRef = D12072E42A9F12BA00B92792 /* texture.png */; };
+		D12072E72A9F12BA00B92792 /* ship.scn in Resources */ = {isa = PBXBuildFile; fileRef = D12072E52A9F12BA00B92792 /* ship.scn */; };
+		D12072E92A9F132000B92792 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = D12072E82A9F132000B92792 /* art.scnassets */; };
+		D12A74502A9EBB4E006F3D08 /* SpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12A744F2A9EBB4E006F3D08 /* SpeechRecognizer.swift */; };
+		D13E35252C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13E35242C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift */; };
+		D13F546D2ACA7C2A00673C13 /* DevicePpi in Frameworks */ = {isa = PBXBuildFile; productRef = D13F546C2ACA7C2A00673C13 /* DevicePpi */; };
+		D19933C52A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf in Resources */ = {isa = PBXBuildFile; fileRef = D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */; };
+		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
+		D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TumblingEViewController.swift; sourceTree = "<group>"; };
+		C0C987092CC9F413003EEEFF /* ResultViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultViewController.swift; sourceTree = "<group>"; };
+		C0CDD6262A687790002A58BA /* Distance Measure Test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Distance Measure Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0CDD6292A687790002A58BA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceOptimization.swift; sourceTree = "<group>"; };
+		C0CDD6302A687790002A58BA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		C0CDD6322A687792002A58BA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C0CDD6352A687792002A58BA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		C94D36EA2A81B87500CAD336 /* Main Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Main Menu.swift"; sourceTree = "<group>"; };
+		C94D36EC2A81B89300CAD336 /* Instructions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instructions.swift; sourceTree = "<group>"; };
+		C94D36EE2A81B91500CAD336 /* Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Test.swift; sourceTree = "<group>"; };
+		D12072E42A9F12BA00B92792 /* texture.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = texture.png; path = art.scnassets/texture.png; sourceTree = "<group>"; };
+		D12072E52A9F12BA00B92792 /* ship.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = ship.scn; path = art.scnassets/ship.scn; sourceTree = "<group>"; };
+		D12072E82A9F132000B92792 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
+		D12A744F2A9EBB4E006F3D08 /* SpeechRecognizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpeechRecognizer.swift; sourceTree = "<group>"; };
+		D13E35242C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpenAI_API_CorrectLetters.swift; sourceTree = "<group>"; };
+		D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "OpticiansansRegular-0pnR.otf"; sourceTree = "<group>"; };
+		D19933C42A955CCF0050CF92 /* info.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = info.txt; sourceTree = "<group>"; };
+		D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Distance-Measure-Test-Info.plist"; sourceTree = SOURCE_ROOT; };
+		D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Select_Acuity.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C0CDD6232A687790002A58BA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D13F546D2ACA7C2A00673C13 /* DevicePpi in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C0CDD61D2A687790002A58BA = {
+			isa = PBXGroup;
+			children = (
+				C0CDD6282A687790002A58BA /* Distance Measure Test */,
+				C0CDD6272A687790002A58BA /* Products */,
+				D19933C22A955CCF0050CF92 /* optician-sans-font */,
+			);
+			sourceTree = "<group>";
+		};
+		C0CDD6272A687790002A58BA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C0CDD6262A687790002A58BA /* Distance Measure Test.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C0CDD6282A687790002A58BA /* Distance Measure Test */ = {
+			isa = PBXGroup;
+			children = (
+				C0CDD6292A687790002A58BA /* AppDelegate.swift */,
+				C94D36EA2A81B87500CAD336 /* Main Menu.swift */,
+				C94D36EC2A81B89300CAD336 /* Instructions.swift */,
+				C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */,
+				D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */,
+				C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */,
+				C0C987092CC9F413003EEEFF /* ResultViewController.swift */,
+				D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */,
+				C0CDD62F2A687790002A58BA /* Main.storyboard */,
+				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
+				C0CDD6322A687792002A58BA /* Assets.xcassets */,
+				D12A744F2A9EBB4E006F3D08 /* SpeechRecognizer.swift */,
+				D13E35242C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift */,
+				C94D36EE2A81B91500CAD336 /* Test.swift */,
+				D12072E82A9F132000B92792 /* art.scnassets */,
+				D12072E52A9F12BA00B92792 /* ship.scn */,
+				D12072E42A9F12BA00B92792 /* texture.png */,
+			);
+			path = "Distance Measure Test";
+			sourceTree = "<group>";
+		};
+		D19933C22A955CCF0050CF92 /* optician-sans-font */ = {
+			isa = PBXGroup;
+			children = (
+				D19933C32A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf */,
+				D19933C42A955CCF0050CF92 /* info.txt */,
+			);
+			path = "optician-sans-font";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C0CDD6252A687790002A58BA /* Distance Measure Test */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C0CDD6392A687792002A58BA /* Build configuration list for PBXNativeTarget "Distance Measure Test" */;
+			buildPhases = (
+				C0CDD6222A687790002A58BA /* Sources */,
+				C0CDD6232A687790002A58BA /* Frameworks */,
+				C0CDD6242A687790002A58BA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Distance Measure Test";
+			packageProductDependencies = (
+				D13F546C2ACA7C2A00673C13 /* DevicePpi */,
+			);
+			productName = "Distance Measure Test";
+			productReference = C0CDD6262A687790002A58BA /* Distance Measure Test.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C0CDD61E2A687790002A58BA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1430;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					C0CDD6252A687790002A58BA = {
+						CreatedOnToolsVersion = 14.3.1;
+					};
+				};
+			};
+			buildConfigurationList = C0CDD6212A687790002A58BA /* Build configuration list for PBXProject "Distance Measure Test" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = C0CDD61D2A687790002A58BA;
+			packageReferences = (
+				D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */,
+			);
+			productRefGroup = C0CDD6272A687790002A58BA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C0CDD6252A687790002A58BA /* Distance Measure Test */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C0CDD6242A687790002A58BA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D12072E62A9F12BA00B92792 /* texture.png in Resources */,
+				D12072E92A9F132000B92792 /* art.scnassets in Resources */,
+				C0CDD6362A687792002A58BA /* LaunchScreen.storyboard in Resources */,
+				C0CDD6332A687792002A58BA /* Assets.xcassets in Resources */,
+				C0CDD6312A687790002A58BA /* Main.storyboard in Resources */,
+				D19933C62A955CCF0050CF92 /* info.txt in Resources */,
+				D12072E72A9F12BA00B92792 /* ship.scn in Resources */,
+				D19933C52A955CCF0050CF92 /* OpticiansansRegular-0pnR.otf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C0CDD6222A687790002A58BA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D13E35252C49B0B90070F979 /* OpenAI_API_CorrectLetters.swift in Sources */,
+				C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */,
+				C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */,
+				C0C9870A2CC9F413003EEEFF /* ResultViewController.swift in Sources */,
+				C94D36EF2A81B91500CAD336 /* Test.swift in Sources */,
+				C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */,
+				C0C987052CC9F141003EEEFF /* TumblingEViewController.swift in Sources */,
+				D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */,
+				C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */,
+				D12A74502A9EBB4E006F3D08 /* SpeechRecognizer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		C0CDD62F2A687790002A58BA /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C0CDD6302A687790002A58BA /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C0CDD6352A687792002A58BA /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		C0CDD6372A687792002A58BA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		C0CDD6382A687792002A58BA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C0CDD63A2A687792002A58BA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L4924K5F8S;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is recorded to transcribe the meeting. Audio recordings are discarded after transcription.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "You can view a text transcription of your meeting in the app.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.maggie.Distance-Measure-Test";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C0CDD63B2A687792002A58BA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L4924K5F8S;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is recorded to transcribe the meeting. Audio recordings are discarded after transcription.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "You can view a text transcription of your meeting in the app.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
+				INFOPLIST_KEY_UIStatusBarHidden = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.maggie.Distance-Measure-Test";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C0CDD6212A687790002A58BA /* Build configuration list for PBXProject "Distance Measure Test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0CDD6372A687792002A58BA /* Debug */,
+				C0CDD6382A687792002A58BA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C0CDD6392A687792002A58BA /* Build configuration list for PBXNativeTarget "Distance Measure Test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0CDD63A2A687792002A58BA /* Debug */,
+				C0CDD63B2A687792002A58BA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Clafou/DevicePpi";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D13F546C2ACA7C2A00673C13 /* DevicePpi */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */;
+			productName = DevicePpi;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = C0CDD61E2A687790002A58BA /* Project object */;
+}
