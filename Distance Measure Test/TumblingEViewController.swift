@@ -1,5 +1,9 @@
 import UIKit
+<<<<<<< HEAD
 var finalAcuityScore = -Double.infinity
+=======
+var finalAcuityScore = 0.0
+>>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
 class TumblingEViewController: UIViewController {
     let acuityList = [200, 160, 125, 100, 80, 63, 50, 40, 32, 20, 16]
     var currentAcuityIndex = 0
@@ -7,6 +11,7 @@ class TumblingEViewController: UIViewController {
     var correctAnswersInSet = 0 // Number of correct answers in current set of 10 letters
     var correctAnswersAcrossAcuityLevels: [Int: Int] = [:]
     var counter = 0
+<<<<<<< HEAD
     var SKIP = 5
     var MAX_CORRECT = 10
     
@@ -38,6 +43,9 @@ class TumblingEViewController: UIViewController {
     ]
     
     // var consecutiveCorrect = 0
+=======
+    var consecutiveCorrect = 0
+>>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
     
     // MARK: - UI Elements
     private lazy var letterLabel: UILabel = {
@@ -97,7 +105,11 @@ class TumblingEViewController: UIViewController {
     // MARK: - Setup Methods
     private func setupUI() {
         print("TumblingEViewController - setupUI started")
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
         // Add subviews
         view.addSubview(letterLabel)
         view.addSubview(scoreLabel)
@@ -138,10 +150,17 @@ class TumblingEViewController: UIViewController {
             isCorrect = 1
             score += 1
             correctAnswersInSet += 1 // Track correct answers in the current set of 10
+<<<<<<< HEAD
             // consecutiveCorrect += 1
         default:
             isCorrect = 0
             // consecutiveCorrect = 0
+=======
+            consecutiveCorrect += 1
+        default:
+            isCorrect = 0
+            consecutiveCorrect = 0
+>>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
         }
         
         totalAttempts += 1
@@ -158,6 +177,7 @@ class TumblingEViewController: UIViewController {
     }
     
     private func processNextTrial() {
+<<<<<<< HEAD
         print("trial:", trial, "correctAnswersInSet:",correctAnswersInSet)
         let acuity = acuityList[currentAcuityIndex]
         correctAnswersAcrossAcuityLevels[acuity] = correctAnswersInSet
@@ -174,6 +194,22 @@ class TumblingEViewController: UIViewController {
                 endTest(withAcuity: acuity, amtCorrect: correctAnswersInSet)
                 return
             }
+=======
+        print("CC:",consecutiveCorrect)
+        let acuity = acuityList[currentAcuityIndex]
+        correctAnswersAcrossAcuityLevels[acuity] = correctAnswersInSet
+        print("correctAnswersAcrossAcuityLevels:", correctAnswersAcrossAcuityLevels)
+        // Check if trial count has reached 10 or if the user has 6 consecutive correct answers
+        if trial > 10 || consecutiveCorrect >= 6 {
+            if currentAcuityIndex == acuityList.count - 1 { // Successfully completed the smallest size
+                print("You have 20/16 vision!")
+                print("acuityList[currentAcuityIndex]:", acuityList[currentAcuityIndex])
+                print("Proceeding to results page.")
+                endTest(withAcuity: acuity, amtCorrect: correctAnswersInSet)
+                return
+            }
+            
+>>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
             if correctAnswersInSet < 6 { // If the user cannot get at least 6 letters correct
                 if currentAcuityIndex <= 0 { // At largest letter size
                     print("You are BLIND! We cannot assess you.")
@@ -182,7 +218,11 @@ class TumblingEViewController: UIViewController {
                     let previousAcuity = acuityList[currentAcuityIndex - 1]
                     if correctAnswersAcrossAcuityLevels[previousAcuity] != nil {
                         print("HI")
+<<<<<<< HEAD
                         endTest(withAcuity: acuity, amtCorrect: correctAnswersInSet)
+=======
+                        endTest(withAcuity: previousAcuity, amtCorrect: correctAnswersAcrossAcuityLevels[previousAcuity] ?? 0)
+>>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
                     } else {
                         print("Going back to larger acuity...")
                         currentAcuityIndex -= 1
@@ -192,7 +232,12 @@ class TumblingEViewController: UIViewController {
             } else { // User gets at least 6 letters correct, advance to next level
                 let nextAcuity = acuityList[currentAcuityIndex + 1]
                 if correctAnswersAcrossAcuityLevels[nextAcuity] != nil {
+<<<<<<< HEAD
                     endTest(withAcuity: nextAcuity, amtCorrect: correctAnswersAcrossAcuityLevels[nextAcuity]!)
+=======
+                    print("HO")
+                    endTest(withAcuity: acuity, amtCorrect: correctAnswersInSet)
+>>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
                 } else {
                     print("Advancing to smaller acuity...")
                     currentAcuityIndex += 1
@@ -203,11 +248,19 @@ class TumblingEViewController: UIViewController {
             // Reset trial counter and correct answers count
             trial = 1
             correctAnswersInSet = 0
+<<<<<<< HEAD
+=======
+            consecutiveCorrect = 0 // Reset consecutive correct count after advancing or stepping back
+>>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
         }
         
         generateNewE() // Generate the next letter with updated size or same size
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
     
     private func updateScore() {
         scoreLabel.text = "Score: \(score)/\(totalAttempts)"
@@ -249,6 +302,7 @@ class TumblingEViewController: UIViewController {
         }
         
         return nil
+<<<<<<< HEAD
     }
     
     func getIndex(numList: [Int], value: Int) -> Int {
@@ -272,5 +326,39 @@ class TumblingEViewController: UIViewController {
         
         // Navigate to the results screen
         performSegue(withIdentifier: "ShowResults", sender: self)
+=======
+>>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
     }
+    
+    func getIndex(numList: [Int], value: Int) -> Int {
+        for (index, val) in numList.enumerated() {
+            if val == value {
+                return index
+            }
+        }
+        return -1
+    }
+    
+    func endTest(withAcuity finishAcuity: Int, amtCorrect: Int, totalLetters: Int = 10) {
+        print("You have an acuity of", finishAcuity, "with", amtCorrect, "letters correct out of 10.")
+        
+        // Calculate the final acuity score
+        finalAcuityScore = Double(finishAcuity)
+        
+        // Pass this score to the results page via the prepare method
+        print("Test completed with final acuity level: \(finalAcuityScore)")
+        
+        // Navigate to the results screen
+        performSegue(withIdentifier: "ShowResults", sender: self)
+    }
+
+//    func computeFinalAcuity(correctLetters: Int, totalLetters: Int, acuity: Int) -> Double {
+//        // Ensure the number of correct letters is between 0 and total letters
+//        guard correctLetters >= 0 && correctLetters <= totalLetters else { return Double(acuity) }
+//        // Calculate the final acuity score
+//        let finalAcuity = Double(acuity) + Double(correctLetters) / Double(totalLetters)
+//        
+//        // Return the final acuity score
+//        return finalAcuity
+//    }
 }
