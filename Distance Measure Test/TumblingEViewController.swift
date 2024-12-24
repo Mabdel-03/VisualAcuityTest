@@ -97,7 +97,6 @@ class TumblingEViewController: UIViewController {
     // MARK: - Setup Methods
     private func setupUI() {
         print("TumblingEViewController - setupUI started")
-        
         // Add subviews
         view.addSubview(letterLabel)
         view.addSubview(scoreLabel)
@@ -199,15 +198,12 @@ class TumblingEViewController: UIViewController {
                     set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: "E") // Update the letter size
                 }
             }
-            
             // Reset trial counter and correct answers count
             trial = 1
             correctAnswersInSet = 0
         }
-        
         generateNewE() // Generate the next letter with updated size or same size
     }
-    
     
     private func updateScore() {
         scoreLabel.text = "Score: \(score)/\(totalAttempts)"
