@@ -5,10 +5,7 @@ class ResultViewController: UIViewController {
     var score: Int = 0
     var totalAttempts: Int = 0
     var logMARValue: Double = 0
-<<<<<<< HEAD
     var snellenValue: Double = 0
-=======
->>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
     // MARK: - UI Elements
     private lazy var scoreLabel: UILabel = {
         let label = UILabel()
@@ -111,20 +108,12 @@ class ResultViewController: UIViewController {
         // Calculate and display results
 //        let percentage = (Double(score) / Double(totalAttempts)) * 100
         
-<<<<<<< HEAD
         logMARValue = finalAcuityScore
         snellenValue = 20 * pow(10, logMARValue)
         scoreLabel.text = String(format: "LogMAR Score: %.4f",logMARValue)
 
         // Display the final acuity score
         acuityLabel.text = String(format: "Snellen Score: 20/%.0f", snellenValue)
-=======
-        logMARValue = snellenToLogMAR(numerator: 20, denominator: finalAcuityScore)!
-        scoreLabel.text = String(format: "LogMAR Score: %.4f",logMARValue)
-
-        // Display the final acuity score
-        acuityLabel.text = String(format: "Snellen Final Acuity: 20/%.0f", finalAcuityScore.rounded())
->>>>>>> 2ff94d5379398993f1695c091d21fa4c2d345169
         
         
 //        // Display the recommendation
@@ -154,15 +143,5 @@ class ResultViewController: UIViewController {
     
     @IBAction func tapDone(_ sender: Any) {
         navigationController?.popToRootViewController(animated: true)
-    }
-    
-    func snellenToLogMAR(numerator: Double, denominator: Double) -> Double? {
-        guard denominator != 0 else {
-            print("Denominator cannot be zero.")
-            return nil
-        }
-        
-        let logMAR = log10(denominator / numerator)
-        return logMAR
     }
 }
