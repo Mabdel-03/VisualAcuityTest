@@ -1,7 +1,7 @@
 # COOL Lab Near Distance Visual Acuity Test App
 
 ## About
-This Github repository houses the code underlying our near distance visual acuity test app. Its contents were developed by Mahmoud Abdelmoneum, Maggie Bao, and Anderson Men at the COOL Lab with the support of Dr. David Huang and Dr. Hiroshi Ishikawa. This ReadME is intended to serve as high level documentation for the different components of our codebase. Please see the individual files for the thoroughly annotated code. Please reach out to Mahmoud Abdelmoneum (mabdel03@mit.edu) if you have any questions or concerns regarding the code. All development thus far has been in Swift, but we as we gear up to release the app on the appstore we will build a RESTful API using Django or Flaks to handle logins as well as a database system for storing user information using a MongoDB.
+This Github repository houses the code underlying our near distance visual acuity test app. Its contents were developed by Mahmoud Abdelmoneum, Maggie Bao, and Anderson Men at the COOL Lab with the support of Dr. David Huang and Dr. Hiroshi Ishikawa. This ReadME is intended to serve as high level documentation for the different components of our codebase. Please see the individual files for the thoroughly annotated code. Please reach out to Mahmoud Abdelmoneum (mabdel03@mit.edu) or Maggie Bao (mbao202@mit.edu) if you have any questions or concerns regarding the code. All development thus far has been in Swift, but we as we gear up to release the app on the appstore we will build a RESTful API using Django or Flaks to handle logins as well as a database system for storing user information using a MongoDB.
 
 ## Codebase Overview
 The .swift files housing the majority of the app's code can be found in the /Distance Measure Test directory, but here we will list out the directories of this project and what they correspond to.
@@ -135,7 +135,7 @@ The `Instructions.swift` file is responsible for displaying the **instructions s
 
 #### Key Details:
 - **Created by:** Anderson Men on August 7, 2023.
-- **Edited by:** Maggie Bao on August 20, 2023.
+- **Modified by:** Maggie Bao on August 20, 2023.
 
 This file is critical to onboarding users and ensuring they understand the necessary steps to perform the ETDRS Visual Acuity Test correctly.
 
@@ -235,7 +235,7 @@ The `ResultViewController.swift` file is responsible for displaying the **result
 - **Snellen Final Acuity:** `20/40`
 
 #### Key Details:
-- **Created by:** Anderson Men on August 7, 2023.
+- **Created by:** Maggie Bao on August 30, 2023.
 - **Purpose:** Displays test results and facilitates user actions like retrying the test or returning to the main menu.
 
 This file is a critical component for delivering a user-friendly summary of test results, while also providing a framework for potential extensions like vision recommendations.
@@ -379,7 +379,7 @@ The `Test.swift` file defines the **test screen** for the app, where the actual 
 
 #### Key Details:
 - **Created by:** Anderson Men on August 7, 2023.
-- **Edited by:** Maggie Bao on August 21, 2023; August 27, 2023; September 10, 2023; September 30, 2023.
+- **Modified by:** Maggie Bao on August 21, 2023; August 27, 2023; September 10, 2023; September 30, 2023.
 - **Purpose:** Implements the core functionality of the ETDRS visual acuity test, ensuring dynamic scaling, user performance tracking, and result calculation.
 
 This file is critical for conducting accurate visual acuity tests and determining user vision levels based on ETDRS standards.
@@ -448,8 +448,7 @@ The `TumblingEViewController.swift` file implements the **Tumbling E visual acui
 - **`endTest`**: Finalizes the test and navigates to the results screen.
 
 #### Key Details:
-- **Created by:** Anderson Men on August 7, 2023.
-- **Edited by:** Maggie Bao on September 10, 2023.
+- **Created by:** Maggie Bao on September 10, 2023.
 - **Purpose:** Implements the interactive Tumbling E test to assess visual acuity dynamically.
 
 This file is essential for conducting accurate, interactive visual acuity tests based on the Tumbling E standard.
