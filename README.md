@@ -1,4 +1,4 @@
-# COOL Lab Near Distance Visual Acuity Test App
+# OHSU COOL Lab Near Distance Visual Acuity Test App
 
 ## About
 This Github repository houses the code underlying our near distance visual acuity test app. Its contents were developed by Mahmoud Abdelmoneum, Maggie Bao, and Anderson Men at the COOL Lab with the support of Dr. David Huang and Dr. Hiroshi Ishikawa. This ReadME is intended to serve as high level documentation for the different components of our codebase. Please see the individual files for the thoroughly annotated code. Please reach out to Mahmoud Abdelmoneum (mabdel03@mit.edu) or Maggie Bao (mbao202@mit.edu) if you have any questions or concerns regarding the code. All development thus far has been in Swift, but we as we gear up to release the app on the appstore we will build a RESTful API using Django or Flaks to handle logins as well as a database system for storing user information using a MongoDB.
