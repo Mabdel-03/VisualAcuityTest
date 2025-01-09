@@ -246,9 +246,9 @@ class TumblingEViewController: UIViewController {
     // MARK: - Public Methods
     // Function to set the size of the LETTER based on visual acuity
     func set_Size_E(_ oneLetter: UILabel?, desired_acuity: Int, letterText: String?) -> String? {
-        let visual_angle = tan(((Double(desired_acuity) / 20) * 5.0) / 60 * Double.pi / 180)
+        let visual_angle = ((Double(desired_acuity) / 20) * 5.0) / 60 * Double.pi / 180
         let scaling_correction_factor = 1 / 2.54  // Conversion to cm
-        let scale_factor = 2 * Double(averageDistanceCM) * visual_angle * scaling_correction_factor
+        let scale_factor = Double(averageDistanceCM) * visual_angle * scaling_correction_factor
         
         if let nonNilLetterText = letterText, let oneLetter = oneLetter {
             oneLetter.text = nonNilLetterText
