@@ -7,7 +7,7 @@
 
 import UIKit
 
-
+let LETTER = "C"
 var selectedAcuity: Int?
 
 class Select_Acuity: UIViewController {
@@ -26,16 +26,16 @@ class Select_Acuity: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         print(averageDistanceCM)
-        Button_ETDRS(B200, dAcuity: 200, letText: "E")
-        Button_ETDRS(B160, dAcuity: 160, letText: "E")
-        Button_ETDRS(B125, dAcuity: 125, letText: "E")
-        Button_ETDRS(B100, dAcuity: 100, letText: "E")
-        Button_ETDRS(B80, dAcuity: 80, letText: "E")
-        Button_ETDRS(B63, dAcuity: 63, letText: "E")
-        Button_ETDRS(B50, dAcuity: 50, letText: "E")
-        Button_ETDRS(B40, dAcuity: 40, letText: "E")
-        Button_ETDRS(B20, dAcuity: 32, letText: "E")
-        Button_ETDRS(B10, dAcuity: 20, letText: "E")
+        Button_ETDRS(B200, dAcuity: 200, letText: LETTER)
+        Button_ETDRS(B160, dAcuity: 160, letText: LETTER)
+        Button_ETDRS(B125, dAcuity: 125, letText: LETTER)
+        Button_ETDRS(B100, dAcuity: 100, letText: LETTER)
+        Button_ETDRS(B80, dAcuity: 80, letText: LETTER)
+        Button_ETDRS(B63, dAcuity: 63, letText: LETTER)
+        Button_ETDRS(B50, dAcuity: 50, letText: LETTER)
+        Button_ETDRS(B40, dAcuity: 40, letText: LETTER)
+        Button_ETDRS(B20, dAcuity: 32, letText: LETTER)
+        Button_ETDRS(B10, dAcuity: 20, letText: LETTER)
     }
     
     func Button_ETDRS(_ button: UIButton, dAcuity: Int, letText: String) {
@@ -44,8 +44,8 @@ class Select_Acuity: UIViewController {
         let scale_factor = 2 * Double(averageDistanceCM) * visual_angle * scaling_correction_factor
         let buttonHeight = scale_factor * Double(ppi)
         let fontSize = 2 / 3 * buttonHeight // Using the same ratio as set_ETDRS
-        //button.setTitle(letText, for: .normal)
-        button.titleLabel?.font = UIFont(name: "OpticianSans-Regular", size: CGFloat(fontSize))
+        button.setTitle(letText, for: .normal)
+        button.titleLabel?.font = UIFont(name: "Sloan", size: CGFloat(fontSize))
         button.frame.size = CGSize(width: buttonHeight * 6, height: buttonHeight) // Assuming button width should be 6 times the height
     }
 

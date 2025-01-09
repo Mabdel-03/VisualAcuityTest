@@ -1,2 +1,5 @@
-﻿license: Creative Commons (by-nc-nd) Attribution Non-commercial No Derivatives 
-link: https://www.fontspace.com/optician-sans-font-f31382
+"Pelli" and Sloan fonts by Denis G. Pelli are licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+
+The “Pelli” and Sloan fonts are available for noncommercial research from GitHub: https://github.com/denispelli/Eye-Chart-Fonts.git
+
+The Pelli and Sloan fonts are intended for vision testing.

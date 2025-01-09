@@ -1,4 +1,22 @@
+//
+//  TumblingEViewController.swift
+//  Distance Measure Test
+//
+//  Created by Maggie Bao on 7/23/24.
+//
+
 import UIKit
+import DevicePpi
+
+let ppi: Double = {
+    switch Ppi.get() {
+    case .success(let ppi):
+        return ppi
+    case .unknown(let bestGuessPpi, _):
+        return bestGuessPpi
+    }
+}()
+
 var finalAcuityScore = -Double.infinity
 class TumblingEViewController: UIViewController {
     let acuityList = [200, 160, 125, 100, 80, 63, 50, 40, 32, 20, 16]
@@ -42,8 +60,8 @@ class TumblingEViewController: UIViewController {
     // MARK: - UI Elements
     private lazy var letterLabel: UILabel = {
         let label = UILabel()
-        label.text = "E"
-        label.font = UIFont(name: "OpticianSans-Regular", size: 100)
+        label.text = LETTER
+        label.font = UIFont(name: "Sloan", size: 100)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -88,7 +106,7 @@ class TumblingEViewController: UIViewController {
             print("Selected acuity is nil.")
         }
         // Set the size of the letter for the current acuity
-        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: "E")
+        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER)
         view.layoutIfNeeded()
         setupGestureRecognizers()
         generateNewE()
@@ -185,7 +203,7 @@ class TumblingEViewController: UIViewController {
                     } else {
                         print("Going back to larger acuity...")
                         currentAcuityIndex -= 1
-                        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: "E") // Update the letter size
+                        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER) // Update the letter size
                     }
                 }
             } else { // User gets at least 6 letters correct, advance to next level
@@ -195,7 +213,7 @@ class TumblingEViewController: UIViewController {
                 } else {
                     print("Advancing to smaller acuity...")
                     currentAcuityIndex += 1
-                    set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: "E") // Update the letter size
+                    set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER) // Update the letter size
                 }
             }
             // Reset trial counter and correct answers count
@@ -226,7 +244,7 @@ class TumblingEViewController: UIViewController {
     }
     
     // MARK: - Public Methods
-    // Function to set the size of the "E" based on visual acuity
+    // Function to set the size of the LETTER based on visual acuity
     func set_Size_E(_ oneLetter: UILabel?, desired_acuity: Int, letterText: String?) -> String? {
         let visual_angle = tan(((Double(desired_acuity) / 20) * 5.0) / 60 * Double.pi / 180)
         let scaling_correction_factor = 1 / 2.54  // Conversion to cm

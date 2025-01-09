@@ -1,5 +1,6 @@
 import UIKit
-
+var finalAcuityDictionary: [Int: String] = [:] // Dictionary to store final acuity values
+var trialNumber: Int = 1
 class ResultViewController: UIViewController {
     // MARK: - Properties
     var score: Int = 0
@@ -142,6 +143,11 @@ class ResultViewController: UIViewController {
     }
     
     @IBAction func tapDone(_ sender: Any) {
+        // Store the final acuity score in the dictionary
+                finalAcuityDictionary[trialNumber] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+        print(finalAcuityDictionary)
+        // Increment trial number for the next test
+        trialNumber += 1
         navigationController?.popToRootViewController(animated: true)
     }
 }
