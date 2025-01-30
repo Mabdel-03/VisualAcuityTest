@@ -78,7 +78,7 @@ class TumblingEViewController: UIViewController {
     
     private lazy var instructionLabel: UILabel = {
         let label = UILabel()
-        label.text = "Please swipe in the direction the E is pointing."
+        label.text = "Please swipe in the direction the C is pointing."
         label.font = UIFont.systemFont(ofSize: 27, weight: .medium)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -188,18 +188,17 @@ class TumblingEViewController: UIViewController {
                 correctAnswersInSet = MAX_CORRECT
             }
             if currentAcuityIndex == acuityList.count - 1 { // Successfully completed the smallest size
-                endTest(withAcuity: acuity, amtCorrect: correctAnswersInSet)
+                calculateScore(finishAcuity1: acuity, amtCorrect1: correctAnswersAcrossAcuityLevels[acuity] ?? 0, finishAcuity2: acuityList[currentAcuityIndex-1], amtCorrect2: correctAnswersAcrossAcuityLevels[acuityList[currentAcuityIndex-1]] ?? 0)
                 return
             }
             if correctAnswersInSet < 6 { // If the user cannot get at least 6 letters correct
                 if currentAcuityIndex <= 0 { // At largest letter size
                     print("You are BLIND! We cannot assess you.")
-                    endTest(withAcuity: acuity, amtCorrect: correctAnswersInSet)
+                    calculateScore(finishAcuity1: acuityList[currentAcuityIndex+1], amtCorrect1: correctAnswersAcrossAcuityLevels[acuityList[currentAcuityIndex+1]] ?? 0, finishAcuity2: acuity, amtCorrect2: correctAnswersAcrossAcuityLevels[acuity] ?? 0)
                 } else { // Move back to previous acuity if incorrect
-                    let previousAcuity = acuityList[currentAcuityIndex - 1]
+                    let previousAcuity = acuityList[currentAcuityIndex-1]
                     if correctAnswersAcrossAcuityLevels[previousAcuity] != nil {
-                        print("HI")
-                        endTest(withAcuity: acuity, amtCorrect: correctAnswersInSet)
+                        calculateScore(finishAcuity1: acuity, amtCorrect1: correctAnswersInSet, finishAcuity2: previousAcuity, amtCorrect2: correctAnswersAcrossAcuityLevels[previousAcuity] ?? 0)
                     } else {
                         print("Going back to larger acuity...")
                         currentAcuityIndex -= 1
@@ -207,9 +206,9 @@ class TumblingEViewController: UIViewController {
                     }
                 }
             } else { // User gets at least 6 letters correct, advance to next level
-                let nextAcuity = acuityList[currentAcuityIndex + 1]
+                let nextAcuity = acuityList[currentAcuityIndex+1]
                 if correctAnswersAcrossAcuityLevels[nextAcuity] != nil {
-                    endTest(withAcuity: nextAcuity, amtCorrect: correctAnswersAcrossAcuityLevels[nextAcuity]!)
+                    calculateScore(finishAcuity1: nextAcuity, amtCorrect1: correctAnswersAcrossAcuityLevels[nextAcuity] ?? 0, finishAcuity2: acuity, amtCorrect2: correctAnswersInSet)
                 } else {
                     print("Advancing to smaller acuity...")
                     currentAcuityIndex += 1
@@ -274,17 +273,19 @@ class TumblingEViewController: UIViewController {
         return -1
     }
     
-    func endTest(withAcuity finishAcuity: Int, amtCorrect: Int, totalLetters: Int = 10) {
-        let amtWrongCurrent = (10.0-Double(amtCorrect))
-        //let amtWrongNext = 10.0 - Double(correctAnswersAcrossAcuityLevels[acuityList[currentAcuityIndex-1]]!)
-        print("You have an acuity of", finishAcuity, "with", amtWrongCurrent, "letters wrong on that line.")
-        //print("In the next acuity, you have an acuity of", acuityList[currentAcuityIndex+1], "with", amtWrongNext, "letters wrong on that line.")
-        finalAcuityScore = usFootToLogMAR[finishAcuity]!
-        finalAcuityScore += amtWrongCurrent / 100.0
+    func calculateScore(finishAcuity1: Int, amtCorrect1: Int, finishAcuity2: Int, amtCorrect2: Int,totalLetters: Int = 10) {
+        print("finishAcuity1", finishAcuity1)
+        let amtWrongCurrent1 = Double(totalLetters - amtCorrect1)
+        let amtWrongCurrent2 = Double(totalLetters - amtCorrect2)
+        print("You have an acuity of", finishAcuity1, "with", amtWrongCurrent1, "letters wrong on that line.")
+        print("You have an acuity of", finishAcuity2, "with", amtWrongCurrent2, "letters wrong on that line.")
+        var acuityScore = usFootToLogMAR[finishAcuity1] ?? 0.0
+        acuityScore += amtWrongCurrent1 / 100.0
+        acuityScore += amtWrongCurrent2 / 100.0
         // Pass this score to the results page via the prepare method
-        print("Test completed with final acuity level: \(finalAcuityScore)")
-        
+        print("Test completed with final acuity level: \(acuityScore)")
         // Navigate to the results screen
+        finalAcuityScore = acuityScore
         performSegue(withIdentifier: "ShowResults", sender: self)
     }
 }

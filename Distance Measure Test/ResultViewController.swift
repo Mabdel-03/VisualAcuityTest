@@ -111,7 +111,7 @@ class ResultViewController: UIViewController {
         
         logMARValue = finalAcuityScore
         snellenValue = 20 * pow(10, logMARValue)
-        scoreLabel.text = String(format: "LogMAR Score: %.4f",logMARValue)
+        scoreLabel.text = String(format: "LogMAR Score: %.4f",finalAcuityScore)
 
         // Display the final acuity score
         acuityLabel.text = String(format: "Snellen Score: 20/%.0f", snellenValue)
