@@ -48,13 +48,19 @@ func randomLetters(size: Int) -> String {
 }
 
 func set_ETDRS(_ oneLetter: inout UILabel!, desired_acuity: Int, letterText: String?) -> String? {
-    let visual_angle = tan(((Double(desired_acuity / 20) * 5.0) / 60) * Double.pi / 180)
-    let scaling_correction_factor = 1 / 2.54  //Conversion to cm
-    let scale_factor = 2 * Double(averageDistanceCM) * visual_angle * scaling_correction_factor
+    // Standard ETDRS calculation: 5 arcminutes at 20/20 vision at designated testing distance
+    // Visual angle in radians = (size in arcmin / 60) * (pi/180)
+    let arcmin_per_letter = 5.0 // Standard size for 20/20 optotype is 5 arcmin
+    let visual_angle = ((Double(desired_acuity) / 20.0) * arcmin_per_letter / 60.0) * Double.pi / 180.0
+    let scaling_correction_factor = 1.0 / 2.54  // Conversion from inches to cm
+    
+    // Calculate size at viewing distance
+    let scale_factor = Double(averageDistanceCM) * tan(visual_angle) * scaling_correction_factor
+    
     if let nonNilLetterText = letterText, oneLetter != nil {
         oneLetter.text = nonNilLetterText //spaceBetweenCharacters(input:nonNilLetterText)
-        oneLetter.frame.size = CGSize(width: (scale_factor * 6 * ppi), height: (scale_factor * ppi))
-        oneLetter.font = oneLetter.font.withSize(2 / 3 * (oneLetter.frame.height))
+        oneLetter.frame.size = CGSize(width: (scale_factor * 5 * ppi), height: (scale_factor * ppi))
+        oneLetter.font = oneLetter.font.withSize(0.6 * (oneLetter.frame.height))
         return nonNilLetterText // Return the text that was set
     }
     return nil // Return nil if there was no text set
