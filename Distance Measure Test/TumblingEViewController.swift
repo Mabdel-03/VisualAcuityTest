@@ -126,12 +126,12 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         return label
     }()
     
-    /// Label displaying the current score (for debugging)
-    private lazy var scoreLabel: UILabel = {
+    /// Label indicating which eye is being tested
+    private lazy var eyeTestLabel: UILabel = {
         let label = UILabel()
-        label.text = "(Debugging) Score: 0/0"
-        label.font = UIFont.systemFont(ofSize: 24)
+        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         label.textAlignment = .center
+        label.textColor = UIColor.black
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -511,32 +511,37 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      * Sets up the UI elements and their constraints.
      */
     private func setupUI() {
-        print("TumblingEViewController - setupUI started")
+        view.backgroundColor = .white
+        
         // Add subviews
         view.addSubview(letterLabel)
-        view.addSubview(scoreLabel)
+        view.addSubview(eyeTestLabel)
         view.addSubview(instructionLabel)
         view.addSubview(warningLabel)
         view.addSubview(checkmarkLabel)
-
-        // Set up constraints for warning and checkmark labels
+        
+        // Update eye test label text based on current eye
+        eyeTestLabel.text = eyeNumber == 1 ? "Left Eye Test" : "Right Eye Test"
+        
+        // Set up constraints
         NSLayoutConstraint.activate([
+            // Eye test label constraints
+            eyeTestLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            eyeTestLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            eyeTestLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            // Warning and checkmark label constraints
             warningLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             warningLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 50),
             
             checkmarkLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            checkmarkLabel.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 10)
-        ])
-
-        // Set up constraints for the main UI elements
-        NSLayoutConstraint.activate([
+            checkmarkLabel.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 10),
+            
+            // Letter label constraints
             letterLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             letterLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             
-            scoreLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            scoreLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            scoreLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
+            // Instruction label constraints
             instructionLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
             instructionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             instructionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
@@ -577,7 +582,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         
         totalAttempts += 1
         trial += 1 // Increment the trial count within this set
-        updateScore()
         
         // Visual feedback
         letterLabel.textColor = isCorrect == 1 ? .green : .red
@@ -644,13 +648,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             correctAnswersInSet = 0
         }
         generateNewE() // Generate the next letter with updated size or same size
-    }
-    
-    /**
-     * Updates the score display with current values.
-     */
-    private func updateScore() {
-        scoreLabel.text = "Score: \(score)/\(totalAttempts)"
     }
     
     /**

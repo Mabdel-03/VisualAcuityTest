@@ -1,6 +1,7 @@
 import UIKit
 var finalAcuityDictionary: [Int: String] = [:] // Dictionary to store final acuity values
-var trialNumber: Int = 1
+var eyeNumber: Int = 1 // 1 for left eye, 2 for right eye
+var allTestsDictionary: [String: [String: String]] = [:] // Dictionary to store all test results
 class ResultViewController: UIViewController {
     // MARK: - Properties
     var score: Int = 0
@@ -8,47 +9,82 @@ class ResultViewController: UIViewController {
     var logMARValue: Double = 0
     var snellenValue: Double = 0
     // MARK: - UI Elements
-    private lazy var scoreLabel: UILabel = {
+    private lazy var scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        return scrollView
+    }()
+    
+    private lazy var contentView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private lazy var leftEyeTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 24, weight: .medium)
+        label.font = UIFont.systemFont(ofSize: 27, weight: .heavy)
         label.textAlignment = .center
         label.textColor = UIColor.black
+        label.text = "Left Eye"
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    private lazy var acuityLabel: UILabel = {
+    private lazy var leftEyeResultsLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 27, weight: .bold)
         label.textAlignment = .center
         label.textColor = UIColor.black
+        label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-//    private lazy var recommendationLabel: UILabel = {
-//        let label = UILabel()
-//        label.font = UIFont.systemFont(ofSize: 24)
-//        label.textAlignment = .center
-//        label.textColor = UIColor.black
-//        label.numberOfLines = 0
-//        label.backgroundColor = UIColor.systemGray6
-//        label.clipsToBounds = true
-//        label.translatesAutoresizingMaskIntoConstraints = false
-//        return label
-//    }()
+    private lazy var rightEyeTitleLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 27, weight: .heavy)
+        label.textAlignment = .center
+        label.textColor = UIColor.black
+        label.text = "Right Eye"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
     
-//    private lazy var doneButton: UIButton = {
-//        let button = UIButton(type: .system)
-//        button.setTitle("Done", for: .normal)
-//        button.setTitleColor(.white, for: .normal)
-//        button.backgroundColor = UIColor.systemBlue
-//        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-//        button.layer.cornerRadius = 10
-//        button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
-//        button.translatesAutoresizingMaskIntoConstraints = false
-//        return button
-//    }()
+    private lazy var rightEyeResultsLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 27, weight: .bold)
+        label.textAlignment = .center
+        label.textColor = UIColor.black
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var rightEyeButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Test Right Eye", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor.systemBlue
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.layer.cornerRadius = 10
+        button.addTarget(self, action: #selector(startRightEyeTest), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    private lazy var doneButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Done", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor.systemBlue
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.layer.cornerRadius = 10
+        button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.isHidden = true
+        return button
+    }()
     
 //    private lazy var retryButton: UIButton = {
 //        let button = UIButton(type: .system)
@@ -73,54 +109,110 @@ class ResultViewController: UIViewController {
         view.backgroundColor = UIColor.systemBackground
         title = "Test Results"
         
-        // Add subviews
-        view.addSubview(scoreLabel)
-        view.addSubview(acuityLabel)
-//        view.addSubview(recommendationLabel)
+        // Add scroll view and content view
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
         
-        // Setup constraints
+        // Add subviews to content view
+        contentView.addSubview(leftEyeTitleLabel)
+        contentView.addSubview(leftEyeResultsLabel)
+        contentView.addSubview(rightEyeTitleLabel)
+        contentView.addSubview(rightEyeResultsLabel)
+        contentView.addSubview(rightEyeButton)
+        contentView.addSubview(doneButton)
+        
+        // Set up constraints
         NSLayoutConstraint.activate([
-            // Center the acuity label horizontally and move it towards the top of the center
-            acuityLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            acuityLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100), // Moved up slightly
-            acuityLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
-            acuityLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
+            // Scroll view constraints
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
-            // Center the score label horizontally and place it below the acuity label
-            scoreLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            scoreLabel.topAnchor.constraint(equalTo: acuityLabel.bottomAnchor, constant: 20),
-            scoreLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
-            scoreLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
+            // Content view constraints
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
-//            // Center horizontally
-//               recommendationLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-//               
-//               // Place it below the score label
-//               recommendationLabel.topAnchor.constraint(equalTo: scoreLabel.bottomAnchor, constant: 20),
-//               
-//               // Set flexible width constraints with some padding from the edges
-//               recommendationLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
-//               recommendationLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
-//               
-//               // Increase the height to allow more text
-//               recommendationLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 150)
+            // Left eye title constraints
+            leftEyeTitleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            leftEyeTitleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 100),
+            leftEyeTitleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
+            leftEyeTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
+            
+            // Left eye results constraints
+            leftEyeResultsLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            leftEyeResultsLabel.topAnchor.constraint(equalTo: leftEyeTitleLabel.bottomAnchor, constant: 20),
+            leftEyeResultsLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
+            leftEyeResultsLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
+            
+            // Right eye title constraints
+            rightEyeTitleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            rightEyeTitleLabel.topAnchor.constraint(equalTo: leftEyeResultsLabel.bottomAnchor, constant: 50),
+            rightEyeTitleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
+            rightEyeTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
+            
+            // Right eye results constraints
+            rightEyeResultsLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            rightEyeResultsLabel.topAnchor.constraint(equalTo: rightEyeTitleLabel.bottomAnchor, constant: 20),
+            rightEyeResultsLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
+            rightEyeResultsLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
+            
+            // Right eye button constraints
+            rightEyeButton.topAnchor.constraint(equalTo: rightEyeResultsLabel.bottomAnchor, constant: 50),
+            rightEyeButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            rightEyeButton.widthAnchor.constraint(equalToConstant: 200),
+            rightEyeButton.heightAnchor.constraint(equalToConstant: 50),
+            rightEyeButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30),
+            
+            // Done button constraints
+            doneButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            doneButton.topAnchor.constraint(equalTo: rightEyeResultsLabel.bottomAnchor, constant: 50),
+            doneButton.widthAnchor.constraint(equalToConstant: 200),
+            doneButton.heightAnchor.constraint(equalToConstant: 50),
+            doneButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
         ])
         
         // Calculate and display results
 //        let percentage = (Double(score) / Double(totalAttempts)) * 100
         
-        logMARValue = finalAcuityScore
-        snellenValue = 20 * pow(10, logMARValue)
-        scoreLabel.text = String(format: "LogMAR Score: %.4f",finalAcuityScore)
-
-        // Display the final acuity score
-        acuityLabel.text = String(format: "Snellen Score: 20/%.0f", snellenValue)
-        
+        updateResults()
         
 //        // Display the recommendation
 //        recommendationLabel.text = getRecommendation(acuity: finalAcuityScore)
     }
 
+    func updateResults() {
+        logMARValue = finalAcuityScore
+        snellenValue = 20 * pow(10, logMARValue)
+        
+        // Store the current eye's results
+        finalAcuityDictionary[eyeNumber] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+        
+        if eyeNumber == 1 {
+            // Left eye
+            leftEyeResultsLabel.text = String(format: "LogMAR Score: %.4f\nSnellen Score: 20/%.0f", 
+                                            finalAcuityScore, snellenValue)
+            rightEyeResultsLabel.text = "Not tested yet"
+            rightEyeButton.isHidden = false
+            doneButton.isHidden = true
+        } else if eyeNumber == 2 {
+            // Right eye
+            // Get both eyes' results from the dictionary
+            if let leftEyeResult = finalAcuityDictionary[1] {
+                leftEyeResultsLabel.text = leftEyeResult.replacingOccurrences(of: "LogMAR: ", with: "LogMAR Score: ")
+                                                      .replacingOccurrences(of: "Snellen: ", with: "Snellen Score: ")
+            }
+            if let rightEyeResult = finalAcuityDictionary[2] {
+                rightEyeResultsLabel.text = rightEyeResult.replacingOccurrences(of: "LogMAR: ", with: "LogMAR Score: ")
+                                                        .replacingOccurrences(of: "Snellen: ", with: "Snellen Score: ")
+            }
+            rightEyeButton.isHidden = true
+            doneButton.isHidden = false
+        }
+    }
 
     // MARK: - Private Methods
 
@@ -144,10 +236,45 @@ class ResultViewController: UIViewController {
     
     @IBAction func tapDone(_ sender: Any) {
         // Store the final acuity score in the dictionary
-                finalAcuityDictionary[trialNumber] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+                finalAcuityDictionary[eyeNumber] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
         print(finalAcuityDictionary)
-        // Increment trial number for the next test
-        trialNumber += 1
+        // Increment eye number for the next test
+        eyeNumber += 1
+        navigationController?.popToRootViewController(animated: true)
+    }
+    
+    @objc func startRightEyeTest() {
+        // Store the left eye's results
+        finalAcuityDictionary[1] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+        
+        // Set eye number for right eye test
+        eyeNumber = 2
+        
+        // Navigate back to the capture acuity page
+        if let captureVC = navigationController?.viewControllers.first(where: { $0 is DistanceOptimization }) {
+            navigationController?.popToViewController(captureVC, animated: true)
+        }
+    }
+    
+    @objc func doneButtonTapped() {
+        // Create a timestamp for this test
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let timestamp = dateFormatter.string(from: Date())
+        
+        // Create a dictionary for this test's results
+        var testResults: [String: String] = [:]
+        if let leftEyeResult = finalAcuityDictionary[1] {
+            testResults["Left Eye"] = leftEyeResult
+        }
+        if let rightEyeResult = finalAcuityDictionary[2] {
+            testResults["Right Eye"] = rightEyeResult
+        }
+        
+        // Add to all tests dictionary
+        allTestsDictionary[timestamp] = testResults
+        
+        // Navigate back to the main screen
         navigationController?.popToRootViewController(animated: true)
     }
 }

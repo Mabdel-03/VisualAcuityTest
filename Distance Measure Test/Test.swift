@@ -109,6 +109,7 @@ class Test: UIViewController {
     var acuityVisits: [Int: Int] = [:]
     var counter = 0
     var displayTrial = ""
+    var isSecondTrial = false
     
     
     @IBOutlet weak var LetterRow1: UILabel!
@@ -216,15 +217,12 @@ class Test: UIViewController {
         let finalAcuityScore = computeFinalAcuity(correctLetters: amtCorrect, totalLetters: totalLetters, acuity: finishAcuity)
         // Print the final acuity score
         print("Test completed with final acuity level: \(finalAcuityScore)")
-        // Exit or navigate to the results screen
-        let myAcuity = "20/" + String(Int(finalAcuityScore.rounded()))
-        print(myAcuity)
-
-//        let storyboard = UIStoryboard(name: "Test", bundle: nil) // Replace "Main" with your storyboard name if different
-//            if let ResultScreen = storyboard.instantiateViewController(withIdentifier: "ResultScreen") as? ResultScreen {
-//                ResultScreen.finalAcuity = finalAcuityScore // Pass data if needed
-//                self.present(ResultScreen, animated: true, completion: nil)
-//            }
+        
+        // Show results
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        if let resultVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as? ResultViewController {
+            navigationController?.pushViewController(resultVC, animated: true)
+        }
     }
 
     // Existing computeFinalAcuity function
