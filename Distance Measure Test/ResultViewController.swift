@@ -274,6 +274,11 @@ class ResultViewController: UIViewController {
         // Add to all tests dictionary
         allTestsDictionary[timestamp] = testResults
         
+        // Reset all global variables to their initial state
+        finalAcuityDictionary.removeAll()
+        eyeNumber = 1
+        finalAcuityScore = -Double.infinity
+        
         // Navigate back to the main screen
         navigationController?.popToRootViewController(animated: true)
     }

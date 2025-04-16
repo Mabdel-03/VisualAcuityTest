@@ -62,6 +62,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     /// 3D node for right eye tracking
     var rightEye: SCNNode!
     
+    /// Current eye being tested (1 for left eye, 2 for right eye)
+    //var eyeNumber: Int = 1
+    
     /// List of acuity levels to test in 20/x format (from largest to smallest)
     let acuityList = [200, 160, 125, 100, 80, 63, 50, 40, 32, 20, 16]
     
@@ -230,6 +233,13 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         // Finish layout and generate the first rotated letter
         view.layoutIfNeeded()
         generateNewE()
+        
+        // Update eye test label based on current eye number
+        updateEyeTestLabel()
+    }
+
+    private func updateEyeTestLabel() {
+        eyeTestLabel.text = eyeNumber == 1 ? "Left Eye Test" : "Right Eye Test"
     }
 
     /**
@@ -455,8 +465,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
                 let leftEyeDistance = self.SCNVector3Distance(leftEyePos, cameraPosition)
                 let rightEyeDistance = self.SCNVector3Distance(rightEyePos, cameraPosition)
                 
-                // Apply a raw conversion factor to cm
-                let rawAverageDistance = (leftEyeDistance + rightEyeDistance) / 2 * 100
+                // Use only the relevant eye's distance based on which eye is being tested
+                let rawDistance = (eyeNumber == 1) ? leftEyeDistance : rightEyeDistance
+                let rawAverageDistance = rawDistance * 100  // Convert to cm
                 
                 // Use a more aggressive threshold for extreme movements
                 let extremeDistanceThreshold = 20.0 // cm
@@ -519,9 +530,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         view.addSubview(instructionLabel)
         view.addSubview(warningLabel)
         view.addSubview(checkmarkLabel)
-        
-        // Update eye test label text based on current eye
-        eyeTestLabel.text = eyeNumber == 1 ? "Left Eye Test" : "Right Eye Test"
         
         // Set up constraints
         NSLayoutConstraint.activate([
@@ -871,5 +879,21 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         // Navigate to the results screen
         finalAcuityScore = acuityScore
         performSegue(withIdentifier: "ShowResults", sender: self)
+    }
+
+    @objc func startRightEyeTest() {
+        // Store the left eye's results
+        finalAcuityDictionary[1] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", finalAcuityScore, 20 * pow(10, finalAcuityScore))
+        
+        // Set eye number for right eye test
+        eyeNumber = 2
+        
+        // Update the eye test label
+        updateEyeTestLabel()
+        
+        // Navigate back to the capture acuity page
+        if let captureVC = navigationController?.viewControllers.first(where: { $0 is DistanceOptimization }) {
+            navigationController?.popToViewController(captureVC, animated: true)
+        }
     }
 }

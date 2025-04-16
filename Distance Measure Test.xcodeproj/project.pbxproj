@@ -21,6 +21,7 @@
 		D12072E92A9F132000B92792 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = D12072E82A9F132000B92792 /* art.scnassets */; };
 		D13F546D2ACA7C2A00673C13 /* DevicePpi in Frameworks */ = {isa = PBXBuildFile; productRef = D13F546C2ACA7C2A00673C13 /* DevicePpi */; };
 		D14180E62D3049990070FB19 /* Sloan.otf in Resources */ = {isa = PBXBuildFile; fileRef = D14180E52D3049990070FB19 /* Sloan.otf */; };
+		D17FC2C82DAF9FB300B08D03 /* TestHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */; };
 		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
 		D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */; };
 /* End PBXBuildFile section */
@@ -40,6 +41,7 @@
 		D12072E52A9F12BA00B92792 /* ship.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = ship.scn; path = art.scnassets/ship.scn; sourceTree = "<group>"; };
 		D12072E82A9F132000B92792 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
 		D14180E52D3049990070FB19 /* Sloan.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Sloan.otf; sourceTree = "<group>"; };
+		D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHistoryViewController.swift; sourceTree = "<group>"; };
 		D19933C42A955CCF0050CF92 /* info.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = info.txt; sourceTree = "<group>"; };
 		D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Distance-Measure-Test-Info.plist"; sourceTree = SOURCE_ROOT; };
 		D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Select_Acuity.swift; sourceTree = "<group>"; };
@@ -84,6 +86,7 @@
 				D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */,
 				C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */,
 				C0C987092CC9F413003EEEFF /* ResultViewController.swift */,
+				D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */,
 				D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */,
 				C0CDD62F2A687790002A58BA /* Main.storyboard */,
 				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
@@ -189,6 +192,7 @@
 				C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */,
 				C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */,
 				C0C9870A2CC9F413003EEEFF /* ResultViewController.swift in Sources */,
+				D17FC2C82DAF9FB300B08D03 /* TestHistoryViewController.swift in Sources */,
 				C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */,
 				C0C987052CC9F141003EEEFF /* TumblingEViewController.swift in Sources */,
 				D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */,
@@ -339,7 +343,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = HW8LWQ35S9;
+				DEVELOPMENT_TEAM = L4924K5F8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
@@ -372,7 +376,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = HW8LWQ35S9;
+				DEVELOPMENT_TEAM = L4924K5F8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";

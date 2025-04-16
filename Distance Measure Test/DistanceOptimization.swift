@@ -114,9 +114,17 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         }
         
         // Calculate distance from camera to eyes
-        let leftEyeDistance = SCNVector3Distance(leftEyePos, cameraPosition)
-        let rightEyeDistance = SCNVector3Distance(rightEyePos, cameraPosition) 
-        let averageDistance = (leftEyeDistance + rightEyeDistance) / 2 * 100  // Convert to cm
+        let leftEyeDistance = SCNVector3Distance(leftEyePos, cameraPosition) * 100  // Convert to cm
+        let rightEyeDistance = SCNVector3Distance(rightEyePos, cameraPosition) * 100  // Convert to cm
+        let averageDistance: Float
+        if (eyeNumber == 1){
+            print("Left eye tracking enabled")
+            averageDistance = leftEyeDistance
+        }
+        else {
+            print("Right eye tracking enabled")
+            averageDistance = rightEyeDistance
+        }
 
         // Validate the measured distance is reasonable
         if averageDistance < 10 || averageDistance > 100 {
