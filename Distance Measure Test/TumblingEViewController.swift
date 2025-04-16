@@ -354,25 +354,30 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         sceneView = ARSCNView(frame: view.bounds)
         sceneView.delegate = self
         
-        // Create an AR face tracking configuration
+        // Create an AR face tracking configuration with maximum tracking capability
         let configuration = ARFaceTrackingConfiguration()
         configuration.isLightEstimationEnabled = true
+        configuration.maximumNumberOfTrackedFaces = 1 // Focus on tracking a single face well
         
         // Add the scene view but hide it
         sceneView.isHidden = true
         view.addSubview(sceneView)
         
-        // Start a new tracking session
+        // Start a new tracking session with maximum quality
         sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
         
         print("👁️ AR Face Tracking Started")
 
-        // Initialize eye tracking nodes
+        // Initialize eye tracking nodes with distinctive colors for debugging
         let eyeGeometry = SCNSphere(radius: 0.01)
         eyeGeometry.firstMaterial?.diffuse.contents = UIColor.blue
         
         leftEye = SCNNode(geometry: eyeGeometry)
         rightEye = SCNNode(geometry: eyeGeometry)
+        
+        // Log the target distance for reference
+        print("📏 Target testing distance: \(String(format: "%.1f", averageDistanceCM)) cm")
+        print("📏 Acceptable range: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
     }
 
     /**
@@ -383,6 +388,10 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         // Add a debug option to skip distance checking for testing
         #if DEBUG
         let debugBypassDistanceCheck = false // Set to true to bypass distance checking
+        
+        // Extra debugging for distance
+        let debugExtraLogging = true // Set to true for more verbose distance logs
+        
         if debugBypassDistanceCheck {
             print("🔧 DEBUG MODE: Distance checking disabled")
             isPaused = false
@@ -390,9 +399,14 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             checkmarkLabel.isHidden = true
             return
         }
+        
+        if debugExtraLogging {
+            print("🔧 DEBUG MODE: Enhanced distance logging enabled")
+        }
         #endif
         
-        Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(updateLiveDistance), userInfo: nil, repeats: true)
+        // Use a more frequent timer for more responsive distance checks
+        Timer.scheduledTimer(timeInterval: 0.3, target: self, selector: #selector(updateLiveDistance), userInfo: nil, repeats: true)
     }
 
     /**
@@ -424,53 +438,55 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         guard let frame = sceneView.session.currentFrame else { return }
         let cameraTransform = frame.camera.transform
         
-        // Use lower update frequency to reduce processing load
-        if Int(Date().timeIntervalSince1970 * 10) % 5 == 0 {
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                
-                // Skip if test is already running properly
-                if !isPaused && DistanceTracker.shared.currentDistanceCM >= 10 {
-                    return
-                }
+        // Process ALL updates for better responsiveness to fast movements
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            let cameraPosition = SCNVector3(cameraTransform.columns.3.x,
+                                            cameraTransform.columns.3.y,
+                                            cameraTransform.columns.3.z)
+            
+            let leftEyePos = self.leftEye.worldPosition
+            let rightEyePos = self.rightEye.worldPosition
 
-                let cameraPosition = SCNVector3(cameraTransform.columns.3.x,
-                                                cameraTransform.columns.3.y,
-                                                cameraTransform.columns.3.z)
+            // Only calculate distance if eyes are valid positions
+            if leftEyePos.length() > 0 && rightEyePos.length() > 0 {
+                // Calculate distance from camera to eyes
+                let leftEyeDistance = self.SCNVector3Distance(leftEyePos, cameraPosition)
+                let rightEyeDistance = self.SCNVector3Distance(rightEyePos, cameraPosition)
                 
-                let leftEyePos = self.leftEye.worldPosition
-                let rightEyePos = self.rightEye.worldPosition
-
-                // Only calculate distance if eyes are valid positions
-                if leftEyePos.length() > 0 && rightEyePos.length() > 0 {
-                    // Calculate distance from camera to eyes
-                    let leftEyeDistance = self.SCNVector3Distance(leftEyePos, cameraPosition)
-                    let rightEyeDistance = self.SCNVector3Distance(rightEyePos, cameraPosition)
+                // Apply a raw conversion factor to cm
+                let rawAverageDistance = (leftEyeDistance + rightEyeDistance) / 2 * 100
+                
+                // Use a more aggressive threshold for extreme movements
+                let extremeDistanceThreshold = 20.0 // cm
+                
+                // Check if the distance is extremely different from target (possibly rapid movement)
+                let distanceDifference = abs(Double(rawAverageDistance) - averageDistanceCM)
+                let isExtremeMovement = distanceDifference > extremeDistanceThreshold
+                
+                if isExtremeMovement {
+                    // Log extreme movements immediately to help with debugging
+                    print("⚠️ EXTREME MOVEMENT DETECTED: \(String(format: "%.1f", rawAverageDistance)) cm (Target: \(String(format: "%.1f", averageDistanceCM)) cm)")
                     
-                    // Apply a raw conversion factor to cm
-                    let rawAverageDistance = (leftEyeDistance + rightEyeDistance) / 2 * 100
+                    // Update distance immediately for extreme movements
+                    DistanceTracker.shared.addReading(Double(rawAverageDistance))
                     
-                    // Apply additional scaling to match previous calibration
-                    let adjustedDistance: Double
+                    // Force distance check for extreme movement
+                    self.checkDistance(Double(rawAverageDistance))
+                } else {
+                    // Normal processing for moderate movements
+                    DistanceTracker.shared.addReading(Double(rawAverageDistance))
                     
-                    // CRITICAL FIX: If the raw distance is dramatically different from target,
-                    // something is wrong with the measurement - use stored distance
-                    if abs(Double(rawAverageDistance) - averageDistanceCM) > 30 {
-                        adjustedDistance = averageDistanceCM
-                        if Int(Date().timeIntervalSince1970) % 5 == 0 {
-                            print("⚠️ Rejecting invalid distance reading: \(rawAverageDistance) cm (expected ~\(averageDistanceCM) cm)")
-                        }
-                    } else {
-                        adjustedDistance = Double(rawAverageDistance)
-                        
-                        // Add reading to tracker (smoothing happens inside)
-                        DistanceTracker.shared.addReading(adjustedDistance)
-                        
-                        // Debug print distance, but not too often
-                        if Int(Date().timeIntervalSince1970 * 10) % 20 == 0 {
-                            print("📏 Distance: \(String(format: "%.1f", adjustedDistance)) cm | Target: \(String(format: "%.1f", averageDistanceCM)) cm")
-                        }
+                    // Print distance more often during testing phase
+                    if Int(Date().timeIntervalSince1970 * 10) % 10 == 0 {
+                        print("📏 Distance: \(String(format: "%.1f", Double(rawAverageDistance))) cm | Target: \(String(format: "%.1f", averageDistanceCM)) cm")
                     }
+                }
+            } else {
+                // Print warning when face tracking is lost
+                if Int(Date().timeIntervalSince1970 * 10) % 30 == 0 {
+                    print("⚠️ Face tracking unstable - eye positions invalid")
                 }
             }
         }
@@ -667,9 +683,13 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      * @param liveDistance The current measured distance in centimeters
      */
     private func checkDistance(_ liveDistance: Double) {
-        // Only print distance check logs occasionally to reduce console spam
-        if Int(Date().timeIntervalSince1970 * 10) % 10 == 0 {
-            print("Distance Check: \(String(format: "%.1f", liveDistance)) cm | Bounds: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound))")
+        // Always print extreme values
+        let isExtreme = liveDistance < 15 || liveDistance > 100 || 
+                       abs(liveDistance - averageDistanceCM) > 30
+        
+        if isExtreme || Int(Date().timeIntervalSince1970 * 10) % 10 == 0 {
+            let status = isPaused ? "⏸️ PAUSED" : "▶️ RUNNING"
+            print("\(status) Distance: \(String(format: "%.1f", liveDistance)) cm | Bounds: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
         }
         
         // Add hysteresis to prevent frequent toggling at the boundary
@@ -681,7 +701,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
                 isPaused = false
                 warningLabel.isHidden = true
                 checkmarkLabel.isHidden = false
-                print("✅ Resuming Test - Distance Back in Range: \(String(format: "%.1f", liveDistance)) cm")
+                print("✅ RESUMING TEST - Distance Back in Range: \(String(format: "%.1f", liveDistance)) cm")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                     self.checkmarkLabel.isHidden = true
                 }
@@ -693,7 +713,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
                 isPaused = true
                 warningLabel.isHidden = false
                 checkmarkLabel.isHidden = true
-                print("⚠️ Pausing Test - Distance Out of Range: \(String(format: "%.1f", liveDistance)) cm")
+                print("⚠️ PAUSING TEST - Distance Out of Range: \(String(format: "%.1f", liveDistance)) cm")
                 pauseTest()
             }
         }
@@ -719,20 +739,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     
     /**
      * Updates the test based on current distance from the device.
-     * Legacy method, replaced by updateLiveDistance.
-     */
-    @objc private func updateDistance() {
-        let currentDistance = DistanceTracker.shared.currentDistanceCM
-
-        print("📡 Live Distance Pulled: \(currentDistance) cm")
-
-        DispatchQueue.main.async {
-            self.checkDistance(currentDistance)
-        }
-    }
-
-    /**
-     * Updates the test based on current distance from the device.
      * Called by a timer to continuously check the user's distance.
      * Includes validation and fallback mechanisms for invalid distance readings.
      */
@@ -741,10 +747,39 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         
         // CRITICAL FIX: If distance is suspiciously small, use the target distance
         if liveDistance < 10 && averageDistanceCM > 10 {
-            print("⚠️ Suspicious distance reading: \(liveDistance) cm (expected ~\(averageDistanceCM) cm)")
+            print("⚠️ Very close distance detected: \(String(format: "%.1f", liveDistance)) cm (expected ~\(String(format: "%.1f", averageDistanceCM)) cm)")
+            
+            // For testing purposes, DON'T override with target distance to see if extreme values are detected
+            #if DEBUG
+            let debugStrictDistanceTesting = true // Set to true to test extreme distance values
+            if debugStrictDistanceTesting {
+                print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
+                DispatchQueue.main.async {
+                    self.checkDistance(liveDistance)
+                }
+                return
+            }
+            #endif
+            
             // Use the target/stored distance instead of the current faulty reading
             DistanceTracker.shared.currentDistanceCM = averageDistanceCM
             return
+        }
+        
+        // Check for very large distances too
+        if liveDistance > 100 && averageDistanceCM < 100 {
+            print("⚠️ Very far distance detected: \(String(format: "%.1f", liveDistance)) cm (expected ~\(String(format: "%.1f", averageDistanceCM)) cm)")
+            
+            #if DEBUG
+            let debugStrictDistanceTesting = true // Set to true to test extreme distance values
+            if debugStrictDistanceTesting {
+                print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
+                DispatchQueue.main.async {
+                    self.checkDistance(liveDistance)
+                }
+                return
+            }
+            #endif
         }
         
         // Regular check for other invalid readings
