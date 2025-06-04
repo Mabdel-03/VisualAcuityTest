@@ -143,7 +143,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     private lazy var instructionLabel: UILabel = {
         let label = UILabel()
         label.text = "Please swipe in the direction the C is pointing."
-        label.font = UIFont.systemFont(ofSize: 27, weight: .medium)
+        label.font = UIFont.systemFont(ofSize: 40, weight: .medium)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 0
@@ -877,23 +877,26 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         print("Test completed with final acuity level: \(acuityScore)")
         
         // Navigate to the results screen
+        
         finalAcuityScore = acuityScore
-        performSegue(withIdentifier: "ShowResults", sender: self)
-    }
-
-    @objc func startRightEyeTest() {
-        // Store the left eye's results
-        finalAcuityDictionary[1] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", finalAcuityScore, 20 * pow(10, finalAcuityScore))
+        logMARValue = finalAcuityScore
+        snellenValue = 20 * pow(10, logMARValue)
         
-        // Set eye number for right eye test
-        eyeNumber = 2
-        
-        // Update the eye test label
-        updateEyeTestLabel()
-        
-        // Navigate back to the capture acuity page
-        if let captureVC = navigationController?.viewControllers.first(where: { $0 is DistanceOptimization }) {
-            navigationController?.popToViewController(captureVC, animated: true)
+        if eyeNumber == 1 {
+            // Store the left eye's results
+            finalAcuityDictionary[1] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+            
+            // Set eye number for right eye test
+            eyeNumber = 2
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            if let rightInstrucVC = storyboard.instantiateViewController(withIdentifier: "OneEyeInstruc") as? OneEyeInstruc {
+                navigationController?.pushViewController(rightInstrucVC, animated: true)
+            }
+            
+        } else{
+            finalAcuityDictionary[2] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+            
+            performSegue(withIdentifier: "ShowResults", sender: self)
         }
     }
 }

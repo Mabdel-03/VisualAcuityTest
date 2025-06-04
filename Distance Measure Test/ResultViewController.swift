@@ -2,12 +2,13 @@ import UIKit
 var finalAcuityDictionary: [Int: String] = [:] // Dictionary to store final acuity values
 var eyeNumber: Int = 1 // 1 for left eye, 2 for right eye
 var allTestsDictionary: [String: [String: String]] = [:] // Dictionary to store all test results
+var logMARValue: Double = -1.000
+var snellenValue: Double = -1
+
 class ResultViewController: UIViewController {
     // MARK: - Properties
     var score: Int = 0
     var totalAttempts: Int = 0
-    var logMARValue: Double = 0
-    var snellenValue: Double = 0
     // MARK: - UI Elements
     private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -61,18 +62,6 @@ class ResultViewController: UIViewController {
         return label
     }()
     
-    private lazy var rightEyeButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Test Right Eye", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor.systemBlue
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        button.layer.cornerRadius = 10
-        button.addTarget(self, action: #selector(startRightEyeTest), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
     private lazy var doneButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Done", for: .normal)
@@ -85,18 +74,6 @@ class ResultViewController: UIViewController {
         button.isHidden = true
         return button
     }()
-    
-//    private lazy var retryButton: UIButton = {
-//        let button = UIButton(type: .system)
-//        button.setTitle("Try Again", for: .normal)
-//        button.setTitleColor(.white, for: .normal)
-//        button.backgroundColor = UIColor.systemGreen
-//        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-//        button.layer.cornerRadius = 10
-//        button.addTarget(self, action: #selector(retryTest), for: .touchUpInside)
-//        button.translatesAutoresizingMaskIntoConstraints = false
-//        return button
-//    }()
     
     // MARK: - Lifecycle Methods
     override func viewDidLoad() {
@@ -118,7 +95,7 @@ class ResultViewController: UIViewController {
         contentView.addSubview(leftEyeResultsLabel)
         contentView.addSubview(rightEyeTitleLabel)
         contentView.addSubview(rightEyeResultsLabel)
-        contentView.addSubview(rightEyeButton)
+        // contentView.addSubview(rightEyeButton)
         contentView.addSubview(doneButton)
         
         // Set up constraints
@@ -159,14 +136,7 @@ class ResultViewController: UIViewController {
             rightEyeResultsLabel.topAnchor.constraint(equalTo: rightEyeTitleLabel.bottomAnchor, constant: 20),
             rightEyeResultsLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
             rightEyeResultsLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
-            
-            // Right eye button constraints
-            rightEyeButton.topAnchor.constraint(equalTo: rightEyeResultsLabel.bottomAnchor, constant: 50),
-            rightEyeButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            rightEyeButton.widthAnchor.constraint(equalToConstant: 200),
-            rightEyeButton.heightAnchor.constraint(equalToConstant: 50),
-            rightEyeButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30),
-            
+//            
             // Done button constraints
             doneButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             doneButton.topAnchor.constraint(equalTo: rightEyeResultsLabel.bottomAnchor, constant: 50),
@@ -175,30 +145,10 @@ class ResultViewController: UIViewController {
             doneButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
         ])
         
-        // Calculate and display results
-//        let percentage = (Double(score) / Double(totalAttempts)) * 100
-        
-        updateResults()
-        
-//        // Display the recommendation
-//        recommendationLabel.text = getRecommendation(acuity: finalAcuityScore)
+        displayResults()
     }
 
-    func updateResults() {
-        logMARValue = finalAcuityScore
-        snellenValue = 20 * pow(10, logMARValue)
-        
-        // Store the current eye's results
-        finalAcuityDictionary[eyeNumber] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
-        
-        if eyeNumber == 1 {
-            // Left eye
-            leftEyeResultsLabel.text = String(format: "LogMAR Score: %.4f\nSnellen Score: 20/%.0f", 
-                                            finalAcuityScore, snellenValue)
-            rightEyeResultsLabel.text = "Not tested yet"
-            rightEyeButton.isHidden = false
-            doneButton.isHidden = true
-        } else if eyeNumber == 2 {
+    func displayResults() {
             // Right eye
             // Get both eyes' results from the dictionary
             if let leftEyeResult = finalAcuityDictionary[1] {
@@ -209,26 +159,11 @@ class ResultViewController: UIViewController {
                 rightEyeResultsLabel.text = rightEyeResult.replacingOccurrences(of: "LogMAR: ", with: "LogMAR Score: ")
                                                         .replacingOccurrences(of: "Snellen: ", with: "Snellen Score: ")
             }
-            rightEyeButton.isHidden = true
             doneButton.isHidden = false
-        }
     }
 
     // MARK: - Private Methods
 
-//    private func getRecommendation(acuity: Double) -> String {
-//        switch acuity {
-//        case 16..<40:
-//            return "Your vision appears to be normal. Continue with regular eye check-ups."
-//        case 40..<85:
-//            return "Minor vision issues may be present. Consider scheduling an eye examination."
-//        case 85..<150:
-//            return "Moderate vision issues detected. We recommend consulting an eye care professional."
-//        default:
-//            return "Significant vision issues detected. Please schedule an appointment with an eye care professional as soon as possible."
-//        }
-//    }
-//    
     // MARK: - Actions
     @IBAction func redoTest(_ sender: Any) {
         navigationController?.popViewController(animated: true)
@@ -239,23 +174,10 @@ class ResultViewController: UIViewController {
                 finalAcuityDictionary[eyeNumber] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
         print(finalAcuityDictionary)
         // Increment eye number for the next test
-        eyeNumber += 1
+        //eyeNumber += 1
         navigationController?.popToRootViewController(animated: true)
     }
-    
-    @objc func startRightEyeTest() {
-        // Store the left eye's results
-        finalAcuityDictionary[1] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
-        
-        // Set eye number for right eye test
-        eyeNumber = 2
-        
-        // Navigate back to the capture acuity page
-        if let captureVC = navigationController?.viewControllers.first(where: { $0 is DistanceOptimization }) {
-            navigationController?.popToViewController(captureVC, animated: true)
-        }
-    }
-    
+
     @objc func doneButtonTapped() {
         // Create a timestamp for this test
         let dateFormatter = DateFormatter()
@@ -278,6 +200,8 @@ class ResultViewController: UIViewController {
         finalAcuityDictionary.removeAll()
         eyeNumber = 1
         finalAcuityScore = -Double.infinity
+        logMARValue = -1.000
+        snellenValue = -1
         
         // Navigate back to the main screen
         navigationController?.popToRootViewController(animated: true)

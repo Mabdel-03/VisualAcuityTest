@@ -220,8 +220,14 @@ class Test: UIViewController {
         
         // Show results
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        if let resultVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as? ResultViewController {
-            navigationController?.pushViewController(resultVC, animated: true)
+        if eyeNumber == 1 { //testing left eye
+            if let resultVC = storyboard.instantiateViewController(withIdentifier: "OneEyeInstruc") as? OneEyeInstruc {
+                navigationController?.pushViewController(resultVC, animated: true)
+            }
+        } else { //testing right eye
+            if let resultVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as? ResultViewController {
+                navigationController?.pushViewController(resultVC, animated: true)
+            }
         }
     }
 

@@ -151,7 +151,7 @@
         <!--One Eye Instruc-->
         <scene sceneID="edf-BF-U7w">
             <objects>
-                <viewController id="OkA-yL-RRY" customClass="OneEyeInstruc" customModule="Distance_Measure_Test" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="OneEyeInstruc" useStoryboardIdentifierAsRestorationIdentifier="YES" id="OkA-yL-RRY" customClass="OneEyeInstruc" customModule="Distance_Measure_Test" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Y32-v7-92g">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -212,6 +212,7 @@
                     <navigationItem key="navigationItem" id="UPX-gG-A1C"/>
                     <connections>
                         <outlet property="instructionText" destination="sc9-43-YfN" id="6tX-XA-oqv"/>
+                        <outlet property="oneEyeInstructions" destination="8gA-I0-gb7" id="ZmF-VL-ZvY"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iRt-fA-YF9" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -268,7 +269,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="SZV-WD-TEh" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2306" y="-6"/>
+            <point key="canvasLocation" x="2295" y="487"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="l1m-AW-ZSb">
@@ -505,7 +506,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Xgv-lK-jCs" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="3155" y="4"/>
+            <point key="canvasLocation" x="3103" y="459"/>
         </scene>
         <!--TumblingE View Controller-->
         <scene sceneID="s8C-W6-as9">
@@ -524,12 +525,12 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="cIg-JH-MY1" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="4171.7557251908393" y="3.5211267605633805"/>
+            <point key="canvasLocation" x="4121" y="458"/>
         </scene>
         <!--Result View Controller-->
         <scene sceneID="tUx-f0-V0a">
             <objects>
-                <viewController id="WvQ-vl-NzY" customClass="ResultViewController" customModule="Distance_Measure_Test" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ResultViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="WvQ-vl-NzY" customClass="ResultViewController" customModule="Distance_Measure_Test" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="ccy-fp-cVj">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
