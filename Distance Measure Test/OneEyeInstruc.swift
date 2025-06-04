@@ -46,10 +46,10 @@ class OneEyeInstruc: UIViewController {
     private func updateText() {
         if eyeNumber == 1 {
             oneEyeInstructions.text = "Left Test"
-            instructionText.text = "Left test instructions."
+            instructionText.text = "Close your right eye and look at the screen with your left eye. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
         } else {
             oneEyeInstructions.text = "Right Test"
-            instructionText.text = "Right test instructions."
+            instructionText.text = "Close your left eye and look at the screen with your right eye. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
         }
     }
     
