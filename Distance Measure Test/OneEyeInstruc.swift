@@ -16,6 +16,7 @@ class OneEyeInstruc: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         updateText()
+        setupCenteredUI()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -26,6 +27,15 @@ class OneEyeInstruc: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         playAudioInstructions()
+    }
+    
+    private func setupCenteredUI() {
+        // Center the instruction text
+        instructionText.textAlignment = .center
+        instructionText.numberOfLines = 0
+        
+        // Center the text field
+        oneEyeInstructions.textAlignment = .center
     }
     
     private func playAudioInstructions() {

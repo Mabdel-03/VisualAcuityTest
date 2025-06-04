@@ -14,6 +14,10 @@ class Instructions: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         instructionText.text = "Welcome to our app based ETDRS Visual Acuity Test. To perform the test, we must first find the optimal distance for you to take the test at. To do so, in the next screen, you must hold the phone at a distance in which the displayed image of the white flower is clear and easy to see. Once you find a comfortable distance, hold your phone there, press the 'capture distance' button, and then click begin test."
+        
+        // Center the instruction text
+        instructionText.textAlignment = .center
+        instructionText.numberOfLines = 0
     }
     
     override func viewDidAppear(_ animated: Bool) {

@@ -143,7 +143,7 @@ class TestHistoryViewController: UIViewController {
     private func createLabel(text: String, fontSize: CGFloat, weight: UIFont.Weight) -> UILabel {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: fontSize, weight: weight)
-        label.textAlignment = .left
+        label.textAlignment = .center
         label.textColor = UIColor.black
         label.numberOfLines = 0
         label.text = text

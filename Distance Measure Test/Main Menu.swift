@@ -221,8 +221,8 @@ class MainMenu: UIViewController {
         
         // Set up constraints
         NSLayoutConstraint.activate([
-            // Completed tests button (keep existing positioning)
-            completedTestsButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 75),
+            // Completed tests button (centered horizontally)
+            completedTestsButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             completedTestsButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 559),
             completedTestsButton.widthAnchor.constraint(equalToConstant: 242),
             completedTestsButton.heightAnchor.constraint(equalToConstant: 50),
