@@ -16,6 +16,7 @@
 		C0CDD6362A687792002A58BA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */; };
 		C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EA2A81B87500CAD336 /* Main Menu.swift */; };
 		C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EC2A81B89300CAD336 /* Instructions.swift */; };
+		D11297512DF08938006DB97E /* OneEyeInstruc.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11297502DF08938006DB97E /* OneEyeInstruc.swift */; };
 		D12072E62A9F12BA00B92792 /* texture.png in Resources */ = {isa = PBXBuildFile; fileRef = D12072E42A9F12BA00B92792 /* texture.png */; };
 		D12072E72A9F12BA00B92792 /* ship.scn in Resources */ = {isa = PBXBuildFile; fileRef = D12072E52A9F12BA00B92792 /* ship.scn */; };
 		D12072E92A9F132000B92792 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = D12072E82A9F132000B92792 /* art.scnassets */; };
@@ -37,6 +38,7 @@
 		C0CDD6352A687792002A58BA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		C94D36EA2A81B87500CAD336 /* Main Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Main Menu.swift"; sourceTree = "<group>"; };
 		C94D36EC2A81B89300CAD336 /* Instructions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instructions.swift; sourceTree = "<group>"; };
+		D11297502DF08938006DB97E /* OneEyeInstruc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneEyeInstruc.swift; sourceTree = "<group>"; };
 		D12072E42A9F12BA00B92792 /* texture.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = texture.png; path = art.scnassets/texture.png; sourceTree = "<group>"; };
 		D12072E52A9F12BA00B92792 /* ship.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = ship.scn; path = art.scnassets/ship.scn; sourceTree = "<group>"; };
 		D12072E82A9F132000B92792 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
@@ -81,6 +83,7 @@
 			children = (
 				C0CDD6292A687790002A58BA /* AppDelegate.swift */,
 				C94D36EA2A81B87500CAD336 /* Main Menu.swift */,
+				D11297502DF08938006DB97E /* OneEyeInstruc.swift */,
 				C94D36EC2A81B89300CAD336 /* Instructions.swift */,
 				C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */,
 				D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */,
@@ -190,6 +193,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */,
+				D11297512DF08938006DB97E /* OneEyeInstruc.swift in Sources */,
 				C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */,
 				C0C9870A2CC9F413003EEEFF /* ResultViewController.swift in Sources */,
 				D17FC2C82DAF9FB300B08D03 /* TestHistoryViewController.swift in Sources */,

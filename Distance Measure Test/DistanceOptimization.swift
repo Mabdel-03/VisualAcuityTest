@@ -91,9 +91,9 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         sceneView.session.pause()
     }
 //        
-    @IBAction func capDistance(_ sender: Any) {
+    @IBAction func capDistanceTransition(_ sender: Any) {
         // Make sure we have valid eye positions before capturing
-        guard let frame = sceneView.session.currentFrame, 
+        guard let frame = sceneView.session.currentFrame,
               leftEye != nil && rightEye != nil else {
             print("⚠️ Cannot capture distance: Face not detected")
             return
