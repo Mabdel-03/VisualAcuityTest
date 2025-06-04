@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 let LETTER = "C"
 var selectedAcuity: Int?
@@ -38,6 +39,16 @@ class Select_Acuity: UIViewController {
         Button_ETDRS(B10, dAcuity: 20, letText: LETTER)
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        playAudioInstructions()
+    }
+    
+    private func playAudioInstructions() {
+        let instructionText = "Choose your starting acuity level by tapping one of the letter options. The letters are sized according to different vision levels. Select the largest letter you can clearly see to begin your test."
+        SharedAudioManager.shared.playText(instructionText, source: "Acuity Selection")
+    }
+    
     func Button_ETDRS(_ button: UIButton, dAcuity: Int, letText: String) {
         // Standard ETDRS calculation: 5 arcminutes at 20/20 vision at designated testing distance
         // Visual angle in radians = (size in arcmin / 60) * (pi/180)
@@ -45,14 +56,20 @@ class Select_Acuity: UIViewController {
         let visual_angle = ((Double(dAcuity) / 20.0) * arcmin_per_letter / 60.0) * Double.pi / 180.0
         let scaling_correction_factor = 1.0 / 2.54  // Conversion from inches to cm
         
-        // Calculate size at viewing distance (no longer using factor of 2)
+        // Calculate size at viewing distance
         let scale_factor = Double(averageDistanceCM) * tan(visual_angle) * scaling_correction_factor
         let buttonHeight = scale_factor * Double(ppi)
-        let fontSize = 0.6 * buttonHeight // Slightly reducing font size ratio 
+        
+        // Adjusted font size - reducing by factor of 2 to match physical acuity cards
+        // The 0.3 factor (instead of 0.6) accounts for font rendering differences
+        let fontSize = 0.3 * buttonHeight 
         
         button.setTitle(letText, for: .normal)
         button.titleLabel?.font = UIFont(name: "Sloan", size: CGFloat(fontSize))
         button.frame.size = CGSize(width: buttonHeight * 5, height: buttonHeight) // Standard 5:1 width to height ratio for optotypes
+        
+        // Debug output to verify scaling
+        print("Acuity: \(dAcuity), Distance: \(averageDistanceCM)cm, Visual angle: \(visual_angle), Scale factor: \(scale_factor), Button height: \(buttonHeight)px, Font size: \(fontSize)pt")
     }
 
     @IBAction func option1(_ sender: Any) {

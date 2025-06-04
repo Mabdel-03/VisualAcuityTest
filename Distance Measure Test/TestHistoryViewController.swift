@@ -1,4 +1,5 @@
 import UIKit
+import AVFoundation
 
 class TestHistoryViewController: UIViewController {
     // MARK: - UI Elements
@@ -29,6 +30,16 @@ class TestHistoryViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         displayTestHistory()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        playAudioInstructions()
+    }
+    
+    private func playAudioInstructions() {
+        let instructionText = "This screen shows your previous test results organized by date and time. You can review your visual acuity progress over time."
+        SharedAudioManager.shared.playText(instructionText, source: "Test History")
     }
     
     // MARK: - Setup Methods
@@ -87,7 +98,8 @@ class TestHistoryViewController: UIViewController {
                 
                 // Add left eye results
                 if let leftEyeResult = testResults["Left Eye"] {
-                    let leftEyeLabel = createLabel(text: "Left Eye: " + leftEyeResult, fontSize: 18, weight: .regular)
+                    let displayText = isDefaultValue(leftEyeResult) ? "Left Eye: Not Tested" : "Left Eye: " + leftEyeResult
+                    let leftEyeLabel = createLabel(text: displayText, fontSize: 18, weight: .regular)
                     contentView.addSubview(leftEyeLabel)
                     
                     NSLayoutConstraint.activate([
@@ -101,7 +113,8 @@ class TestHistoryViewController: UIViewController {
                 
                 // Add right eye results
                 if let rightEyeResult = testResults["Right Eye"] {
-                    let rightEyeLabel = createLabel(text: "Right Eye: " + rightEyeResult, fontSize: 18, weight: .regular)
+                    let displayText = isDefaultValue(rightEyeResult) ? "Right Eye: Not Tested" : "Right Eye: " + rightEyeResult
+                    let rightEyeLabel = createLabel(text: displayText, fontSize: 18, weight: .regular)
                     contentView.addSubview(rightEyeLabel)
                     
                     NSLayoutConstraint.activate([
@@ -119,6 +132,12 @@ class TestHistoryViewController: UIViewController {
         NSLayoutConstraint.activate([
             previousView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
         ])
+    }
+    
+    // Helper function to check if the result contains default/invalid values
+    private func isDefaultValue(_ result: String) -> Bool {
+        // Check for default values that indicate the eye wasn't actually tested
+        return result.contains("-1.000") || result.contains("20/-1") || result.contains("LogMAR: -1")
     }
     
     private func createLabel(text: String, fontSize: CGFloat, weight: UIFont.Weight) -> UILabel {

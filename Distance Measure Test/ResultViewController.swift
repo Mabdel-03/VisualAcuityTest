@@ -1,4 +1,6 @@
 import UIKit
+import AVFoundation
+
 var finalAcuityDictionary: [Int: String] = [:] // Dictionary to store final acuity values
 var eyeNumber: Int = 1 // 1 for left eye, 2 for right eye
 var allTestsDictionary: [String: [String: String]] = [:] // Dictionary to store all test results
@@ -9,6 +11,7 @@ class ResultViewController: UIViewController {
     // MARK: - Properties
     var score: Int = 0
     var totalAttempts: Int = 0
+    
     // MARK: - UI Elements
     private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -81,6 +84,11 @@ class ResultViewController: UIViewController {
         setupUI()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        playAudioInstructions()
+    }
+    
     // MARK: - Setup Methods
     private func setupUI() {
         view.backgroundColor = UIColor.systemBackground
@@ -149,17 +157,29 @@ class ResultViewController: UIViewController {
     }
 
     func displayResults() {
-            // Right eye
-            // Get both eyes' results from the dictionary
-            if let leftEyeResult = finalAcuityDictionary[1] {
-                leftEyeResultsLabel.text = leftEyeResult.replacingOccurrences(of: "LogMAR: ", with: "LogMAR Score: ")
-                                                      .replacingOccurrences(of: "Snellen: ", with: "Snellen Score: ")
-            }
-            if let rightEyeResult = finalAcuityDictionary[2] {
-                rightEyeResultsLabel.text = rightEyeResult.replacingOccurrences(of: "LogMAR: ", with: "LogMAR Score: ")
-                                                        .replacingOccurrences(of: "Snellen: ", with: "Snellen Score: ")
-            }
-            doneButton.isHidden = false
+        // Left eye results
+        if let leftEyeResult = finalAcuityDictionary[1], !isDefaultValue(leftEyeResult) {
+            leftEyeResultsLabel.text = leftEyeResult.replacingOccurrences(of: "LogMAR: ", with: "LogMAR Score: ")
+                                                  .replacingOccurrences(of: "Snellen: ", with: "Snellen Score: ")
+        } else {
+            leftEyeResultsLabel.text = "Not Tested"
+        }
+        
+        // Right eye results
+        if let rightEyeResult = finalAcuityDictionary[2], !isDefaultValue(rightEyeResult) {
+            rightEyeResultsLabel.text = rightEyeResult.replacingOccurrences(of: "LogMAR: ", with: "LogMAR Score: ")
+                                                    .replacingOccurrences(of: "Snellen: ", with: "Snellen Score: ")
+        } else {
+            rightEyeResultsLabel.text = "Not Tested"
+        }
+        
+        doneButton.isHidden = false
+    }
+    
+    // Helper function to check if the result contains default/invalid values
+    private func isDefaultValue(_ result: String) -> Bool {
+        // Check for default values that indicate the eye wasn't actually tested
+        return result.contains("-1.000") || result.contains("20/-1") || result.contains("LogMAR: -1")
     }
 
     // MARK: - Private Methods
@@ -205,5 +225,10 @@ class ResultViewController: UIViewController {
         
         // Navigate back to the main screen
         navigationController?.popToRootViewController(animated: true)
+    }
+
+    private func playAudioInstructions() {
+        let instructionText = "Here are your test results. Your visual acuity scores are displayed for each eye tested. Tap 'Done' when you're finished reviewing your results."
+        SharedAudioManager.shared.playText(instructionText, source: "Results")
     }
 }

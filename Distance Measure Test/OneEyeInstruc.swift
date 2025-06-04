@@ -7,10 +7,12 @@
 
 import Foundation
 import UIKit
+import AVFoundation
 
 class OneEyeInstruc: UIViewController {
     @IBOutlet weak var instructionText: UILabel!
     @IBOutlet weak var oneEyeInstructions: UITextField!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         updateText()
@@ -19,6 +21,16 @@ class OneEyeInstruc: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateText()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        playAudioInstructions()
+    }
+    
+    private func playAudioInstructions() {
+        let instructionText = "Prepare for your vision test. Cover the eye not being tested and look at the screen with the eye being tested. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
+        SharedAudioManager.shared.playText(instructionText, source: "Eye Instructions")
     }
     
     private func updateText() {

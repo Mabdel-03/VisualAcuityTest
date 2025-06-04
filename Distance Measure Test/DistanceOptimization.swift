@@ -1,6 +1,7 @@
 import UIKit
 import SceneKit
 import ARKit
+import AVFoundation
 
 var averageDistanceCM = 0.0
 
@@ -72,6 +73,16 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
 
         leftEye = node.clone()
         rightEye = node.clone()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        playAudioInstructions()
+    }
+    
+    private func playAudioInstructions() {
+        let instructionText = "Hold your phone at a comfortable distance where you can clearly see the white flower image. When the image appears sharp and clear, tap the 'Capture Distance' button to save this distance for your test."
+        SharedAudioManager.shared.playText(instructionText, source: "Distance Optimization")
     }
     
     override func viewWillAppear(_ animated: Bool) {

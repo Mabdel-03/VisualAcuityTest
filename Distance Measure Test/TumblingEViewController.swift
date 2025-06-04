@@ -8,6 +8,7 @@
 import UIKit
 import DevicePpi
 import ARKit
+import AVFoundation
 
 // MARK: - Global Variables
 
@@ -236,6 +237,13 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         
         // Update eye test label based on current eye number
         updateEyeTestLabel()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        // Play audio instructions for the tumbling E test screen
+        playAudioInstructions()
     }
 
     private func updateEyeTestLabel() {
@@ -823,10 +831,16 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             oneLetter.text = nonNilLetterText
             
             // Adjust size based on scale factor with standard 5:1 width to height ratio
-            oneLetter.frame.size = CGSize(width: (scale_factor * 5 * ppi), height: (scale_factor * ppi))
+            let labelHeight = scale_factor * ppi
+            oneLetter.frame.size = CGSize(width: (labelHeight * 5), height: labelHeight)
             
-            // Set the font size proportional to the label size
-            oneLetter.font = oneLetter.font.withSize(0.6 * oneLetter.frame.height)
+            // Adjusted font size - reducing by factor of 2 to match physical acuity cards
+            // The 0.3 factor (instead of 0.6) accounts for font rendering differences
+            let fontSize = 0.3 * oneLetter.frame.height
+            oneLetter.font = oneLetter.font.withSize(fontSize)
+            
+            // Debug output to verify scaling
+            print("Test Letter - Acuity: \(desired_acuity), Distance: \(averageDistanceCM)cm, Visual angle: \(visual_angle), Scale factor: \(scale_factor), Label height: \(labelHeight)px, Font size: \(fontSize)pt")
             
             return nonNilLetterText
         }
@@ -898,5 +912,10 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             
             performSegue(withIdentifier: "ShowResults", sender: self)
         }
+    }
+
+    private func playAudioInstructions() {
+        let instructionText = "Look at the letter C on the screen and swipe in the direction the opening is pointing. Swipe right if the opening points right, left if it points left, up if it points up, and down if it points down. Try to maintain your distance from the screen."
+        SharedAudioManager.shared.playText(instructionText, source: "Vision Test")
     }
 }
