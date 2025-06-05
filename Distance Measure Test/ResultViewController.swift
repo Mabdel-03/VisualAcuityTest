@@ -2,7 +2,7 @@ import UIKit
 import AVFoundation
 
 var finalAcuityDictionary: [Int: String] = [:] // Dictionary to store final acuity values
-var eyeNumber: Int = 1 // 1 for left eye, 2 for right eye
+var eyeNumber: Int = 2 // Start with right eye first (1 for left eye, 2 for right eye)
 var allTestsDictionary: [String: [String: String]] = [:] // Dictionary to store all test results
 var logMARValue: Double = -1.000
 var snellenValue: Double = -1
@@ -218,7 +218,7 @@ class ResultViewController: UIViewController {
         
         // Reset all global variables to their initial state
         finalAcuityDictionary.removeAll()
-        eyeNumber = 1
+        eyeNumber = 2
         finalAcuityScore = -Double.infinity
         logMARValue = -1.000
         snellenValue = -1

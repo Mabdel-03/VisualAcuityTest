@@ -27,6 +27,8 @@ class Select_Acuity: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         print(averageDistanceCM)
+        
+        // Set up all buttons with their appropriate letter sizes
         Button_ETDRS(B200, dAcuity: 200, letText: LETTER)
         Button_ETDRS(B160, dAcuity: 160, letText: LETTER)
         Button_ETDRS(B125, dAcuity: 125, letText: LETTER)
@@ -37,6 +39,9 @@ class Select_Acuity: UIViewController {
         Button_ETDRS(B40, dAcuity: 40, letText: LETTER)
         Button_ETDRS(B20, dAcuity: 32, letText: LETTER)
         Button_ETDRS(B10, dAcuity: 20, letText: LETTER)
+        
+        // Configure the stack view and buttons for dynamic sizing
+        configureButtonConstraints()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -58,18 +63,47 @@ class Select_Acuity: UIViewController {
         
         // Calculate size at viewing distance
         let scale_factor = Double(averageDistanceCM) * tan(visual_angle) * scaling_correction_factor
-        let buttonHeight = scale_factor * Double(ppi)
+        let letterHeight = scale_factor * Double(ppi)
         
         // Adjusted font size - reducing by factor of 2 to match physical acuity cards
         // The 0.3 factor (instead of 0.6) accounts for font rendering differences
-        let fontSize = 0.3 * buttonHeight 
+        let fontSize = 0.3 * letterHeight 
         
         button.setTitle(letText, for: .normal)
         button.titleLabel?.font = UIFont(name: "Sloan", size: CGFloat(fontSize))
-        button.frame.size = CGSize(width: buttonHeight * 5, height: buttonHeight) // Standard 5:1 width to height ratio for optotypes
+        
+        // Calculate appropriate padding based on letter size for full-width buttons
+        let verticalPadding: CGFloat = 20 + (CGFloat(fontSize) * 0.15) // Scale vertical padding with font size
+        let horizontalPadding: CGFloat = 16 // Minimal horizontal padding since button spans full width
+        
+        // Set content edge insets optimized for full-width layout
+        button.contentEdgeInsets = UIEdgeInsets(
+            top: verticalPadding,      // Adequate vertical padding
+            left: horizontalPadding,   // Minimal horizontal padding
+            bottom: verticalPadding,   // Adequate vertical padding
+            right: horizontalPadding   // Minimal horizontal padding
+        )
+        
+        // Configure button appearance for better visual feedback
+        button.layer.cornerRadius = 12 // Slightly larger radius for full-width buttons
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.lightGray.cgColor
+        button.backgroundColor = UIColor.systemBackground
+        
+        // Ensure text is centered in the full-width button
+        button.titleLabel?.textAlignment = .center
+        button.contentHorizontalAlignment = .center
+        button.contentVerticalAlignment = .center
+        
+        // Set content hugging and compression priorities for full-width layout
+        button.setContentHuggingPriority(.defaultLow, for: .horizontal)  // Allow horizontal expansion
+        button.setContentHuggingPriority(.required, for: .vertical)      // Keep tight vertical sizing
+        button.setContentCompressionResistancePriority(.defaultLow, for: .horizontal) // Allow compression if needed
+        button.setContentCompressionResistancePriority(.required, for: .vertical)     // Resist vertical compression
         
         // Debug output to verify scaling
-        print("Acuity: \(dAcuity), Distance: \(averageDistanceCM)cm, Visual angle: \(visual_angle), Scale factor: \(scale_factor), Button height: \(buttonHeight)px, Font size: \(fontSize)pt")
+        let intrinsicSize = button.intrinsicContentSize
+        print("Acuity: \(dAcuity), Letter height: \(letterHeight)px, Font size: \(fontSize)pt, Button intrinsic size: \(intrinsicSize.width)x\(intrinsicSize.height)px, V-Padding: \(verticalPadding)px")
     }
 
     @IBAction func option1(_ sender: Any) {
@@ -146,5 +180,57 @@ class Select_Acuity: UIViewController {
         print("Preparing for segue with acuity: \(String(describing: selectedAcuity))")
         // No need to set selectedAcuity on the destination since it's a global variable,
         // but you may want to set other properties
+    }
+    
+    private func configureButtonConstraints() {
+        // Get all the buttons
+        let buttons = [B200, B160, B125, B100, B80, B63, B50, B40, B20, B10]
+        
+        // Configure the stack view for full-width buttons
+        if let firstButton = buttons.compactMap({ $0 }).first,
+           let stackView = firstButton.superview as? UIStackView {
+            stackView.distribution = .fillEqually
+            stackView.alignment = .fill
+            stackView.spacing = 8 // Add some spacing between buttons
+            print("✅ Stack view configured: distribution=fillEqually, alignment=fill, spacing=8")
+        } else {
+            print("⚠️ Could not find stack view - buttons may not be in a UIStackView")
+        }
+        
+        for button in buttons {
+            guard let button = button else { continue }
+            
+            // Remove any existing height constraints that were set to 200 in the storyboard
+            button.constraints.forEach { constraint in
+                if constraint.firstAttribute == .height && constraint.constant == 200 {
+                    constraint.isActive = false
+                    print("🔧 Removed 200px height constraint from button")
+                }
+            }
+            
+            // Also check constraints from the superview (stack view)
+            if let stackView = button.superview {
+                stackView.constraints.forEach { constraint in
+                    if (constraint.firstItem as? UIButton) == button && 
+                       constraint.firstAttribute == .height && 
+                       constraint.constant == 200 {
+                        constraint.isActive = false
+                        print("🔧 Removed 200px height constraint from stack view")
+                    }
+                }
+            }
+            
+            // Configure button to expand horizontally while maintaining dynamic height
+            button.setContentHuggingPriority(.defaultLow, for: .horizontal) // Allow horizontal expansion
+            button.setContentHuggingPriority(.required, for: .vertical)     // Keep tight vertical sizing
+            button.setContentCompressionResistancePriority(.defaultLow, for: .horizontal) // Allow compression if needed
+            button.setContentCompressionResistancePriority(.required, for: .vertical)     // Resist vertical compression
+        }
+        
+        // Force layout update to apply the new sizing
+        view.setNeedsLayout()
+        view.layoutIfNeeded()
+        
+        print("✅ Button constraints configured for full-width dynamic sizing")
     }
 }

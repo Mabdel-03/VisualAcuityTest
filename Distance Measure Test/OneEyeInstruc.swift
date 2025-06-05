@@ -39,30 +39,34 @@ class OneEyeInstruc: UIViewController {
     }
     
     private func playAudioInstructions() {
-        let instructionText = "Prepare for your vision test. Cover the eye not being tested and look at the screen with the eye being tested. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
+        let instructionText: String
+        if eyeNumber == 2 {
+            instructionText = "Prepare for your right eye vision test. Cover your left eye and look at the screen with your right eye. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
+        } else {
+            instructionText = "Prepare for your left eye vision test. Cover your right eye and look at the screen with your left eye. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
+        }
         SharedAudioManager.shared.playText(instructionText, source: "Eye Instructions")
     }
     
     private func updateText() {
-        if eyeNumber == 1 {
-            oneEyeInstructions.text = "Left Test"
-            instructionText.text = "Close your right eye and look at the screen with your left eye. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
-        } else {
+        if eyeNumber == 2 {
             oneEyeInstructions.text = "Right Test"
             instructionText.text = "Close your left eye and look at the screen with your right eye. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
+        } else {
+            oneEyeInstructions.text = "Left Test"
+            instructionText.text = "Close your right eye and look at the screen with your left eye. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
         }
     }
     
     @IBAction func skipButtonPressed(_ sender: Any) {
-        if eyeNumber == 1 {
-            // Left eye test - skip to right eye test
-            finalAcuityDictionary[1] = "LogMAR: -1.000, Snellen: 20/-1"
-            eyeNumber = 2
+        if eyeNumber == 2 {
+            // Right eye test (tested first) - skip to left eye test
+            finalAcuityDictionary[2] = "LogMAR: -1.000, Snellen: 20/-1"
+            eyeNumber = 1
             updateText()
         } else {
-            // Right eye test - go to results
-            // Only set right eye results if they haven't been set yet
-            finalAcuityDictionary[2] = "LogMAR: -1.000, Snellen: 20/-1"
+            // Left eye test (tested second) - go to results
+            finalAcuityDictionary[1] = "LogMAR: -1.000, Snellen: 20/-1"
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             if let resultVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as? ResultViewController {
                 navigationController?.pushViewController(resultVC, animated: true)
