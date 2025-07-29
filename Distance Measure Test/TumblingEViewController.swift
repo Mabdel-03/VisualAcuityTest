@@ -135,7 +135,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         label.textAlignment = .center
-        label.textColor = UIColor.black
+        label.textColor = UIColor(red: 0.820, green: 0.106, blue: 0.376, alpha: 1.0) // #D11B60
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()

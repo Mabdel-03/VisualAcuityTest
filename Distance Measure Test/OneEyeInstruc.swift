@@ -34,8 +34,9 @@ class OneEyeInstruc: UIViewController {
         instructionText.textAlignment = .center
         instructionText.numberOfLines = 0
         
-        // Center the text field
+        // Center the text field and set color
         oneEyeInstructions.textAlignment = .center
+        oneEyeInstructions.textColor = UIColor(red: 0.820, green: 0.106, blue: 0.376, alpha: 1.0) // #D11B60
     }
     
     private func playAudioInstructions() {

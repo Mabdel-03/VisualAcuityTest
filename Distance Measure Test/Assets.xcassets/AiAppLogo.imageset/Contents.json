@@ -1,15 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "_b6a25da9-fde3-4781-bee4-832000125a15.jpg",
+      "filename" : "transparent-Photoroom-3.jpg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "transparent-Photoroom-3 2.jpg",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "transparent-Photoroom-3 1.jpg",
       "idiom" : "universal",
       "scale" : "3x"
     }
