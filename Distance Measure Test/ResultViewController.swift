@@ -66,12 +66,13 @@ class ResultViewController: UIViewController {
     }()
     
     private lazy var doneButton: UIButton = {
-        let button = UIButton(type: .system)
+        let button = UIButton(type: .custom)
         button.setTitle("Done", for: .normal)
         button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor.systemBlue
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        button.layer.cornerRadius = 10
+        button.backgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0) // #396C6D
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 30)
+        button.layer.cornerRadius = CORNER_RADIUS
+        button.layer.masksToBounds = true
         button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.isHidden = true
@@ -148,7 +149,7 @@ class ResultViewController: UIViewController {
             // Done button constraints
             doneButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             doneButton.topAnchor.constraint(equalTo: rightEyeResultsLabel.bottomAnchor, constant: 50),
-            doneButton.widthAnchor.constraint(equalToConstant: 200),
+            doneButton.widthAnchor.constraint(equalToConstant: 242),
             doneButton.heightAnchor.constraint(equalToConstant: 50),
             doneButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
         ])
