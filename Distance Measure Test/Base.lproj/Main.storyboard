@@ -23,14 +23,24 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="AiAppLogo" translatesAutoresizingMaskIntoConstraints="NO" id="1zV-I3-jsd">
-                                <rect key="frame" x="75" y="103" width="250" height="177"/>
+                                <rect key="frame" x="75" y="150" width="250" height="177"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             </imageView>
+                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="button-background">
+                                <rect key="frame" x="40" y="420" width="313" height="340"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" red="0.95" green="0.95" blue="0.95" alpha="0.5" colorSpace="custom" customColorSpace="sRGB"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="20"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </view>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="xGJ-vI-2Hr">
                                 <rect key="frame" x="75" y="445" width="242" height="50"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Start Test">
+                                <buttonConfiguration key="configuration" style="filled" title="Test">
                                     <fontDescription key="titleFontDescription" type="system" pointSize="30"/>
                                     <color key="baseForegroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     <color key="baseBackgroundColor" red="0.22352941176470587" green="0.42352941176470588" blue="0.42745098039215684" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
@@ -63,7 +73,7 @@
                                 <rect key="frame" x="75" y="526" width="242" height="50"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Completed Tests">
+                                <buttonConfiguration key="configuration" style="filled" title="History">
                                     <fontDescription key="titleFontDescription" type="system" pointSize="30"/>
                                     <color key="baseForegroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     <color key="baseBackgroundColor" red="0.2235293984" green="0.42352938649999999" blue="0.42745098469999998" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
@@ -72,8 +82,8 @@
                                     <action selector="goToTestHistory:" destination="lbh-aZ-5cA" eventType="touchUpInside" id="shv-a0-v44"/>
                                 </connections>
                             </button>
-                            <textField opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" text="Daisy Sight" textAlignment="center" minimumFontSize="20" translatesAutoresizingMaskIntoConstraints="NO" id="55T-vu-dlo">
-                                <rect key="frame" x="-12" y="194" width="424" height="63"/>
+                            <textField opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" text="Fleur Sight" textAlignment="center" minimumFontSize="20" translatesAutoresizingMaskIntoConstraints="NO" id="55T-vu-dlo">
+                                <rect key="frame" x="-12" y="241" width="424" height="63"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="textColor" red="0.25098040700000002" green="0.42745098469999998" blue="0.45490193369999998" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                 <fontDescription key="fontDescription" name="Menlo-Regular" family="Menlo" pointSize="24"/>
@@ -108,7 +118,7 @@
                                 <rect key="frame" x="90" y="718" width="214" height="47"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Start Acuity Test">
+                                <buttonConfiguration key="configuration" style="filled" title="Continue">
                                     <fontDescription key="titleFontDescription" type="system" pointSize="27"/>
                                     <color key="baseForegroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     <color key="baseBackgroundColor" red="0.2470588088" green="0.42352938649999999" blue="0.45098042490000001" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
@@ -164,7 +174,7 @@
                                 <rect key="frame" x="89" y="641" width="214" height="47"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="filled" title="Start Acuity Test">
+                                <buttonConfiguration key="configuration" style="filled" title="Begin Test">
                                     <fontDescription key="titleFontDescription" type="system" pointSize="27"/>
                                     <color key="baseForegroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                     <color key="baseBackgroundColor" red="0.2235293984" green="0.42352938649999999" blue="0.42745098469999998" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
@@ -216,7 +226,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="TargetImage" translatesAutoresizingMaskIntoConstraints="NO" id="cWB-iE-6yw">
-                                <rect key="frame" x="-50" y="122" width="393" height="344"/>
+                                <rect key="frame" x="-50" y="200" width="393" height="344"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             </imageView>
                             <arscnView hidden="YES" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="BrB-h1-WRS">
@@ -280,6 +290,7 @@
                     <view key="view" contentMode="scaleToFill" id="Ofq-kr-fW5">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" red="0.969" green="0.808" blue="0.275" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <subviews>
                             <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="eJv-kA-lL1">
                                 <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
@@ -466,7 +477,7 @@
                             </scrollView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="llb-mg-yUc"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <color key="backgroundColor" red="0.224" green="0.424" blue="0.427" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="eJv-kA-lL1" firstAttribute="leading" secondItem="llb-mg-yUc" secondAttribute="leading" id="40Y-sJ-Gqy"/>
                             <constraint firstAttribute="bottom" secondItem="eJv-kA-lL1" secondAttribute="bottom" id="SHa-aB-2Rb"/>
