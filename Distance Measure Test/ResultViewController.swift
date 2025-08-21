@@ -3,16 +3,84 @@ import AVFoundation
 
 var finalAcuityDictionary: [Int: String] = [:] // Dictionary to store final acuity values
 var eyeNumber: Int = 2 // Start with right eye first (1 for left eye, 2 for right eye)
-var allTestsDictionary: [String: [String: String]] = [:] // Dictionary to store all test results
 var logMARValue: Double = -1.000
 var snellenValue: Double = -1
 
+/* TestDataManager class is designed to manage the persistent storage of the test results.
+    It is a singleton class that is used to save and retrieve the test results from the user's
+    device.
+*/
+class TestDataManager {
+    static let shared = TestDataManager()
+    private let userDefaults = UserDefaults.standard
+    private let allTestsKey = "allTestsDictionary"
+    
+    private init() {}
+    
+    // Save test results to persistent storage
+    func saveTestResults(_ testResults: [String: String], for timestamp: String) {
+        var allTests = getAllTests()
+        allTests[timestamp] = testResults
+        
+        // Convert dictionary to Data for storage
+        if let data = try? JSONSerialization.data(withJSONObject: allTests) {
+            userDefaults.set(data, forKey: allTestsKey)
+        }
+    }
+    
+    // Retrieve all test results from persistent storage
+    func getAllTests() -> [String: [String: String]] {
+        guard let data = userDefaults.data(forKey: allTestsKey),
+              let allTests = try? JSONSerialization.jsonObject(with: data) as? [String: [String: String]] else {
+            return [:]
+        }
+        return allTests
+    }
+    
+    // Clear all test history (optional method for resetting)
+    func clearAllTests() {
+        userDefaults.removeObject(forKey: allTestsKey)
+    }
+    
+    // Get the total number of tests performed
+    func getTestCount() -> Int {
+        return getAllTests().count
+    }
+    
+    // Check if there are any saved tests
+    func hasTests() -> Bool {
+        return !getAllTests().isEmpty
+    }
+    
+    // Export all test data as a formatted string (for debugging)
+    func exportTestData() -> String {
+        let allTests = getAllTests()
+        var exportString = "Test History Export\n"
+        exportString += "Total Tests: \(allTests.count)\n"
+        exportString += "==================\n\n"
+        
+        let sortedTimestamps = allTests.keys.sorted(by: >)
+        for timestamp in sortedTimestamps {
+            if let testResults = allTests[timestamp] {
+                exportString += "Date: \(timestamp)\n"
+                for (eye, result) in testResults {
+                    exportString += "\(eye): \(result)\n"
+                }
+                exportString += "------------------\n"
+            }
+        }
+        return exportString
+    }
+}
+
+/* ResultViewController class is designed to display the results of the test.
+    On this page, the user is given the results of the test for both eyes.
+*/
 class ResultViewController: UIViewController {
-    // MARK: - Properties
     var score: Int = 0
     var totalAttempts: Int = 0
     
-    // MARK: - UI Elements
+    // UI ELEMENTS
     private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -79,7 +147,6 @@ class ResultViewController: UIViewController {
         return button
     }()
     
-    // MARK: - Lifecycle Methods
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -90,7 +157,8 @@ class ResultViewController: UIViewController {
         playAudioInstructions()
     }
     
-    // MARK: - Setup Methods
+    /* Sets up the UI for the result scene.
+    */
     private func setupUI() {
         view.backgroundColor = UIColor.systemBackground
         title = "Test Results"
@@ -122,21 +190,9 @@ class ResultViewController: UIViewController {
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
-            // Left eye title constraints
-            leftEyeTitleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            leftEyeTitleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 100),
-            leftEyeTitleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
-            leftEyeTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
-            
-            // Left eye results constraints
-            leftEyeResultsLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            leftEyeResultsLabel.topAnchor.constraint(equalTo: leftEyeTitleLabel.bottomAnchor, constant: 20),
-            leftEyeResultsLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
-            leftEyeResultsLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
-            
             // Right eye title constraints
             rightEyeTitleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            rightEyeTitleLabel.topAnchor.constraint(equalTo: leftEyeResultsLabel.bottomAnchor, constant: 50),
+            rightEyeTitleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 100),
             rightEyeTitleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
             rightEyeTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
             
@@ -145,10 +201,22 @@ class ResultViewController: UIViewController {
             rightEyeResultsLabel.topAnchor.constraint(equalTo: rightEyeTitleLabel.bottomAnchor, constant: 20),
             rightEyeResultsLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
             rightEyeResultsLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
+            
+            // Left eye title constraints
+            leftEyeTitleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            leftEyeTitleLabel.topAnchor.constraint(equalTo: rightEyeResultsLabel.bottomAnchor, constant: 50),
+            leftEyeTitleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
+            leftEyeTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
+            
+            // Left eye results constraints
+            leftEyeResultsLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            leftEyeResultsLabel.topAnchor.constraint(equalTo: leftEyeTitleLabel.bottomAnchor, constant: 20),
+            leftEyeResultsLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
+            leftEyeResultsLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
 //            
             // Done button constraints
             doneButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            doneButton.topAnchor.constraint(equalTo: rightEyeResultsLabel.bottomAnchor, constant: 50),
+            doneButton.topAnchor.constraint(equalTo: leftEyeResultsLabel.bottomAnchor, constant: 50),
             doneButton.widthAnchor.constraint(equalToConstant: 242),
             doneButton.heightAnchor.constraint(equalToConstant: 50),
             doneButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
@@ -157,6 +225,8 @@ class ResultViewController: UIViewController {
         displayResults()
     }
 
+    /* Displays the results of the test for both eyes.
+    */
     func displayResults() {
         // Left eye results
         if let leftEyeResult = finalAcuityDictionary[1], !isDefaultValue(leftEyeResult) {
@@ -183,22 +253,32 @@ class ResultViewController: UIViewController {
         return result.contains("-1.000") || result.contains("20/-1") || result.contains("LogMAR: -1")
     }
 
-    // MARK: - Private Methods
+    /* Plays audio instructions to the user.
+    */
+    private func playAudioInstructions() {
+        let instructionText = "Here are your test results. Your visual acuity scores are displayed for each eye tested. Tap 'Done' when you're finished reviewing your results."
+        SharedAudioManager.shared.playText(instructionText, source: "Results")
+    }
 
-    // MARK: - Actions
+    /* Redoes the test.
+    */
     @IBAction func redoTest(_ sender: Any) {
         navigationController?.popViewController(animated: true)
     }
     
-    @IBAction func tapDone(_ sender: Any) {
-        // Store the final acuity score in the dictionary
-                finalAcuityDictionary[eyeNumber] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
-        print(finalAcuityDictionary)
-        // Increment eye number for the next test
-        //eyeNumber += 1
-        navigationController?.popToRootViewController(animated: true)
-    }
+    /* Saves the results of the test and navigates back to the main menu.
+    */
+    // @IBAction func tapDone(_ sender: Any) {
+    //     // Store the final acuity score in the dictionary
+    //     finalAcuityDictionary[eyeNumber] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+    //     print(finalAcuityDictionary)
+    //     // Increment eye number for the next test
+    //     //eyeNumber += 1
+    //     navigationController?.popToRootViewController(animated: true)
+    // }
 
+    /* Saves the results of the test and navigates back to the main menu.
+    */
     @objc func doneButtonTapped() {
         // Create a timestamp for this test
         let dateFormatter = DateFormatter()
@@ -215,7 +295,11 @@ class ResultViewController: UIViewController {
         }
         
         // Add to all tests dictionary
-        allTestsDictionary[timestamp] = testResults
+        TestDataManager.shared.saveTestResults(testResults, for: timestamp)
+        
+        // Debug: Print the saved data
+        print("Test results saved for timestamp: \(timestamp)")
+        print("All tests count: \(TestDataManager.shared.getTestCount())")
         
         // Reset all global variables to their initial state
         finalAcuityDictionary.removeAll()
@@ -228,8 +312,4 @@ class ResultViewController: UIViewController {
         navigationController?.popToRootViewController(animated: true)
     }
 
-    private func playAudioInstructions() {
-        let instructionText = "Here are your test results. Your visual acuity scores are displayed for each eye tested. Tap 'Done' when you're finished reviewing your results."
-        SharedAudioManager.shared.playText(instructionText, source: "Results")
-    }
 }

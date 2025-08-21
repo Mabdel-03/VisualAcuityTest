@@ -9,6 +9,10 @@ import Foundation
 import UIKit
 import AVFoundation
 
+/* OneEyeInstruc class is designed to display the instructions scene for just one eye.
+    On this page, the user is given instructions on how to perform the test for either the
+    left or right eye.
+*/
 class OneEyeInstruc: UIViewController {
     @IBOutlet weak var instructionText: UILabel!
     @IBOutlet weak var oneEyeInstructions: UITextField!
@@ -29,6 +33,8 @@ class OneEyeInstruc: UIViewController {
         playAudioInstructions()
     }
     
+    /* Sets up the UI for the one eye instructions scene.
+    */
     private func setupCenteredUI() {
         // Center the instruction text
         instructionText.textAlignment = .center
@@ -39,6 +45,8 @@ class OneEyeInstruc: UIViewController {
         oneEyeInstructions.textColor = UIColor(red: 0.820, green: 0.106, blue: 0.376, alpha: 1.0) // #D11B60
     }
     
+    /* Plays audio instructions to the user.
+    */
     private func playAudioInstructions() {
         let instructionText: String
         if eyeNumber == 2 {
@@ -49,6 +57,8 @@ class OneEyeInstruc: UIViewController {
         SharedAudioManager.shared.playText(instructionText, source: "Eye Instructions")
     }
     
+    /* Updates the text on the one eye instructions scene.
+    */
     private func updateText() {
         if eyeNumber == 2 {
             oneEyeInstructions.text = "Right Test"
@@ -59,6 +69,8 @@ class OneEyeInstruc: UIViewController {
         }
     }
     
+    /* Skips the one eye test and goes to the results scene.
+    */
     @IBAction func skipButtonPressed(_ sender: Any) {
         if eyeNumber == 2 {
             // Right eye test (tested first) - skip to left eye test

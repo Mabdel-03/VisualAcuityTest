@@ -5,9 +5,14 @@ import AVFoundation
 
 var averageDistanceCM = 0.0
 
+/*
+ The DistanceTracker class is designed to manage distance measurements. 
+ It provides real-time distance tracking with smoothing algorithms and persistent 
+ storage capabilities.
+ */
+
 class DistanceTracker {
     static let shared = DistanceTracker()
-    private init() {}
 
     var currentDistanceCM: Double = 0.0  // Live tracking distance
     var targetDistanceCM: Double = 0.0   // Captured optimal distance
@@ -15,22 +20,28 @@ class DistanceTracker {
     // Buffer for smoothing distance readings
     private var recentReadings: [Double] = []
     private let maxReadings = 5
+
+    /* Private initializer enforcing singleton pattern
+    */
+    private init() {}
     
-    // Add a new reading with smoothing
+    /* Adds a new distance reading with smoothing algorithm. 
+        Validates input (rejects values ≤ 0), adds reading to buffer, 
+        maintains buffer size limit, and updates currentDistanceCM with 
+        smoothed average.
+        @param distance: Distance value in centimeters
+    */
     func addReading(_ distance: Double) {
         // Don't add invalid readings
         if distance <= 0 {
             return
         }
-        
         // Add to recent readings
         recentReadings.append(distance)
-        
         // Keep only the most recent readings
         if recentReadings.count > maxReadings {
             recentReadings.removeFirst()
         }
-        
         // Update current distance with smoothed value
         if !recentReadings.isEmpty {
             currentDistanceCM = recentReadings.reduce(0, +) / Double(recentReadings.count)
@@ -39,6 +50,12 @@ class DistanceTracker {
 }
 
 
+
+/* DistanceOptimization class is designed to manage the distance optimization scene on the
+    visual acuity app. On this page, the user is asked to hold their phone at a distance where
+    they can clearly see the flower image. When the image appears the most clear, the user
+    taps 'Capture Distance' button to save this distance as the optimal distance for their test.
+*/
 
 class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     @IBOutlet var sceneView: ARSCNView!
@@ -57,10 +74,8 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
-        
         // Create a new scene
         let scene = SCNScene(named: "/ship.scn")!
-        
         // Set the scene to the view
         sceneView.scene = scene
 
@@ -79,7 +94,9 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         super.viewDidAppear(animated)
         playAudioInstructions()
     }
-    
+
+    /* Plays audio instructions to the user.
+    */
     private func playAudioInstructions() {
         let instructionText = "Hold your phone at a comfortable distance where you can clearly see the white flower image. When the image appears sharp and clear, tap the 'Capture Distance' button to save this distance for your test."
         SharedAudioManager.shared.playText(instructionText, source: "Distance Optimization")
@@ -101,7 +118,10 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         // Pause the view's session
         sceneView.session.pause()
     }
-//        
+
+    /* Captures the distance and immediately transitions to the next scene when the 
+    user taps the 'Capture Distance' button.
+    */
     @IBAction func capDistanceTransition(_ sender: Any) {
         // Make sure we have valid eye positions before capturing
         guard let frame = sceneView.session.currentFrame,
@@ -113,8 +133,7 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         let cameraTransform = frame.camera.transform
         let cameraPosition = SCNVector3(cameraTransform.columns.3.x,
                                         cameraTransform.columns.3.y,
-                                        cameraTransform.columns.3.z)
-                                        
+                                        cameraTransform.columns.3.z)                       
         let leftEyePos = leftEye.worldPosition
         let rightEyePos = rightEye.worldPosition
         
@@ -161,6 +180,10 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         UserDefaults.standard.set(distanceValue, forKey: "SavedTargetDistance")
     }
     
+    /* Called when ARKit first detects a face and creates the initial face 
+        node. Sets up the initial face tracking structure, called only once per 
+        face detection session.
+    */
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         faceNode = node
         faceNode.addChildNode(leftEye)
@@ -169,6 +192,10 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         trackDistance()
     }
 
+    /* Called every frame(60 times per second on most devices) while the 
+        face is being tracked. Continuously updates face and eye positions as 
+        the user moves.
+    */
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         faceNode.transform = node.transform
         guard let faceAnchor = anchor as? ARFaceAnchor else { return }
@@ -177,6 +204,8 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         trackDistance()
     }
 
+    /* Tracks the distance between the camera and the eyes.
+    */
     func trackDistance() {
         DispatchQueue.main.async {
             guard let frame = self.sceneView.session.currentFrame else { return }

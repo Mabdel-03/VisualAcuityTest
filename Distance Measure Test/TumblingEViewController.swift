@@ -10,7 +10,7 @@ import DevicePpi
 import ARKit
 import AVFoundation
 
-// MARK: - Global Variables
+//Global Variables
 
 /// Flag indicating if the test is currently paused due to distance issues
 var isPaused = false
@@ -43,13 +43,9 @@ let ppi: Double = {
 /// Final acuity score calculated at the end of the test
 var finalAcuityScore = -Double.infinity
 
-/**
- * TumblingEViewController
- *
- * This class implements a visual acuity test using a tumbling E paradigm.
- * The test displays a rotated "C" letter at various sizes, and the user 
- * must swipe in the direction the C is pointing. The test maintains
- * a fixed testing distance using AR face tracking.
+/* TumblingEViewController class implements a visual acuity test using a tumbling E paradigm.
+   The test displays a rotated "C" letter at various sizes, and the user must swipe in the
+   direction the C is pointing. The test maintains a fixed testing distance using AR face tracking.
  */
 class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     // MARK: - Properties
@@ -120,7 +116,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     
     // MARK: - UI Elements
     
-    /// Label displaying the tumbling C for the vision test
+    // Label displaying the tumbling C for the vision test
     private lazy var letterLabel: UILabel = {
         let label = UILabel()
         label.text = LETTER
@@ -130,7 +126,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         return label
     }()
     
-    /// Label indicating which eye is being tested
+    // Label indicating which eye is being tested
     private lazy var eyeTestLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
@@ -140,7 +136,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         return label
     }()
     
-    /// Label displaying instructions to the user
+    // Label displaying instructions to the user
     private lazy var instructionLabel: UILabel = {
         let label = UILabel()
         label.text = "Please swipe in the direction the C is pointing."
@@ -151,7 +147,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         return label
     }()
     
-    /// Label warning the user about incorrect distance
+    // Label warning the user about incorrect distance
     private lazy var warningLabel: UILabel = {
         let label = UILabel()
         label.text = "⚠️ Adjust Distance"
@@ -163,7 +159,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         return label
     }()
 
-    /// Label indicating distance is acceptable
+    // Label indicating distance is acceptable
     private lazy var checkmarkLabel: UILabel = {
         let label = UILabel()
         label.text = "✅ Distance OK"
@@ -175,7 +171,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         return label
     }()
     
-    /// Label with arrow indicating user should move closer
+    // Label with arrow indicating user should move closer
     private lazy var moveCloserArrowLabel: UILabel = {
         let label = UILabel()
         label.text = "⬇️ Move Closer ⬇️"
@@ -188,7 +184,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         return label
     }()
     
-    /// Label with arrow indicating user should move farther
+    // Label with arrow indicating user should move farther
     private lazy var moveFartherArrowLabel: UILabel = {
         let label = UILabel()
         label.text = "⬆️ Move Farther ⬆️"
@@ -203,54 +199,49 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     
     // MARK: - Test Properties
     
-    /// Current rotation angle of the letter (in degrees)
+    // Current rotation angle of the letter (in degrees)
     private var currentRotation: Double = 0
     
-    /// Number of correct answers
+    // Number of correct answers
     private var score = 0
     
-    /// Total number of test attempts
+    // Total number of test attempts
     private var totalAttempts = 0
     
-    /// Available rotation angles for the letter (right, down, left, up)
+    // Available rotation angles for the letter (right, down, left, up)
     private let possibleRotations = [0.0, 90.0, 180.0, 270.0]
     
-    /// Last distance used for letter scaling to prevent unnecessary updates
+    // Last distance used for letter scaling to prevent unnecessary updates
     private var lastScalingDistance: Double = 0.0
     
-    /// Minimum distance change required to trigger letter rescaling (in cm)
+    // Minimum distance change required to trigger letter rescaling (in cm)
     private let scalingDistanceThreshold: Double = 2.0
     
-    /// Last audio instruction played to avoid repetition
+    // Last audio instruction played to avoid repetition
     private var lastAudioInstruction: String = ""
     
-    /// Timer for audio instruction repetition
+    // Timer for audio instruction repetition
     private var audioInstructionTimer: Timer?
     
-    /// Display link for smooth distance monitoring
+    // Display link for smooth distance monitoring
     private var displayLink: CADisplayLink?
     
-    /// Base font size for scaling calculations
+    // Base font size for scaling calculations
     private let baseFontSize: CGFloat = 100.0
     
-    /// Last scale factor applied to prevent unnecessary transforms
+    // Last scale factor applied to prevent unnecessary transforms
     private var lastScaleFactor: CGFloat = 1.0
     
-    /// Last AR update time for throttling updates
+    // Last AR update time for throttling updates
     private var lastARUpdateTime: CFTimeInterval?
     
     // MARK: - Lifecycle Methods
     
-    /**
-     * Initializes the view and sets up the test environment.
-     * 
-     * This method:
-     * - Sets up the UI elements
-     * - Configures gesture recognizers for user input
-     * - Initializes the current acuity level from the selected value
-     * - Sets up distance tracking and boundaries
-     * - Initializes AR face tracking for distance monitoring
-     * - Sizes the test letter appropriately for the current acuity level
+    /* Initializes the view and sets up the test environment.
+       This method sets up the UI elements, configures gesture recognizers for user input,
+       initializes the current acuity level from the selected value, sets up distance tracking
+       and boundaries, initializes AR face tracking for distance monitoring, and sizes the
+       test letter appropriately for the current acuity level.
      */
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -310,11 +301,14 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         displayLink = nil
     }
 
+    /*
+    * Updates the eye test label based on the current eye number.
+    */
     private func updateEyeTestLabel() {
         eyeTestLabel.text = eyeNumber == 2 ? "Right Eye Test" : "Left Eye Test"
     }
 
-    /**
+    /*
      * Initializes the acuity level based on the user's selection.
      * If no selection was made or the selection is invalid, defaults to the largest letter size.
      */
@@ -338,7 +332,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
-    /**
+    /*
      * Initializes distance tracking parameters including
      * retrieving saved distances and setting acceptable bounds.
      */
@@ -374,7 +368,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         print("Distance bounds set to: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
     }
     
-    /**
+    /*
      * Sets up an emergency override gesture (triple tap) to bypass
      * distance checking if the user encounters persistent distance issues.
      */
@@ -385,7 +379,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         view.addGestureRecognizer(tripleTap)
     }
 
-    /**
+    /*
      * Handles the triple-tap gesture to bypass distance checking.
      * This is an emergency override for when distance detection is problematic.
      */
@@ -432,7 +426,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
 
-    /**
+    /*
      * Sets up AR face tracking for distance monitoring.
      * Initializes the AR scene and creates tracking nodes for the eyes.
      */
@@ -471,7 +465,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         print("📏 Acceptable range: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
     }
 
-    /**
+    /*
      * Initiates distance monitoring with CADisplayLink for better performance.
      * Can be configured to bypass distance checking for testing purposes.
      */
@@ -504,7 +498,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         print("🎯 Distance monitoring started with CADisplayLink at 10fps")
     }
 
-    /**
+    /*
      * Called when a new AR anchor is added to the scene.
      * Used to attach eye nodes to detected face anchors.
      */
@@ -518,7 +512,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         print("👁️ Face detected and tracking started")
     }
     
-    /**
+    /*
      * Called when an AR anchor is updated in the scene.
      * Updates eye positions and calculates distance from the device.
      * Optimized to reduce unnecessary calculations.
@@ -570,7 +564,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
 
-    /**
+    /*
      * Calculates Euclidean distance between two 3D points.
      * 
      * @param a First point
@@ -585,7 +579,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         )
     }
 
-    /**
+    /*
      * Sets up the UI elements and their constraints.
      */
     private func setupUI() {
@@ -638,7 +632,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         print("TumblingEViewController - constraints activated")
     }
     
-    /**
+    /*
      * Sets up swipe gesture recognizers for all four directions.
      */
     private func setupGestureRecognizers() {
@@ -652,7 +646,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     }
 
     // MARK: - Gesture Handling
-    /**
+    /*
      * Handles a user's swipe gesture and determines if it matches the direction of the letter.
      * 
      * @param gesture The UISwipeGestureRecognizer that triggered this action
@@ -681,15 +675,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
-    /**
-     * Processes the current trial state and determines the next steps in the test.
-     * 
-     * This method is called after each user response and handles:
-     * - Tracking correct answers for the current acuity level
-     * - Determining if the test should advance to a smaller letter size
-     * - Determining if the test should revert to a larger letter size
-     * - Calculating the final score if appropriate conditions are met
-     * - Resetting trial counters when changing acuity levels
+    /* Processes the current trial state and determines the next steps in the test.
+       This method is called after each user response and handles tracking correct answers,
+       determining acuity level changes, calculating final scores, and resetting trial counters.
      */
     private func processNextTrial() {
         print("trial:", trial, "correctAnswersInSet:",correctAnswersInSet)
@@ -741,9 +729,8 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         generateNewE() // Generate the next letter with updated size or same size
     }
     
-    /**
-     * Generates a new tumbling E with a random rotation.
-     * Animates the rotation of the letter to one of four possible orientations.
+    /* Generates a new tumbling E with a random rotation.
+       Animates the rotation of the letter to one of four possible orientations.
      */
     private func generateNewE() {
         currentRotation = possibleRotations.randomElement() ?? 0
@@ -752,9 +739,8 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
-    /**
-     * Prepares for navigation to the results screen.
-     * Passes the final score data to the destination view controller.
+    /* Prepares for navigation to the results screen.
+       Passes the final score data to the destination view controller.
      */
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowResults",
@@ -764,13 +750,11 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
 
-    /**
-     * Checks if the user's distance from the device is within acceptable bounds.
-     * Implements hysteresis to prevent frequent toggling between paused/unpaused states.
-     * Also updates letter size in real-time when distance is within acceptable bounds.
-     * Shows directional arrows and plays audio instructions when out of range.
-     * 
-     * @param liveDistance The current measured distance in centimeters
+    /* Checks if the user's distance from the device is within acceptable bounds.
+       Implements hysteresis to prevent frequent toggling between paused/unpaused states.
+       Also updates letter size in real-time when distance is within acceptable bounds.
+       Shows directional arrows and plays audio instructions when out of range.
+       @param liveDistance The current measured distance in centimeters
      */
     private func checkDistance(_ liveDistance: Double) {
         // Always print extreme values
@@ -823,8 +807,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
-    /**
-     * Updates directional indicators and plays audio instructions based on whether user is too close or too far.
+    /* Updates directional indicators and plays audio instructions based on whether user is too close or too far.
      */
     private func updateDirectionalIndicators(tooClose: Bool, tooFar: Bool, distance: Double) {
         if tooClose {
@@ -840,8 +823,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
-    /**
-     * Plays audio instruction only if it's different from the last one played or enough time has passed.
+    /* Plays audio instruction only if it's different from the last one played or enough time has passed.
      */
     private func playAudioInstructionIfNeeded(_ instruction: String) {
         // Only play if it's a different instruction or enough time has passed
@@ -857,15 +839,13 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
-    /**
-     * Shows the distance warning indicator.
+    /* Shows the distance warning indicator.
      */
     private func showDistanceWarning() {
         warningLabel.isHidden = false
     }
     
-    /**
-     * Shows the distance OK indicator temporarily.
+    /* Shows the distance OK indicator temporarily.
      */
     private func showDistanceOK() {
         checkmarkLabel.isHidden = false
@@ -874,8 +854,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
-    /**
-     * Hides all distance-related indicators.
+    /* Hides all distance-related indicators.
      */
     private func hideAllDistanceIndicators() {
         warningLabel.isHidden = true
@@ -884,12 +863,10 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         moveFartherArrowLabel.isHidden = true
     }
     
-    /**
-     * Updates the letter size based on current distance if the change is significant enough.
-     * This provides live scaling while the user is within acceptable distance bounds.
-     * Uses efficient CALayer transforms instead of font changes for better performance.
-     * 
-     * @param currentDistance The current measured distance in centimeters
+    /* Updates the letter size based on current distance if the change is significant enough.
+       This provides live scaling while the user is within acceptable distance bounds.
+       Uses efficient CALayer transforms instead of font changes for better performance.
+       @param currentDistance The current measured distance in centimeters
      */
     private func updateLetterSizeForDistance(_ currentDistance: Double) {
         // Only update if the distance change is significant enough to warrant rescaling
@@ -918,9 +895,8 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
     
-    /**
-     * Resets the letter scaling factors when acuity changes.
-     * This ensures clean scaling for the new acuity level while preserving the calculated font size.
+    /* Resets the letter scaling factors when acuity changes.
+       This ensures clean scaling for the new acuity level while preserving the calculated font size.
      */
     private func resetLetterScaling() {
         // Reset transform to identity (but preserve the font size set by set_Size_E)
@@ -931,28 +907,25 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         print("🔄 Letter scaling reset for acuity change (preserving font size)")
     }
 
-    /**
-     * Pauses the visual acuity test when the user is not at the proper distance.
-     * Updates UI elements and disables user interaction.
+    /* Pauses the visual acuity test when the user is not at the proper distance.
+       Updates UI elements and disables user interaction.
      */
     private func pauseTest() {
         instructionLabel.text = "Paused: Adjust your distance"
         view.isUserInteractionEnabled = false // Disable swipes
     }
 
-    /**
-     * Resumes the visual acuity test when the user returns to the proper distance.
-     * Updates UI elements and re-enables user interaction.
+    /* Resumes the visual acuity test when the user returns to the proper distance.
+       Updates UI elements and re-enables user interaction.
      */
     private func resumeTest() {
         instructionLabel.text = "Please swipe in the direction the C is pointing."
         view.isUserInteractionEnabled = true // Re-enable swipes
     }
     
-    /**
-     * Updates the test based on current distance from the device.
-     * Called by CADisplayLink for smooth, efficient updates.
-     * Includes validation and fallback mechanisms for invalid distance readings.
+    /* Updates the test based on current distance from the device.
+       Called by CADisplayLink for smooth, efficient updates.
+       Includes validation and fallback mechanisms for invalid distance readings.
      */
     @objc private func updateLiveDistance() {
         let liveDistance = DistanceTracker.shared.currentDistanceCM  // Get latest live distance
@@ -1012,30 +985,26 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
 
     // MARK: - Public Methods
     
-    /**
-     * Sets the size of the letter based on the visual acuity level and viewing distance.
-     * Implements the standard ETDRS calculation for optotype sizing.
-     * This version uses the stored target distance for initial sizing.
-     * 
-     * @param oneLetter The UILabel to be sized
-     * @param desired_acuity The target acuity in 20/x notation
-     * @param letterText The letter to display
+    /* Sets the size of the letter based on the visual acuity level and viewing distance.
+       Implements the standard ETDRS calculation for optotype sizing.
+       This version uses the stored target distance for initial sizing.
+       @param oneLetter The UILabel to be sized
+       @param desired_acuity The target acuity in 20/x notation
+       @param letterText The letter to display
      * @return The text that was displayed or nil if the operation failed
      */
     func set_Size_E(_ oneLetter: UILabel?, desired_acuity: Int, letterText: String?) -> String? {
         return set_Size_E_WithDistance(oneLetter, desired_acuity: desired_acuity, letterText: letterText, distance: averageDistanceCM)
     }
     
-    /**
-     * Sets the size of the letter based on the visual acuity level and a specific viewing distance.
-     * Implements the standard ETDRS calculation for optotype sizing.
-     * This version allows for live distance-based scaling.
-     * 
-     * @param oneLetter The UILabel to be sized
-     * @param desired_acuity The target acuity in 20/x notation
-     * @param letterText The letter to display
-     * @param distance The current viewing distance in centimeters
-     * @return The text that was displayed or nil if the operation failed
+    /* Sets the size of the letter based on the visual acuity level and a specific viewing distance.
+       Implements the standard ETDRS calculation for optotype sizing.
+       This version allows for live distance-based scaling.
+       @param oneLetter The UILabel to be sized
+       @param desired_acuity The target acuity in 20/x notation
+       @param letterText The letter to display
+       @param distance The current viewing distance in centimeters
+       @return The text that was displayed or nil if the operation failed
      */
     func set_Size_E_WithDistance(_ oneLetter: UILabel?, desired_acuity: Int, letterText: String?, distance: Double) -> String? {
         // Standard ETDRS calculation: 5 arcminutes at 20/20 vision at designated testing distance
@@ -1068,12 +1037,10 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         return nil
     }
     
-    /**
-     * Find the index of a value in a list.
-     * 
-     * @param numList The array to search
-     * @param value The value to find
-     * @return The index of the value or -1 if not found
+    /* Find the index of a value in a list.
+       @param numList The array to search
+       @param value The value to find
+       @return The index of the value or -1 if not found
      */
     func getIndex(numList: [Int], value: Int) -> Int {
         for (index, val) in numList.enumerated() {
@@ -1084,16 +1051,14 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         return -1
     }
     
-    /**
-     * Calculates the final acuity score based on performance at two acuity levels.
-     * Uses the number of correct/incorrect responses to refine the score.
-     * Navigates to the results screen with the final score.
-     * 
-     * @param finishAcuity1 The first acuity level (20/x notation)
-     * @param amtCorrect1 Number of correct responses at first acuity level
-     * @param finishAcuity2 The second acuity level (20/x notation)
-     * @param amtCorrect2 Number of correct responses at second acuity level
-     * @param totalLetters Total number of letters shown at each acuity level
+    /* Calculates the final acuity score based on performance at two acuity levels.
+       Uses the number of correct/incorrect responses to refine the score.
+       Navigates to the results screen with the final score.
+       @param finishAcuity1 The first acuity level (20/x notation)
+       @param amtCorrect1 Number of correct responses at first acuity level
+       @param finishAcuity2 The second acuity level (20/x notation)
+       @param amtCorrect2 Number of correct responses at second acuity level
+       @param totalLetters Total number of letters shown at each acuity level
      */
     func calculateScore(finishAcuity1: Int, amtCorrect1: Int, finishAcuity2: Int, amtCorrect2: Int, totalLetters: Int = 10) {
         print("finishAcuity1", finishAcuity1)

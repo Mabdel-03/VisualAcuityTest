@@ -8,9 +8,12 @@
 import UIKit
 import AVFoundation
 
-let LETTER = "C"
+let LETTER = "C" // Landold C-- the letter that is displayed on the acuity selection scene.
 var selectedAcuity: Int?
 
+/* Select_Acuity class is designed to display the acuity selection scene.
+    On this page, the user is given a list of acuity levels to start the test at.
+*/
 class Select_Acuity: UIViewController {
     
     @IBOutlet weak var B200: UIButton!
@@ -49,11 +52,15 @@ class Select_Acuity: UIViewController {
         playAudioInstructions()
     }
     
+    /* Plays audio instructions to the user.
+    */
     private func playAudioInstructions() {
         let instructionText = "Choose your starting acuity level by tapping one of the letter options. The letters are sized according to different vision levels. Select the largest letter you can clearly see to begin your test."
         SharedAudioManager.shared.playText(instructionText, source: "Acuity Selection")
     }
     
+    /* Sets up the button text size and display for the acuity selection scene.
+    */
     func Button_ETDRS(_ button: UIButton, dAcuity: Int, letText: String) {
         // Standard ETDRS calculation: 5 arcminutes at 20/20 vision at designated testing distance
         // Visual angle in radians = (size in arcmin / 60) * (pi/180)
@@ -106,82 +113,63 @@ class Select_Acuity: UIViewController {
         print("Acuity: \(dAcuity), Letter height: \(letterHeight)px, Font size: \(fontSize)pt, Button intrinsic size: \(intrinsicSize.width)x\(intrinsicSize.height)px, V-Padding: \(verticalPadding)px")
     }
 
+    //DIFFERENT ACUITY LEVELS
+
     @IBAction func option1(_ sender: Any) {
         selectedAcuity = 200
-        print("Selected acuity set to: 200")
         proceedToTest()
     }
     @IBAction func option2(_ sender: Any) {
         selectedAcuity = 160
-        print("Selected acuity set to: 160")
         proceedToTest()
     }
     @IBAction func option3(_ sender: Any) {
         selectedAcuity = 125
-        print("Selected acuity set to: 125")
         proceedToTest()
     }
 
     @IBAction func option4(_ sender: Any) {
         selectedAcuity = 100
-        print("Selected acuity set to: 100")
         proceedToTest()
     }
     @IBAction func option5(_ sender: Any) {
         selectedAcuity = 80
-        print("Selected acuity set to: 80")
         proceedToTest()
     }
     @IBAction func option6(_ sender: Any) {
         selectedAcuity = 63
-        print("Selected acuity set to: 63")
         proceedToTest()
     }
 
     @IBAction func option7(_ sender: Any) {
         selectedAcuity = 50
-        print("Selected acuity set to: 50")
         proceedToTest()
     }
 
     @IBAction func option8(_ sender: Any) {
         selectedAcuity = 40
-        print("Selected acuity set to: 40")
         proceedToTest()
     }
     
     @IBAction func option9(_ sender: Any) {
         selectedAcuity = 32
-        print("Selected acuity set to: 32")
         proceedToTest()
     }
     
     @IBAction func option10(_ sender: Any) {
         selectedAcuity = 20
-        print("Selected acuity set to: 20")
         proceedToTest()
     }
     
+    /* This function ensures that selectedAcuity is saved before transitioning
+        to the test scene.
+    */
     private func proceedToTest() {
-        // This function ensures that selectedAcuity is saved before transitioning
-        // You might need to adjust this based on your segue method
         print("Proceeding to test with acuity: \(String(describing: selectedAcuity))")
-        
-        // If you're using a storyboard segue, you might have something like:
-        // performSegue(withIdentifier: "GoToTumblingETest", sender: self)
-        
-        // Or if you're using programmatic navigation:
-        // let tumblingEVC = TumblingEViewController()
-        // navigationController?.pushViewController(tumblingEVC, animated: true)
     }
     
-    // If you're using prepareForSegue, make sure selectedAcuity is passed correctly
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        print("Preparing for segue with acuity: \(String(describing: selectedAcuity))")
-        // No need to set selectedAcuity on the destination since it's a global variable,
-        // but you may want to set other properties
-    }
-    
+    /* Configures the button constraints for the acuity selection scene.
+    */
     private func configureButtonConstraints() {
         // Get all the buttons
         let buttons = [B200, B160, B125, B100, B80, B63, B50, B40, B20, B10]

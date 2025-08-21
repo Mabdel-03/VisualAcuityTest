@@ -8,10 +8,10 @@
 import UIKit
 import AVFoundation
 
-// MARK: - Global Constants
-let CORNER_RADIUS: CGFloat = 2.0
-
-// MARK: - Shared Audio Manager
+/* SharedAudioManager class is designed to manage the audio instructions on the
+    visual acuity app. It is a singleton class that is used to play audio instructions
+    to the user.
+*/
 class SharedAudioManager: NSObject {
     static let shared = SharedAudioManager()
     private let speechSynthesizer = AVSpeechSynthesizer()
@@ -106,7 +106,9 @@ class SharedAudioManager: NSObject {
     }
 }
 
-// MARK: - AVSpeechSynthesizerDelegate
+/* AVSpeechSynthesizerDelegate is a protocol that allows the SharedAudioManager to 
+    manage the audio instructions on the visual acuity app.
+*/
 extension SharedAudioManager: AVSpeechSynthesizerDelegate {
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
         print("🔊 Shared Audio Manager - ✅ Speech synthesis STARTED")
@@ -125,21 +127,19 @@ extension SharedAudioManager: AVSpeechSynthesizerDelegate {
     }
 }
 
+/* CORNER_RADIUS is a constant that is used to round the corners of the buttons on the main menu.
+*/
+let CORNER_RADIUS: CGFloat = 2.0
+
+/* MainMenu class is designed to manage the main menu scene on the
+    visual acuity app. This is what the user sees upon first opening the app.
+    Tuser is given the option to toggle their audio instructions as well as 
+    four buttons to navigate to the different scenes.
+*/
 class MainMenu: UIViewController {
-    // MARK: - Properties
-//    private lazy var completedTestsButton: UIButton = {
-//        let button = UIButton(type: .custom)
-//        button.setTitle("Completed Tests", for: .normal)
-//        button.setTitleColor(.white, for: .normal)
-//        button.backgroundColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
-//        button.titleLabel?.font = UIFont.systemFont(ofSize: 30)
-//        button.layer.cornerRadius = CORNER_RADIUS
-//        button.layer.masksToBounds = true
-//        button.addTarget(self, action: #selector(completedTestsButtonTapped), for: .touchUpInside)
-//        button.translatesAutoresizingMaskIntoConstraints = false
-//        return button
-//    }()
     
+    /* Settings button is a button that allows the user to toggle their audio instructions.
+    */
     private lazy var settingsButton: UIButton = {
         let button = UIButton(type: .custom)
         button.setTitle("⚙️ Audio", for: .normal)
@@ -152,32 +152,6 @@ class MainMenu: UIViewController {
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
-    
-//    private lazy var testAudioButton: UIButton = {
-//        let button = UIButton(type: .custom)
-//        button.setTitle("🔊 Test", for: .normal)
-//        button.setTitleColor(.white, for: .normal)
-//        button.backgroundColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
-//        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-//        button.layer.cornerRadius = CORNER_RADIUS
-//        button.layer.masksToBounds = true
-//        button.addTarget(self, action: #selector(testAudioButtonTapped), for: .touchUpInside)
-//        button.translatesAutoresizingMaskIntoConstraints = false
-//        return button
-//    }()
-//    
-//    private lazy var bypassTestButton: UIButton = {
-//        let button = UIButton(type: .custom)
-//        button.setTitle("🔊 Bypass", for: .normal)
-//        button.setTitleColor(.white, for: .normal)
-//        button.backgroundColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
-//        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-//        button.layer.cornerRadius = CORNER_RADIUS
-//        button.layer.masksToBounds = true
-//        button.addTarget(self, action: #selector(bypassTestButtonTapped), for: .touchUpInside)
-//        button.translatesAutoresizingMaskIntoConstraints = false
-//        return button
-//    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -191,20 +165,27 @@ class MainMenu: UIViewController {
         playAudioInstructions()
     }
     
-    // MARK: - Audio System Methods (Now using SharedAudioManager)
+    /* Initializes the audio settings for the user.
+    */
     private func initializeAudioSettings() {
         SharedAudioManager.shared.initializeDefaultSettings()
     }
     
+    /* Checks if the audio is enabled for the user.
+    */
     private func isAudioEnabled() -> Bool {
         return SharedAudioManager.shared.isAudioEnabled()
     }
     
+    /* Sets the audio enabled for the user.
+    */
     private func setAudioEnabled(_ enabled: Bool) {
         SharedAudioManager.shared.setAudioEnabled(enabled)
         updateAudioButtonAppearance()
     }
     
+    /* Updates the appearance of the audio button.
+    */
     private func updateAudioButtonAppearance() {
         let isEnabled = isAudioEnabled()
         settingsButton.setTitle(isEnabled ? "🔊 Audio On" : "🔇 Audio Off", for: .normal)
@@ -212,50 +193,36 @@ class MainMenu: UIViewController {
         print("🔊 Main Menu - Button updated - Audio is: \(isEnabled ? "ON" : "OFF")")
     }
     
+    /* Plays audio instructions to the user.
+    */
     private func playAudioInstructions() {
         let instructionText = "Welcome to the Visual Acuity Test app. Tap 'Start Test' to begin a new vision test, or tap 'Completed Tests' to view your test history. You can toggle audio instructions using the audio button."
         SharedAudioManager.shared.playText(instructionText, source: "Main Menu")
     }
     
-    // MARK: - Setup Methods
+    /* Sets up the UI for the main menu.
+    */
     private func setupUI() {
         view.backgroundColor = UIColor.white
-        
-        // Add buttons
-//        view.addSubview(completedTestsButton)
         view.addSubview(settingsButton)
-//        view.addSubview(testAudioButton)
-//        view.addSubview(bypassTestButton)
         
-        // Set up constraints
         NSLayoutConstraint.activate([
-            // Completed tests button (centered horizontally)
-            // Audio toggle button (top right)
             settingsButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
             settingsButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             settingsButton.widthAnchor.constraint(equalToConstant: 140),
             settingsButton.heightAnchor.constraint(equalToConstant: 44),
-            
-//            // Test audio button (bottom right)
-//            testAudioButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-//            testAudioButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-//            testAudioButton.widthAnchor.constraint(equalToConstant: 140),
-//            testAudioButton.heightAnchor.constraint(equalToConstant: 44),
-//            
-//            // Bypass test button (bottom left)
-//            bypassTestButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-//            bypassTestButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-//            bypassTestButton.widthAnchor.constraint(equalToConstant: 140),
-//            bypassTestButton.heightAnchor.constraint(equalToConstant: 44)
         ])
     }
     
-    // MARK: - Actions
+    /* Navigates to the test history scene.
+    */
     @IBAction func goToTestHistory(_ sender: Any) {
         let testHistoryVC = TestHistoryViewController()
         navigationController?.pushViewController(testHistoryVC, animated: true)
     }
     
+    /* Toggles the audio instructions for the user.
+    */
     @objc private func audioToggleButtonTapped() {
         let currentState = isAudioEnabled()
         setAudioEnabled(!currentState)
@@ -267,6 +234,8 @@ class MainMenu: UIViewController {
         }
     }
     
+    /* Tests the audio instructions for the user.
+    */
     @objc private func testAudioButtonTapped() {
         print("🔊 Test Audio button tapped!")
         
@@ -278,6 +247,8 @@ class MainMenu: UIViewController {
         SharedAudioManager.shared.playText(testText, source: "Main Menu Test")
     }
     
+    /* Bypasses the audio instructions for the user.
+    */
     @objc private func bypassTestButtonTapped() {
         print("🔊 BYPASS test button tapped!")
         

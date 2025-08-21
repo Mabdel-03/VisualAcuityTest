@@ -8,6 +8,10 @@
 import UIKit
 import AVFoundation
 
+/* Instructions class is designed to manage the instructions scene on the
+    visual acuity app. On this page, the user is given generalinstructions on how to
+    perform the test.
+*/
 class Instructions: UIViewController {
     @IBOutlet weak var instructionText: UILabel!
     
@@ -25,6 +29,8 @@ class Instructions: UIViewController {
         playAudioInstructions()
     }
     
+    /* Plays audio instructions to the user.
+    */
     private func playAudioInstructions() {
         let instructionText = "Welcome to the ETDRS Visual Acuity Test. First, we need to find the optimal distance for your test. In the next screen, hold your phone at a distance where the white flower image is clear and easy to see. Once you find a comfortable distance, press the 'Capture Distance' button, then tap 'Begin Test'."
         SharedAudioManager.shared.playText(instructionText, source: "Instructions")
