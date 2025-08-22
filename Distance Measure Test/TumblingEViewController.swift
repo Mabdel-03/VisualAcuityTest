@@ -342,7 +342,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         
         // If no valid distance is stored, try to load from UserDefaults
         if averageDistanceCM <= 0 {
-            if let savedDistance = UserDefaults.standard.object(forKey: "SavedTargetDistance") as? Double, 
+            if let savedDistance = UserDefaults.standard.object(forKey: "SavedTargetDistance") as? Double,
                savedDistance > 0 {
                 print("📏 Loading saved distance from UserDefaults: \(savedDistance) cm")
                 averageDistanceCM = savedDistance
@@ -566,7 +566,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
 
     /*
      * Calculates Euclidean distance between two 3D points.
-     * 
+     *
      * @param a First point
      * @param b Second point
      * @return Distance between the points in ARKit units
@@ -648,7 +648,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     // MARK: - Gesture Handling
     /*
      * Handles a user's swipe gesture and determines if it matches the direction of the letter.
-     * 
+     *
      * @param gesture The UISwipeGestureRecognizer that triggered this action
      */
     @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
@@ -666,12 +666,8 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         totalAttempts += 1
         trial += 1 // Increment the trial count within this set
         
-        // Visual feedback
-        letterLabel.textColor = isCorrect == 1 ? .green : .red
-        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.letterLabel.textColor = .black
-            self?.processNextTrial()
+                self?.processNextTrial()
         }
     }
     
@@ -733,10 +729,19 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
        Animates the rotation of the letter to one of four possible orientations.
      */
     private func generateNewE() {
-        currentRotation = possibleRotations.randomElement() ?? 0
-        UIView.animate(withDuration: 0.1) {
-            self.letterLabel.transform = CGAffineTransform(rotationAngle: CGFloat(self.currentRotation) * .pi / 180)
-        }
+        // Current position can be 0°, 90°, 180°, or 270°
+        // Add random increment (90°, 180°, or 270°) to get next position
+        let currentRotationValue = currentRotation
+        let increments = [90.0, 180.0, 270.0]
+        
+        var newRotation: Double
+        let randomIncrement = increments.randomElement() ?? 0.0
+        newRotation = (currentRotationValue + randomIncrement).truncatingRemainder(dividingBy: 360)
+        
+        currentRotation = newRotation
+        
+        // Apply rotation without animation
+        letterLabel.transform = CGAffineTransform(rotationAngle: CGFloat(currentRotation) * .pi / 180)
     }
     
     /* Prepares for navigation to the results screen.
@@ -758,7 +763,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      */
     private func checkDistance(_ liveDistance: Double) {
         // Always print extreme values
-        let isExtreme = liveDistance < 15 || liveDistance > 100 || 
+        let isExtreme = liveDistance < 15 || liveDistance > 100 ||
                        abs(liveDistance - averageDistanceCM) > 30
         
         if isExtreme || Int(Date().timeIntervalSince1970 * 10) % 10 == 0 {
