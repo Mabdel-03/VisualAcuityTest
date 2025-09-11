@@ -666,8 +666,8 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         totalAttempts += 1
         trial += 1 // Increment the trial count within this set
         
-        // Animate the letter flying off screen before processing next trial
-        animateLetterFlyOff { [weak self] in
+        // Animate the letter flying off screen in the swipe direction before processing next trial
+        animateLetterFlyOff(direction: gesture.direction) { [weak self] in
             self?.processNextTrial()
         }
     }
@@ -1114,10 +1114,10 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     // MARK: - Animation Methods
     
     /*
-     * Animates the Landolt C letter flying off screen with a smooth transition.
-     * Provides visual feedback when a swipe gesture response is completed.
+     * Animates the Landolt C letter flying off screen in the direction of the user's swipe.
+     * Provides visual feedback that connects the swipe gesture to the letter movement.
      */
-    private func animateLetterFlyOff(completion: @escaping () -> Void) {
+    private func animateLetterFlyOff(direction: UISwipeGestureRecognizer.Direction, completion: @escaping () -> Void) {
         // Create a snapshot of the current letter for animation
         guard let letterSnapshot = letterLabel.snapshotView(afterScreenUpdates: false) else {
             // If snapshot fails, just proceed without animation
@@ -1135,20 +1135,32 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         // Hide the original label during animation
         letterLabel.alpha = 0
         
-        // Determine random fly-off direction
-        let directions: [(x: CGFloat, y: CGFloat)] = [
-            (x: -view.bounds.width, y: -200),  // Up-left
-            (x: view.bounds.width, y: -200),   // Up-right
-            (x: -view.bounds.width, y: 200),   // Down-left
-            (x: view.bounds.width, y: 200),    // Down-right
-            (x: 0, y: -view.bounds.height),    // Straight up
-            (x: 0, y: view.bounds.height)      // Straight down
-        ]
+        // Determine fly-off direction based on user's swipe direction
+        let flyDistance: CGFloat = max(view.bounds.width, view.bounds.height) * 1.5
         
-        let randomDirection = directions.randomElement()!
+        let (deltaX, deltaY): (CGFloat, CGFloat)
+        switch direction {
+        case .right:
+            deltaX = flyDistance
+            deltaY = 0
+        case .left:
+            deltaX = -flyDistance
+            deltaY = 0
+        case .up:
+            deltaX = 0
+            deltaY = -flyDistance
+        case .down:
+            deltaX = 0
+            deltaY = flyDistance
+        default:
+            // Fallback to upward direction for any unexpected cases
+            deltaX = 0
+            deltaY = -flyDistance
+        }
+        
         let finalCenter = CGPoint(
-            x: letterLabel.center.x + randomDirection.x,
-            y: letterLabel.center.y + randomDirection.y
+            x: letterLabel.center.x + deltaX,
+            y: letterLabel.center.y + deltaY
         )
         
         // Animate the letter flying off

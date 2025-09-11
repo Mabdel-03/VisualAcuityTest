@@ -280,8 +280,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         // Add triple-tap gesture to bypass distance checking if needed
         setupEmergencyOverride()
         
-        // Add temporary debugging tap gesture
-        setupDebugTapGesture()
         
         // Finish layout and generate the first letter
         view.layoutIfNeeded()
@@ -716,23 +714,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         present(alert, animated: true)
     }
     
-    /*
-     * Sets up a temporary debug tap gesture for testing purposes.
-     */
-    private func setupDebugTapGesture() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleDebugTap))
-        tapGesture.numberOfTapsRequired = 1
-        view.addGestureRecognizer(tapGesture)
-        print("🔍 Debug tap gesture added - tap screen to simulate letter input")
-    }
-    
-    /*
-     * Handles debug tap to simulate speech input.
-     */
-    @objc private func handleDebugTap() {
-        print("🔍 Debug tap detected - simulating speech input with current letter: \(currentLetter)")
-        handleLetterInput(currentLetter) // Simulate correct answer
-    }
     
     /*
      * Starts listening for speech input.
