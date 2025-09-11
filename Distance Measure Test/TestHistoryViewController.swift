@@ -42,58 +42,6 @@ class TestHistoryViewController: UIViewController {
         return button
     }()
     
-    private lazy var exportLeftEyeButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("📊 Export Left Eye CSV", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.layer.cornerRadius = 8
-        button.layer.masksToBounds = true
-        button.addTarget(self, action: #selector(exportLeftEyeCSVTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.isHidden = true // Initially hidden
-        return button
-    }()
-    
-    private lazy var exportRightEyeButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("📊 Export Right Eye CSV", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.layer.cornerRadius = 8
-        button.layer.masksToBounds = true
-        button.addTarget(self, action: #selector(exportRightEyeCSVTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.isHidden = true // Initially hidden
-        return button
-    }()
-    
-    private lazy var exportCombinedButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("📊 Export Combined CSV", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(red: 0.2, green: 0.6, blue: 0.2, alpha: 1.0) // Green
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.layer.cornerRadius = 8
-        button.layer.masksToBounds = true
-        button.addTarget(self, action: #selector(exportCombinedCSVTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.isHidden = true // Initially hidden
-        return button
-    }()
-    
-    private lazy var progressionDataLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
-        label.textAlignment = .center
-        label.textColor = UIColor.black
-        label.text = "Test Progression Data"
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true // Initially hidden
-        return label
-    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -122,13 +70,9 @@ class TestHistoryViewController: UIViewController {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
-        // Add title label and buttons
+        // Add title label and clear button (export buttons will be added dynamically)
         contentView.addSubview(titleLabel)
         contentView.addSubview(clearButton)
-        contentView.addSubview(progressionDataLabel)
-        contentView.addSubview(exportLeftEyeButton)
-        contentView.addSubview(exportRightEyeButton)
-        contentView.addSubview(exportCombinedButton)
         
         // Set up constraints
         NSLayoutConstraint.activate([
@@ -155,29 +99,7 @@ class TestHistoryViewController: UIViewController {
             clearButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             clearButton.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
             clearButton.widthAnchor.constraint(equalToConstant: 200),
-            clearButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            // Progression data label constraints
-            progressionDataLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            progressionDataLabel.topAnchor.constraint(equalTo: clearButton.bottomAnchor, constant: 30),
-            progressionDataLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
-            progressionDataLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
-            
-            // Export buttons constraints
-            exportLeftEyeButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            exportLeftEyeButton.topAnchor.constraint(equalTo: progressionDataLabel.bottomAnchor, constant: 15),
-            exportLeftEyeButton.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.45, constant: -15),
-            exportLeftEyeButton.heightAnchor.constraint(equalToConstant: 44),
-            
-            exportRightEyeButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            exportRightEyeButton.topAnchor.constraint(equalTo: progressionDataLabel.bottomAnchor, constant: 15),
-            exportRightEyeButton.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.45, constant: -15),
-            exportRightEyeButton.heightAnchor.constraint(equalToConstant: 44),
-            
-            exportCombinedButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            exportCombinedButton.topAnchor.constraint(equalTo: exportLeftEyeButton.bottomAnchor, constant: 10),
-            exportCombinedButton.widthAnchor.constraint(equalToConstant: 200),
-            exportCombinedButton.heightAnchor.constraint(equalToConstant: 44)
+            clearButton.heightAnchor.constraint(equalToConstant: 50)
         ])
     }
     
@@ -194,9 +116,8 @@ class TestHistoryViewController: UIViewController {
         
         // Check if there are any tests
         if allTestsDictionary.isEmpty && !hasProgressionData {
-            // Hide all buttons when no tests
+            // Hide clear button when no tests
             clearButton.isHidden = true
-            hideAllExportButtons()
             
             let noTestsLabel = createLabel(text: "No test history available.\nComplete a test to see your results here.", fontSize: 18, weight: .regular)
             contentView.addSubview(noTestsLabel)
@@ -213,15 +134,7 @@ class TestHistoryViewController: UIViewController {
         
         // Show clear button when tests exist
         clearButton.isHidden = false
-        
-        // Show/hide export buttons based on progression data availability
-        if hasProgressionData {
-            showExportButtons(for: allProgressionData)
-        } else {
-            hideAllExportButtons()
-        }
-        
-        var previousView: UIView = hasProgressionData ? exportCombinedButton : clearButton
+        var previousView: UIView = clearButton
         
         // Sort timestamps in descending order (newest first)
         let sortedTimestamps = allTestsDictionary.keys.sorted(by: >)
@@ -234,41 +147,106 @@ class TestHistoryViewController: UIViewController {
                 
                 NSLayoutConstraint.activate([
                     timestampLabel.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 30),
-                    timestampLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-                    timestampLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
+                    timestampLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                    timestampLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
+                    timestampLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20)
                 ])
                 
                 previousView = timestampLabel
                 
-                // Add right eye results
+                // Add right eye results and export button
                 if let rightEyeResult = testResults["Right Eye"] {
                     let displayText = isDefaultValue(rightEyeResult) ? "Right Eye: Not Tested" : "Right Eye: " + rightEyeResult
                     let rightEyeLabel = createLabel(text: displayText, fontSize: 18, weight: .regular)
                     contentView.addSubview(rightEyeLabel)
                     
                     NSLayoutConstraint.activate([
-                        rightEyeLabel.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 10),
-                        rightEyeLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-                        rightEyeLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
+                        rightEyeLabel.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 15),
+                        rightEyeLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                        rightEyeLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
+                        rightEyeLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20)
                     ])
                     
                     previousView = rightEyeLabel
+                    
+                    // Add right eye export button if data exists
+                    if hasProgressionData {
+                        let rightEyeData = allProgressionData.filter { $0.eye == "Right" }
+                        if !rightEyeData.isEmpty {
+                            let rightEyeExportButton = createExportButton(
+                                title: "📊 Export Right Eye Data\n(\(rightEyeData.count) responses)",
+                                eye: "Right"
+                            )
+                            contentView.addSubview(rightEyeExportButton)
+                            
+                            NSLayoutConstraint.activate([
+                                rightEyeExportButton.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 10),
+                                rightEyeExportButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                                rightEyeExportButton.widthAnchor.constraint(equalToConstant: 250),
+                                rightEyeExportButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+                            ])
+                            
+                            previousView = rightEyeExportButton
+                        }
+                    }
                 }
-                // Add left eye results
+                
+                // Add left eye results and export button
                 if let leftEyeResult = testResults["Left Eye"] {
                     let displayText = isDefaultValue(leftEyeResult) ? "Left Eye: Not Tested" : "Left Eye: " + leftEyeResult
                     let leftEyeLabel = createLabel(text: displayText, fontSize: 18, weight: .regular)
                     contentView.addSubview(leftEyeLabel)
                     
                     NSLayoutConstraint.activate([
-                        leftEyeLabel.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 10),
-                        leftEyeLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-                        leftEyeLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20)
+                        leftEyeLabel.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 15),
+                        leftEyeLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                        leftEyeLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
+                        leftEyeLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20)
                     ])
                     
                     previousView = leftEyeLabel
+                    
+                    // Add left eye export button if data exists
+                    if hasProgressionData {
+                        let leftEyeData = allProgressionData.filter { $0.eye == "Left" }
+                        if !leftEyeData.isEmpty {
+                            let leftEyeExportButton = createExportButton(
+                                title: "📊 Export Left Eye Data\n(\(leftEyeData.count) responses)",
+                                eye: "Left"
+                            )
+                            contentView.addSubview(leftEyeExportButton)
+                            
+                            NSLayoutConstraint.activate([
+                                leftEyeExportButton.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 10),
+                                leftEyeExportButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                                leftEyeExportButton.widthAnchor.constraint(equalToConstant: 250),
+                                leftEyeExportButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+                            ])
+                            
+                            previousView = leftEyeExportButton
+                        }
+                    }
                 }
             }
+        }
+        
+        // Add combined export button at the end if we have progression data
+        if hasProgressionData {
+            let combinedExportButton = createExportButton(
+                title: "📊 Export Both Eyes Combined Data\n(\(allProgressionData.count) total responses)",
+                eye: nil
+            )
+            combinedExportButton.backgroundColor = UIColor(red: 0.2, green: 0.6, blue: 0.2, alpha: 1.0) // Green
+            contentView.addSubview(combinedExportButton)
+            
+            NSLayoutConstraint.activate([
+                combinedExportButton.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 30),
+                combinedExportButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                combinedExportButton.widthAnchor.constraint(equalToConstant: 280),
+                combinedExportButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+            ])
+            
+            previousView = combinedExportButton
         }
         
         // Set the bottom constraint of the last view to the content view
@@ -295,6 +273,35 @@ class TestHistoryViewController: UIViewController {
         label.text = text
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }
+    
+    /* Creates an export button for CSV data.
+    */
+    private func createExportButton(title: String, eye: String?) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(title, for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.titleLabel?.numberOfLines = 0
+        button.titleLabel?.textAlignment = .center
+        button.layer.cornerRadius = 8
+        button.layer.masksToBounds = true
+        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        
+        // Add appropriate target based on eye
+        if let eye = eye {
+            if eye == "Left" {
+                button.addTarget(self, action: #selector(exportLeftEyeCSVTapped), for: .touchUpInside)
+            } else {
+                button.addTarget(self, action: #selector(exportRightEyeCSVTapped), for: .touchUpInside)
+            }
+        } else {
+            button.addTarget(self, action: #selector(exportCombinedCSVTapped), for: .touchUpInside)
+        }
+        
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
     }
     
     /* Handles the clear history button tap with confirmation alert.
@@ -326,11 +333,9 @@ class TestHistoryViewController: UIViewController {
         // Clear all progression data
         TestProgressionDataCollector.shared.clearAllProgressionData()
         
-        // Remove all dynamically added subviews (except title and buttons)
+        // Remove all dynamically added subviews (except title and clear button)
         contentView.subviews.forEach { subview in
-            if subview != titleLabel && subview != clearButton && 
-               subview != progressionDataLabel && subview != exportLeftEyeButton && 
-               subview != exportRightEyeButton && subview != exportCombinedButton {
+            if subview != titleLabel && subview != clearButton {
                 subview.removeFromSuperview()
             }
         }
@@ -346,41 +351,6 @@ class TestHistoryViewController: UIViewController {
         )
         successAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
         present(successAlert, animated: true, completion: nil)
-    }
-    
-    // MARK: - Export Button Management
-    
-    /*
-     * Shows export buttons based on available data
-     */
-    private func showExportButtons(for progressionData: [TestResponseData]) {
-        progressionDataLabel.isHidden = false
-        
-        let leftEyeData = progressionData.filter { $0.eye == "Left" }
-        let rightEyeData = progressionData.filter { $0.eye == "Right" }
-        
-        exportLeftEyeButton.isHidden = leftEyeData.isEmpty
-        exportRightEyeButton.isHidden = rightEyeData.isEmpty
-        exportCombinedButton.isHidden = false
-        
-        // Update button titles with data counts
-        if !leftEyeData.isEmpty {
-            exportLeftEyeButton.setTitle("📊 Export Left Eye CSV (\(leftEyeData.count) responses)", for: .normal)
-        }
-        if !rightEyeData.isEmpty {
-            exportRightEyeButton.setTitle("📊 Export Right Eye CSV (\(rightEyeData.count) responses)", for: .normal)
-        }
-        exportCombinedButton.setTitle("📊 Export Combined CSV (\(progressionData.count) responses)", for: .normal)
-    }
-    
-    /*
-     * Hides all export buttons
-     */
-    private func hideAllExportButtons() {
-        progressionDataLabel.isHidden = true
-        exportLeftEyeButton.isHidden = true
-        exportRightEyeButton.isHidden = true
-        exportCombinedButton.isHidden = true
     }
     
     // MARK: - Export Actions
@@ -423,16 +393,11 @@ class TestHistoryViewController: UIViewController {
             // Present activity view controller for sharing
             let activityViewController = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
             
-            // For iPad compatibility
+            // For iPad compatibility - use the view center since we have dynamic buttons
             if let popoverController = activityViewController.popoverPresentationController {
-                if let eye = eye {
-                    let button = eye == "Left" ? exportLeftEyeButton : exportRightEyeButton
-                    popoverController.sourceView = button
-                    popoverController.sourceRect = button.bounds
-                } else {
-                    popoverController.sourceView = exportCombinedButton
-                    popoverController.sourceRect = exportCombinedButton.bounds
-                }
+                popoverController.sourceView = view
+                popoverController.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+                popoverController.permittedArrowDirections = []
             }
             
             // Add completion handler to clean up temporary file
