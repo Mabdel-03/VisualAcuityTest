@@ -27,6 +27,7 @@
 		D17FC2C82DAF9FB300B08D03 /* TestHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */; };
 		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
 		D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */; };
+		F1A2B3C42E4F5D670089AB12 /* TestProgressionDataCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C32E4F5D670089AB12 /* TestProgressionDataCollector.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +52,7 @@
 		D19933C42A955CCF0050CF92 /* info.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = info.txt; sourceTree = "<group>"; };
 		D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Distance-Measure-Test-Info.plist"; sourceTree = SOURCE_ROOT; };
 		D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Select_Acuity.swift; sourceTree = "<group>"; };
+		F1A2B3C32E4F5D670089AB12 /* TestProgressionDataCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestProgressionDataCollector.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,6 +98,7 @@
 				E0F987042CC9F139003EEEFF /* SettingsViewController.swift */,
 				C0C987092CC9F413003EEEFF /* ResultViewController.swift */,
 				D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */,
+				F1A2B3C32E4F5D670089AB12 /* TestProgressionDataCollector.swift */,
 				D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */,
 				C0CDD62F2A687790002A58BA /* Main.storyboard */,
 				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
@@ -203,6 +206,7 @@
 				C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */,
 				C0C9870A2CC9F413003EEEFF /* ResultViewController.swift in Sources */,
 				D17FC2C82DAF9FB300B08D03 /* TestHistoryViewController.swift in Sources */,
+				F1A2B3C42E4F5D670089AB12 /* TestProgressionDataCollector.swift in Sources */,
 				C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */,
 				C0C987052CC9F141003EEEFF /* TumblingEViewController.swift in Sources */,
 				E0E987052CC9F141003EEEFF /* ETDRSViewController.swift in Sources */,

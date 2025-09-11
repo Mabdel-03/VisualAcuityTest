@@ -235,6 +235,14 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     // Last AR update time for throttling updates
     private var lastARUpdateTime: CFTimeInterval?
     
+    // MARK: - Data Collection Properties
+    
+    /// Time when the current letter was displayed
+    private var letterDisplayTime: Date?
+    
+    /// Data collector for test progression tracking
+    private let dataCollector = TestProgressionDataCollector.shared
+    
     // MARK: - Lifecycle Methods
     
     /* Initializes the view and sets up the test environment.
@@ -292,6 +300,10 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         
         // Update eye test label based on current eye number
         updateEyeTestLabel()
+        
+        // Initialize data collection session
+        let eyeName = eyeNumber == 2 ? "Right" : "Left"
+        dataCollector.startNewSession(eye: eyeName, testType: "ETDRS")
         
         print("🔍 ETDRSViewController - viewDidLoad completed successfully")
     }
@@ -1288,7 +1300,31 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         totalAttempts += 1
         trial += 1 // Increment the trial count within this set
         
-        print("🎯 Letter: \(currentLetter), Input: \(inputLetter), Correct: \(isCorrect == 1)")
+        // Calculate response time
+        let responseTime: Int64
+        if let displayTime = letterDisplayTime {
+            responseTime = Int64(Date().timeIntervalSince(displayTime) * 1000) // Convert to milliseconds
+        } else {
+            responseTime = 0 // Fallback if timing wasn't recorded
+        }
+        
+        // Record the response data
+        let eyeName = eyeNumber == 2 ? "Right" : "Left"
+        let acuityString = "20/\(acuityList[currentAcuityIndex])"
+        
+        dataCollector.recordResponse(
+            eye: eyeName,
+            testType: "ETDRS",
+            acuityLevel: acuityString,
+            letterDisplayed: currentLetter,
+            distanceCM: DistanceTracker.shared.currentDistanceCM,
+            responseTimeMS: responseTime,
+            userResponse: inputLetter,
+            isCorrect: isCorrect == 1,
+            trialNumber: trial - 1 // trial was already incremented, so subtract 1 for the actual trial number
+        )
+        
+        print("🎯 Letter: \(currentLetter), Input: \(inputLetter), Correct: \(isCorrect == 1)), Time: \(responseTime)ms")
         
         // Animate the letter flying off screen before processing next trial
         animateLetterFlyOff { [weak self] in
@@ -1365,6 +1401,9 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         // Select a random ETDRS letter
         currentLetter = etdrsLetters.randomElement() ?? "C"
         letterLabel.text = currentLetter
+        
+        // Record the time when this letter is displayed for response time calculation
+        letterDisplayTime = Date()
         
         print("📝 New letter generated: \(currentLetter)")
     }
@@ -1711,6 +1750,9 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         
         // Pass this score to the results page via the prepare method
         print("Test completed with final acuity level: \(acuityScore)")
+        
+        // End the data collection session
+        dataCollector.endCurrentSession()
         
         // Navigate to the results screen
         

@@ -235,6 +235,14 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     // Last AR update time for throttling updates
     private var lastARUpdateTime: CFTimeInterval?
     
+    // MARK: - Data Collection Properties
+    
+    /// Time when the current letter was displayed
+    private var letterDisplayTime: Date?
+    
+    /// Data collector for test progression tracking
+    private let dataCollector = TestProgressionDataCollector.shared
+    
     // MARK: - Lifecycle Methods
     
     /* Initializes the view and sets up the test environment.
@@ -282,6 +290,10 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         
         // Update eye test label based on current eye number
         updateEyeTestLabel()
+        
+        // Initialize data collection session
+        let eyeName = eyeNumber == 2 ? "Right" : "Left"
+        dataCollector.startNewSession(eye: eyeName, testType: "Landolt_C")
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -666,6 +678,36 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         totalAttempts += 1
         trial += 1 // Increment the trial count within this set
         
+        // Calculate response time
+        let responseTime: Int64
+        if let displayTime = letterDisplayTime {
+            responseTime = Int64(Date().timeIntervalSince(displayTime) * 1000) // Convert to milliseconds
+        } else {
+            responseTime = 0 // Fallback if timing wasn't recorded
+        }
+        
+        // Convert swipe direction and rotation to readable format
+        let orientationDisplayed = getOrientationString(for: currentRotation)
+        let userSwipeDirection = getSwipeDirectionString(for: gesture.direction)
+        
+        // Record the response data
+        let eyeName = eyeNumber == 2 ? "Right" : "Left"
+        let acuityString = "20/\(acuityList[currentAcuityIndex])"
+        
+        dataCollector.recordResponse(
+            eye: eyeName,
+            testType: "Landolt_C",
+            acuityLevel: acuityString,
+            letterDisplayed: orientationDisplayed,
+            distanceCM: DistanceTracker.shared.currentDistanceCM,
+            responseTimeMS: responseTime,
+            userResponse: userSwipeDirection,
+            isCorrect: isCorrect == 1,
+            trialNumber: trial - 1 // trial was already incremented, so subtract 1 for the actual trial number
+        )
+        
+        print("🎯 C Orientation: \(orientationDisplayed), Swipe: \(userSwipeDirection), Correct: \(isCorrect == 1), Time: \(responseTime)ms")
+        
         // Animate the letter flying off screen in the swipe direction before processing next trial
         animateLetterFlyOff(direction: gesture.direction) { [weak self] in
             self?.processNextTrial()
@@ -743,6 +785,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         
         // Apply rotation without animation
         letterLabel.transform = CGAffineTransform(rotationAngle: CGFloat(currentRotation) * .pi / 180)
+        
+        // Record the time when this letter is displayed for response time calculation
+        letterDisplayTime = Date()
     }
     
     /* Prepares for navigation to the results screen.
@@ -1081,6 +1126,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         // Pass this score to the results page via the prepare method
         print("Test completed with final acuity level: \(acuityScore)")
         
+        // End the data collection session
+        dataCollector.endCurrentSession()
+        
         // Navigate to the results screen
         
         finalAcuityScore = acuityScore
@@ -1109,6 +1157,44 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     private func playAudioInstructions() {
         let instructionText = "Swipe in the direction the C opening points."
         SharedAudioManager.shared.playText(instructionText, source: "Vision Test")
+    }
+    
+    // MARK: - Data Collection Helper Methods
+    
+    /*
+     * Converts rotation angle to readable orientation string
+     */
+    private func getOrientationString(for rotation: Double) -> String {
+        switch rotation {
+        case 0:
+            return "Right"
+        case 90:
+            return "Down"
+        case 180:
+            return "Left"
+        case 270:
+            return "Up"
+        default:
+            return "Unknown(\(rotation)°)"
+        }
+    }
+    
+    /*
+     * Converts swipe direction to readable string
+     */
+    private func getSwipeDirectionString(for direction: UISwipeGestureRecognizer.Direction) -> String {
+        switch direction {
+        case .right:
+            return "Right"
+        case .left:
+            return "Left"
+        case .up:
+            return "Up"
+        case .down:
+            return "Down"
+        default:
+            return "Unknown"
+        }
     }
     
     // MARK: - Animation Methods

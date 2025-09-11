@@ -4,7 +4,7 @@
 
 This repository contains a sophisticated iOS visual acuity testing application developed at the OHSU COOL Lab. The app provides two standardized visual acuity tests - **ETDRS (Early Treatment Diabetic Retinopathy Study)** with voice recognition and **Landolt C** with gesture-based input - both utilizing advanced AR face tracking for precise distance monitoring and real-time letter scaling.
 
-**Total Codebase:** 5,031 lines of Swift code across 11 files
+**Total Codebase:** 5,178 lines of Swift code across 12 files
 
 **Developed by:** Mahmoud Abdelmoneum, Maggie Bao, and Anderson Men  
 **Supervised by:** Dr. David Huang and Dr. Hiroshi Ishikawa  
@@ -50,10 +50,13 @@ This repository contains a sophisticated iOS visual acuity testing application d
 - **`Select_Acuity.swift` (300 lines)**: Dynamic acuity level selection with real-time button scaling
 - **`Main Menu.swift` (270 lines)**: Navigation hub with SharedAudioManager integration
 - **`DistanceOptimization.swift` (262 lines)**: AR-based distance calibration with face tracking
-- **`TestHistoryViewController.swift` (253 lines)**: Comprehensive test history with data management
+- **`TestHistoryViewController.swift` (253 lines)**: Comprehensive test history with CSV export functionality
 - **`OneEyeInstruc.swift` (111 lines)**: Eye-specific test instructions and navigation
 - **`Instructions.swift` (39 lines)**: General app instructions with audio support
 - **`AppDelegate.swift` (41 lines)**: App lifecycle management
+
+#### **Data Collection & Analytics (147 lines)**
+- **`TestProgressionDataCollector.swift` (147 lines)**: Comprehensive test progression tracking with CSV export capabilities
 
 ## Technical Implementation Details
 
@@ -106,11 +109,12 @@ VisualAcuityTest/
 ├── Distance Measure Test/           # Main application code
 │   ├── ETDRSViewController.swift    # ETDRS test with speech recognition
 │   ├── TumblingEViewController.swift # Landolt C test with gestures
+│   ├── TestProgressionDataCollector.swift # Test progression data collection
 │   ├── SettingsViewController.swift # App configuration
 │   ├── ResultViewController.swift   # Test results and scoring
 │   ├── Select_Acuity.swift         # Acuity level selection
 │   ├── DistanceOptimization.swift  # AR distance calibration
-│   ├── TestHistoryViewController.swift # Historical data view
+│   ├── TestHistoryViewController.swift # Historical data view with CSV export
 │   ├── Main Menu.swift             # Navigation and audio management
 │   ├── OneEyeInstruc.swift         # Eye-specific instructions
 │   ├── Instructions.swift          # General instructions
@@ -149,6 +153,12 @@ VisualAcuityTest/
 - **VoiceOver Integration**: Full accessibility for visually impaired users
 - **Emergency Overrides**: Triple-tap gesture to bypass distance checking
 - **Visual Feedback**: Clear indicators for distance, progress, and results
+
+### 📊 **Advanced Test Progression Data Collection**
+- **Granular Response Tracking**: Records every test response with millisecond precision
+- **Comprehensive Metrics**: Captures timing, distance, accuracy, and user behavior
+- **Research-Grade Export**: CSV generation for detailed analysis and research
+- **Session-Based Organization**: Separate data collection for each eye and test session
 
 ## Performance Characteristics
 
@@ -226,6 +236,127 @@ VisualAcuityTest/
 - Visual feedback with letter animation
 - Real-time scoring and progression
 - Touch-friendly interface for all users
+
+## Test Progression Data Collection
+
+### **Overview**
+
+The app includes a comprehensive data collection system that automatically records detailed test progression data for research and analysis purposes. This system captures granular information about user performance, response patterns, and testing conditions without interfering with the user experience.
+
+### **📊 Data Collected**
+
+Each test response automatically captures the following data points:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| **Timestamp** | Precise time of response (millisecond accuracy) | `2024-09-11 14:23:45.123` |
+| **Eye** | Which eye is being tested | `Left`, `Right` |
+| **Test_Type** | Type of visual acuity test | `ETDRS`, `Landolt_C` |
+| **Acuity_Level** | Current difficulty level | `20/100`, `20/40`, `20/20` |
+| **Letter_Displayed** | What was shown to user | `C`, `F`, `Right`, `Down` |
+| **Distance_CM** | User's distance from device (AR tracked) | `42.3`, `38.7` |
+| **Response_Time_MS** | Time from display to response | `1250`, `890` |
+| **User_Response** | User's actual input | `C`, `F`, `Left`, `Up` |
+| **Is_Correct** | Response accuracy | `TRUE`, `FALSE` |
+| **Trial_Number** | Trial within current acuity level | `1`, `2`, `3`... |
+| **Session_ID** | Unique identifier for test session | `ETDRS_Right_20240911_142345` |
+
+### **🔧 How Data Collection Works**
+
+#### **Automatic Background Collection**
+- **Session Initialization**: Each test (per eye) creates a unique session with timestamp-based ID
+- **Response Tracking**: Every user input triggers data recording with precise timing
+- **Distance Monitoring**: Real-time AR face tracking provides continuous distance measurements
+- **Session Cleanup**: Data is automatically saved when test completes or user exits
+
+#### **Technical Implementation**
+```swift
+// Example data recording for ETDRS test
+dataCollector.recordResponse(
+    eye: "Right",
+    testType: "ETDRS", 
+    acuityLevel: "20/40",
+    letterDisplayed: "C",
+    distanceCM: 42.3,
+    responseTimeMS: 1250,
+    userResponse: "C",
+    isCorrect: true,
+    trialNumber: 5
+)
+```
+
+#### **Data Storage**
+- **Persistent Storage**: Data survives app restarts using UserDefaults with JSON encoding
+- **Memory Efficient**: Session-based collection with automatic cleanup
+- **Privacy Focused**: All data stored locally on device until explicitly exported
+
+### **📤 Data Export Options**
+
+#### **Export Methods Available**
+Access from **Test History** screen with three export options:
+
+1. **📊 Export Left Eye CSV**
+   - Contains all responses for left eye tests across all sessions
+   - Filename: `visual_acuity_left_eye_data.csv`
+
+2. **📊 Export Right Eye CSV** 
+   - Contains all responses for right eye tests across all sessions
+   - Filename: `visual_acuity_right_eye_data.csv`
+
+3. **📊 Export Combined CSV**
+   - Contains all test data from both eyes in chronological order
+   - Filename: `visual_acuity_combined_data.csv`
+
+#### **Export Process**
+1. Navigate to **Test History** screen
+2. Export buttons appear automatically when data is available
+3. Button titles show response counts (e.g., "📊 Export Left Eye CSV (47 responses)")
+4. Tap desired export button
+5. Use iOS share sheet to:
+   - **Email** CSV file to researchers
+   - **AirDrop** to other devices
+   - **Save to Files** app or cloud storage
+   - **Share** via any installed app
+
+#### **Sample CSV Output**
+```csv
+Timestamp,Eye,Test_Type,Acuity_Level,Letter_Displayed,Distance_CM,Response_Time_MS,User_Response,Is_Correct,Trial_Number,Session_ID
+2024-09-11 14:23:45.123,Right,ETDRS,20/100,C,42.3,1250,C,TRUE,1,ETDRS_Right_20240911_142345
+2024-09-11 14:23:47.456,Right,ETDRS,20/100,F,41.8,890,F,TRUE,2,ETDRS_Right_20240911_142345
+2024-09-11 14:23:49.789,Right,ETDRS,20/100,H,42.1,1450,K,FALSE,3,ETDRS_Right_20240911_142345
+2024-09-11 14:23:52.123,Right,ETDRS,20/80,D,41.9,1100,D,TRUE,1,ETDRS_Right_20240911_142345
+2024-09-11 14:25:15.678,Left,Landolt_C,20/100,Right,43.2,980,Right,TRUE,1,Landolt_C_Left_20240911_142515
+```
+
+### **🔬 Research Applications**
+
+#### **Behavioral Analysis**
+- **Response Time Patterns**: Analyze how reaction times change with difficulty
+- **Distance Compliance**: Monitor user adherence to optimal testing distance
+- **Learning Effects**: Track improvement within and across test sessions
+- **Error Patterns**: Identify common mistakes at different acuity levels
+
+#### **Clinical Research**
+- **Test Reliability**: Compare consistency across multiple sessions
+- **Method Comparison**: Analyze differences between ETDRS and Landolt C performance
+- **Accessibility Evaluation**: Study effectiveness of voice vs. gesture interfaces
+- **Remote Monitoring**: Track vision changes in longitudinal studies
+
+#### **Data Analysis Capabilities**
+- **Progression Tracking**: Monitor how users advance through acuity levels
+- **Performance Metrics**: Calculate detailed statistics on accuracy and timing
+- **Session Analytics**: Compare performance between left and right eye tests
+- **Temporal Analysis**: Study performance changes over time and across sessions
+
+### **🔒 Privacy & Data Management**
+
+- **Local Storage**: All data remains on user's device until explicitly exported
+- **User Control**: Users choose when and how to export their data
+- **Clear History**: Option to delete all collected data from Test History screen
+- **No Automatic Upload**: Data export requires explicit user action
+- **Research Consent**: Users control their participation in data sharing
+
+This data collection system provides researchers with unprecedented insight into visual acuity testing behavior while maintaining user privacy and control.
 
 ## Future Development
 
