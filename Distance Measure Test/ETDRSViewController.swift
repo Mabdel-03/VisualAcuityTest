@@ -1,53 +1,21 @@
 //
-//  TumblingEViewController.swift
+//  ETDRSViewController.swift
 //  Distance Measure Test
 //
-//  Created by Maggie Bao on 7/23/24.
+//  Created by Visual Acuity Test Assistant
 //
 
 import UIKit
 import DevicePpi
 import ARKit
 import AVFoundation
+import Speech
 
-//Global Variables
-
-/// Flag indicating if the test is currently paused due to distance issues
-var isPaused = false
-
-/// Lower boundary for acceptable testing distance (calculated as percentage of target distance)
-var lowerBound: Double = 0.0
-
-/// Upper boundary for acceptable testing distance (calculated as percentage of target distance)
-var upperBound: Double = 0.0
-
-/// Reference to the AR scene view for face tracking
-var sceneView: ARSCNView!
-
-/// 3D node representing the user's left eye position
-var leftEye: SCNNode!
-
-/// 3D node representing the user's right eye position
-var rightEye: SCNNode!
-
-/// Device's pixels per inch, used for accurate size calculations
-let ppi: Double = {
-    switch Ppi.get() {
-    case .success(let ppi):
-        return ppi
-    case .unknown(let bestGuessPpi, _):
-        return bestGuessPpi
-    }
-}()
-
-/// Final acuity score calculated at the end of the test
-var finalAcuityScore = -Double.infinity
-
-/* TumblingEViewController class implements a visual acuity test using a tumbling E paradigm.
-   The test displays a rotated "C" letter at various sizes, and the user must swipe in the
-   direction the C is pointing. The test maintains a fixed testing distance using AR face tracking.
+/* ETDRSViewController class implements a visual acuity test using ETDRS letters.
+   The test displays ETDRS letters at various sizes, and the user must speak the
+   letter they see. The test maintains a fixed testing distance using AR face tracking.
  */
-class TumblingEViewController: UIViewController, ARSCNViewDelegate {
+class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecognizerDelegate {
     // MARK: - Properties
     
     /// AR scene view for face tracking
@@ -59,9 +27,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     /// 3D node for right eye tracking
     var rightEye: SCNNode!
     
-    /// Current eye being tested (1 for left eye, 2 for right eye)
-    //var eyeNumber: Int = 1
-    
     /// List of acuity levels to test in 20/x format (from largest to smallest)
     let acuityList = [200, 160, 125, 100, 80, 63, 50, 40, 32, 20, 16]
     
@@ -70,6 +35,12 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     
     /// Current trial number within the current acuity level
     var trial = 1
+    
+    /// Flag to track if the test has actually started (user has provided input)
+    private var testStarted = false
+    
+    /// Timer to restart speech recognition if it gets stuck
+    private var speechTimeoutTimer: Timer?
     
     /// Number of correct answers in the current set of trials
     var correctAnswersInSet = 0
@@ -114,12 +85,35 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         2000: 2.0
     ]
     
+    /// Standard ETDRS letters
+    let etdrsLetters = ["C", "D", "F", "H", "K", "N", "P", "R", "U", "V", "Z"]
+    
+    /// Current letter being displayed
+    private var currentLetter: String = ""
+    
+    // MARK: - Speech Recognition Properties
+    
+    /// Speech recognizer for voice input
+    private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))!
+    
+    /// Audio engine for speech recognition
+    private let audioEngine = AVAudioEngine()
+    
+    /// Speech recognition request
+    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    
+    /// Speech recognition task
+    private var recognitionTask: SFSpeechRecognitionTask?
+    
+    /// Flag to indicate if speech recognition is active
+    private var isListening = false
+    
     // MARK: - UI Elements
     
-    // Label displaying the tumbling C for the vision test
+    // Label displaying the ETDRS letter for the vision test
     private lazy var letterLabel: UILabel = {
         let label = UILabel()
-        label.text = LETTER
+        label.text = "C"
         label.font = UIFont(name: "Sloan", size: 50) // Temporary size, will be set by set_Size_E()
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -139,7 +133,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     // Label displaying instructions to the user
     private lazy var instructionLabel: UILabel = {
         let label = UILabel()
-        label.text = "Please swipe in the direction the C is pointing."
+        label.text = "Please say the letter you see out loud."
         label.font = UIFont.systemFont(ofSize: 40, weight: .medium)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -197,19 +191,25 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         return label
     }()
     
-    // MARK: - Test Properties
+    // Label showing microphone status
+    private lazy var microphoneLabel: UILabel = {
+        let label = UILabel()
+        label.text = "🎤 Listening..."
+        label.font = UIFont.systemFont(ofSize: 20, weight: .medium)
+        label.textColor = .systemBlue
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }()
     
-    // Current rotation angle of the letter (in degrees)
-    private var currentRotation: Double = 0
+    // MARK: - Test Properties
     
     // Number of correct answers
     private var score = 0
     
     // Total number of test attempts
     private var totalAttempts = 0
-    
-    // Available rotation angles for the letter (right, down, left, up)
-    private let possibleRotations = [0.0, 90.0, 180.0, 270.0]
     
     // Last distance used for letter scaling to prevent unnecessary updates
     private var lastScalingDistance: Double = 0.0
@@ -238,7 +238,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     // MARK: - Lifecycle Methods
     
     /* Initializes the view and sets up the test environment.
-       This method sets up the UI elements, configures gesture recognizers for user input,
+       This method sets up the UI elements, initializes speech recognition,
        initializes the current acuity level from the selected value, sets up distance tracking
        and boundaries, initializes AR face tracking for distance monitoring, and sizes the
        test letter appropriately for the current acuity level.
@@ -246,49 +246,70 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        print("TumblingEViewController - viewDidLoad")
+        print("🔍 ETDRSViewController - viewDidLoad started")
 
-        // Set up the basic UI and gesture recognizers
+        // Set up the basic UI
         view.backgroundColor = .white
         setupUI()
-        setupGestureRecognizers()
+        print("🔍 ETDRSViewController - UI setup completed")
 
         // Initialize acuity level from the selected value
         initializeAcuityLevel()
+        print("🔍 ETDRSViewController - acuity level initialized")
         
         // Set up distance tracking and monitoring
         initializeDistanceTracking()
+        print("🔍 ETDRSViewController - distance tracking initialized")
         
         // Set up AR face tracking for distance monitoring
         setupARTracking()
+        print("🔍 ETDRSViewController - AR tracking setup completed")
+        
+        // Set up speech recognition
+        setupSpeechRecognition()
+        print("🔍 ETDRSViewController - speech recognition setup completed")
         
         // Start monitoring distance with appropriate checks
         startDistanceMonitoring()
+        print("🔍 ETDRSViewController - distance monitoring started")
 
-        // Size the test letter for the current acuity level
-        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER)
-        print("Initial letter size set for acuity: \(acuityList[currentAcuityIndex])")
-        
-        // Initialize scaling factors (but preserve the font size calculated above)
+        // Initialize scaling factors
         lastScaleFactor = 1.0
         lastScalingDistance = 0.0
         
         // Add triple-tap gesture to bypass distance checking if needed
         setupEmergencyOverride()
         
-        // Finish layout and generate the first rotated letter
+        // Add temporary debugging tap gesture
+        setupDebugTapGesture()
+        
+        // Finish layout and generate the first letter
         view.layoutIfNeeded()
-        generateNewE()
+        generateNewLetter()
+        print("🔍 ETDRSViewController - first letter generated: \(currentLetter)")
+        
+        // Size the test letter for the current acuity level (after letter is generated)
+        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter)
+        print("🔍 ETDRSViewController - initial letter size set for acuity: \(acuityList[currentAcuityIndex])")
         
         // Update eye test label based on current eye number
         updateEyeTestLabel()
+        
+        print("🔍 ETDRSViewController - viewDidLoad completed successfully")
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        // Play audio instructions for the tumbling E test screen
+        print("🔍 ETDRSViewController - viewDidAppear started")
+        
+        // Play audio instructions for the ETDRS test screen
         playAudioInstructions()
+        print("🔍 ETDRSViewController - audio instructions played")
+        
+        // Start speech recognition
+        startListening()
+        print("🔍 ETDRSViewController - viewDidAppear completed")
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -299,13 +320,17 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         audioInstructionTimer = nil
         displayLink?.invalidate()
         displayLink = nil
+        
+        // Stop speech recognition and timeout timer
+        stopListening()
+        stopSpeechTimeoutTimer()
     }
 
     /*
     * Updates the eye test label based on the current eye number.
     */
     private func updateEyeTestLabel() {
-        eyeTestLabel.text = eyeNumber == 2 ? "Right Eye Test" : "Left Eye Test"
+        eyeTestLabel.text = eyeNumber == 2 ? "Right Eye Test - ETDRS" : "Left Eye Test - ETDRS"
     }
 
     /*
@@ -354,18 +379,17 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             }
         }
         
-        print("Target test distance: \(averageDistanceCM) cm")
+        print("📏 ETDRS Target test distance: \(averageDistanceCM) cm")
         
-        // If current distance is invalid but target is valid, use target as current
-        if averageDistanceCM > 0 && DistanceTracker.shared.currentDistanceCM < 10 {
-            print("⚠️ Current distance invalid - using stored target distance")
-            DistanceTracker.shared.currentDistanceCM = averageDistanceCM
-        }
+        // Reset current distance to target distance to avoid immediate out-of-range warnings
+        // This helps when switching between test types
+        DistanceTracker.shared.currentDistanceCM = averageDistanceCM
+        print("📏 ETDRS Reset current distance to target: \(averageDistanceCM) cm")
         
         // Set acceptable distance range (±20% of target)
         lowerBound = 0.8 * averageDistanceCM  // 20% below target
         upperBound = 1.2 * averageDistanceCM  // 20% above target
-        print("Distance bounds set to: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
+        print("📏 ETDRS Distance bounds set to: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
     }
     
     /*
@@ -593,6 +617,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         view.addSubview(checkmarkLabel)
         view.addSubview(moveCloserArrowLabel)
         view.addSubview(moveFartherArrowLabel)
+        view.addSubview(microphoneLabel)
         
         // Set up constraints
         NSLayoutConstraint.activate([
@@ -612,6 +637,10 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             letterLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             letterLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             
+            // Microphone label constraints
+            microphoneLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            microphoneLabel.topAnchor.constraint(equalTo: letterLabel.bottomAnchor, constant: 30),
+            
             // Instruction label constraints
             instructionLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
             instructionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -629,42 +658,656 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             moveFartherArrowLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             moveFartherArrowLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
-        print("TumblingEViewController - constraints activated")
+        print("ETDRSViewController - constraints activated")
+    }
+    
+    // MARK: - Speech Recognition Setup
+    
+    /*
+     * Sets up speech recognition for voice input.
+     */
+    private func setupSpeechRecognition() {
+        speechRecognizer.delegate = self
+        
+        print("🎤 Setting up speech recognition...")
+        print("🎤 Speech recognizer available: \(speechRecognizer.isAvailable)")
+        
+        SFSpeechRecognizer.requestAuthorization { [weak self] authStatus in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                
+                switch authStatus {
+                case .authorized:
+                    print("🎤 Speech recognition authorized ✅")
+                case .denied:
+                    print("🎤 Speech recognition access denied ❌")
+                    // Show alert to user
+                    self.showSpeechPermissionAlert()
+                case .restricted:
+                    print("🎤 Speech recognition restricted ❌")
+                    self.showSpeechPermissionAlert()
+                case .notDetermined:
+                    print("🎤 Speech recognition not determined ⚠️")
+                @unknown default:
+                    print("🎤 Speech recognition unknown authorization status ❓")
+                }
+            }
+        }
     }
     
     /*
-     * Sets up swipe gesture recognizers for all four directions.
+     * Shows an alert when speech recognition permission is not available.
      */
-    private func setupGestureRecognizers() {
-        let directions: [UISwipeGestureRecognizer.Direction] = [.right, .left, .up, .down]
+    private func showSpeechPermissionAlert() {
+        let alert = UIAlertController(
+            title: "Speech Recognition Required",
+            message: "This ETDRS test requires speech recognition to work. Please enable speech recognition in Settings > Privacy & Security > Speech Recognition.",
+            preferredStyle: .alert
+        )
         
-        for direction in directions {
-            let swipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
-            swipe.direction = direction
-            view.addGestureRecognizer(swipe)
+        alert.addAction(UIAlertAction(title: "Settings", style: .default) { _ in
+            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsUrl)
+            }
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        present(alert, animated: true)
+    }
+    
+    /*
+     * Sets up a temporary debug tap gesture for testing purposes.
+     */
+    private func setupDebugTapGesture() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleDebugTap))
+        tapGesture.numberOfTapsRequired = 1
+        view.addGestureRecognizer(tapGesture)
+        print("🔍 Debug tap gesture added - tap screen to simulate letter input")
+    }
+    
+    /*
+     * Handles debug tap to simulate speech input.
+     */
+    @objc private func handleDebugTap() {
+        print("🔍 Debug tap detected - simulating speech input with current letter: \(currentLetter)")
+        handleLetterInput(currentLetter) // Simulate correct answer
+    }
+    
+    /*
+     * Starts listening for speech input.
+     */
+    private func startListening() {
+        guard !isListening else { 
+            print("🎤 Already listening, skipping start")
+            return 
+        }
+        
+        // Check speech recognition authorization first
+        guard speechRecognizer.isAvailable else {
+            print("🎤 Speech recognizer not available")
+            return
+        }
+        
+        // Cancel any previous recognition task
+        recognitionTask?.cancel()
+        recognitionTask = nil
+        
+        // Configure audio session
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            print("🎤 Audio session configured successfully")
+        } catch {
+            print("🎤 Audio session setup failed: \(error)")
+            return
+        }
+        
+        // Create recognition request
+        recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+        guard let recognitionRequest = recognitionRequest else {
+            print("🎤 Unable to create recognition request")
+            return
+        }
+        
+        recognitionRequest.shouldReportPartialResults = true
+        recognitionRequest.requiresOnDeviceRecognition = false
+        
+        // Get audio input node
+        let inputNode = audioEngine.inputNode
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
+        
+        // Remove any existing taps
+        inputNode.removeTap(onBus: 0)
+        
+        // Install audio tap
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
+            recognitionRequest.append(buffer)
+        }
+        
+        // Start audio engine
+        audioEngine.prepare()
+        do {
+            try audioEngine.start()
+            print("🎤 Audio engine started successfully")
+        } catch {
+            print("🎤 Audio engine start failed: \(error)")
+            return
+        }
+        
+        // Start recognition task
+        recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
+            guard let self = self else { return }
+            
+            if let result = result {
+                let spokenText = result.bestTranscription.formattedString.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
+                print("🎤 Heard: '\(spokenText)' (length: \(spokenText.count))")
+                
+                // CRITICAL: Filter out sentences and unwanted speech
+                if !self.isValidLetterAttempt(spokenText) {
+                    print("🎤 ❌ Ignoring: '\(spokenText)' (Not a valid letter attempt)")
+                    // Immediately reset speech recognition to clear the transcription
+                    self.resetSpeechRecognition()
+                    return
+                }
+                
+                // Process input when we have meaningful speech
+                if !spokenText.isEmpty {
+                    var shouldProcess = false
+                    var reason = ""
+                    
+                    // Check for single letter first (highest priority)
+                    if self.containsSingleLetter(spokenText) {
+                        reason = "Single letter detected"
+                        shouldProcess = true
+                    }
+                    // Check for common phonetic words that we know map to letters
+                    else if spokenText.count <= 7 { // Reasonable length for phonetic words
+                        let commonPhoneticWords = ["ARE", "YOU", "SEE", "DEE", "EFF", "AITCH", "KAY", "PEE", "VEE", "ZEE"]
+                        if commonPhoneticWords.contains(spokenText) {
+                            reason = "Common phonetic word detected"
+                            shouldProcess = true
+                        }
+                        // Also try a quick phonetic match check
+                        else if self.canPhoneticMatch(spokenText) {
+                            reason = "Phonetic match possible"
+                            shouldProcess = true
+                        }
+                    }
+                    // For final results, always try to process
+                    else if result.isFinal {
+                        reason = "Final result"
+                        shouldProcess = true
+                    }
+                    
+                    if shouldProcess {
+                        print("🎤 Processing: '\(spokenText)' (\(reason))")
+                        self.processSpokenInput(spokenText)
+                        // Stop and restart recognition after processing
+                        self.stopListening()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            if !isPaused {
+                                self.startListening()
+                            }
+                        }
+                        return
+                    }
+                }
+            }
+            
+            if let error = error {
+                print("🎤 Speech recognition error: \(error)")
+            }
+            
+            if error != nil || result?.isFinal == true {
+                self.stopListening()
+                // Restart listening after a short delay if not paused
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    if !isPaused {
+                        self.startListening()
+                    }
+                }
+            }
+        }
+        
+        isListening = true
+        microphoneLabel.isHidden = false
+        
+        // Start timeout timer to restart recognition if it gets stuck
+        startSpeechTimeoutTimer()
+        
+        print("🎤 Started listening for speech input")
+    }
+    
+    /*
+     * Checks if the spoken text contains a single recognizable letter.
+     */
+    private func containsSingleLetter(_ text: String) -> Bool {
+        let letters = text.filter { $0.isLetter }
+        return letters.count == 1 && etdrsLetters.contains(String(letters))
+    }
+    
+    /*
+     * Checks if the spoken text can be phonetically matched to an ETDRS letter.
+     */
+    private func canPhoneticMatch(_ text: String) -> Bool {
+        // Quick check to see if phonetic matching would succeed
+        return phoneticMatch(for: text) != nil
+    }
+    
+    /*
+     * Validates if the spoken text is a valid letter attempt and not a sentence.
+     * This prevents the app from processing conversation or long sentences.
+     */
+    private func isValidLetterAttempt(_ text: String) -> Bool {
+        let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Empty text is invalid
+        if cleanText.isEmpty {
+            return false
+        }
+        
+        // RULE 1: Length filter - reject very long text (likely sentences)
+        if cleanText.count > 15 {
+            print("🎤 🚫 Sentence filter: Text too long (\(cleanText.count) chars)")
+            return false
+        }
+        
+        // RULE 1.5: Letter count filter - reject if more than 5 letters detected
+        let letterCount = cleanText.filter { $0.isLetter }.count
+        if letterCount > 5 {
+            print("🎤 🚫 Sentence filter: Too many letters (\\(letterCount) letters)")
+            return false
+        }
+        
+        // RULE 2: Word count filter - reject multiple words (likely sentences)
+        let words = cleanText.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
+        if words.count > 4 {
+            print("🎤 🚫 Sentence filter: Too many words (\(words.count) words)")
+            return false
+        }
+        
+        // RULE 3: Common sentence starters - reject obvious conversation
+        let sentenceStarters = ["WAIT", "I", "SHOULD", "CAN", "COULD", "WILL", "WOULD", "MAYBE", "PERHAPS", "LET", "LETS", "PLEASE", "EXCUSE", "SORRY", "HI", "HELLO", "YES", "NO", "OKAY", "WELL", "SO", "BUT", "OR", "THE", "A", "AN", "THIS", "THAT", "THESE", "THOSE", "MY", "YOUR", "HIS", "HER", "OUR", "THEIR", "WE", "THEY", "SHE", "HE", "IT", "THERE", "HERE", "NOW", "THEN", "WHEN", "WHERE", "WHY", "HOW", "WHAT", "WHO", "WHICH"]
+        let firstWord = words.first ?? ""
+        if sentenceStarters.contains(firstWord) {
+            print("🎤 🚫 Sentence filter: Conversation starter detected: '\(firstWord)'")
+            return false
+        }
+        
+        // RULE 4: Common sentence patterns - reject obvious conversation
+        let sentencePatterns = [
+            "I SHOULD", "WAIT I", "CAN YOU", "COULD YOU", "WILL YOU", "WOULD YOU",
+            "LET ME", "LETS", "PLEASE", "EXCUSE ME", "I THINK", "I BELIEVE",
+            "MAYBE", "PERHAPS", "PROBABLY", "DEFINITELY", "CERTAINLY",
+            "WAIT I SHOULD", "I SHOULD PROBABLY", "SHOULD PROBABLY", "PROBABLY DO",
+            "DO ONE", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN"
+        ]
+        for pattern in sentencePatterns {
+            if cleanText.hasPrefix(pattern) || cleanText.contains(pattern) {
+                print("🎤 🚫 Sentence filter: Conversation pattern detected: '\(pattern)'")
+                return false
+            }
+        }
+        
+        // RULE 5: Question patterns - reject questions
+        if cleanText.contains("?") || 
+           cleanText.hasPrefix("WHAT") || 
+           cleanText.hasPrefix("WHERE") || 
+           cleanText.hasPrefix("WHEN") || 
+           cleanText.hasPrefix("WHY") || 
+           cleanText.hasPrefix("WHO") || 
+           cleanText.hasPrefix("HOW") ||
+           cleanText.hasPrefix("DO YOU") ||
+           cleanText.hasPrefix("DID YOU") ||
+           cleanText.hasPrefix("ARE YOU") ||
+           cleanText.hasPrefix("CAN YOU") {
+            print("🎤 🚫 Sentence filter: Question detected")
+            return false
+        }
+        
+        // RULE 5.5: Numbers and counting - reject number sequences
+        let numberWords = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN", "TWENTY"]
+        for numberWord in numberWords {
+            if words.contains(numberWord) && words.count > 1 {
+                print("🎤 🚫 Sentence filter: Number in context detected: '\(numberWord)'")
+                return false
+            }
+        }
+        
+        // RULE 6: Allow single letters (highest priority)
+        if cleanText.count == 1 && cleanText.first?.isLetter == true {
+            print("🎤 ✅ Valid: Single letter '\(cleanText)'")
+            return true
+        }
+        
+        // RULE 7: Allow known phonetic words for ETDRS letters
+        let validPhoneticWords = [
+            // Direct phonetic pronunciations
+            "ARE", "YOU", "SEE", "SEA", "DEE", "EFF", "AITCH", "KAY", "PEE", "VEE", "ZEE",
+            // Alternative pronunciations
+            "EACH", "AND", "OK", "OH", "HE", "FEE", "ED", "DZ", "VV", "CC", "DD", "FF", 
+            "HH", "KK", "NN", "PP", "RR", "UU", "ZZ",
+            // Short combinations that might be phonetic attempts
+            "AR", "ARR", "EN", "AFF", "ATCH", "AYCH", "SI", "SII", "DI", "DIA"
+        ]
+        
+        if validPhoneticWords.contains(cleanText) {
+            print("🎤 ✅ Valid: Known phonetic word '\(cleanText)'")
+            return true
+        }
+        
+        // RULE 8: Allow very short text that might contain letters
+        if cleanText.count <= 3 {
+            // Check if it contains any ETDRS letters
+            let containsETDRSLetter = etdrsLetters.contains { letter in
+                cleanText.contains(letter)
+            }
+            if containsETDRSLetter {
+                print("🎤 ✅ Valid: Short text with ETDRS letter '\(cleanText)'")
+                return true
+            }
+        }
+        
+        // RULE 9: Reject everything else (likely conversation)
+        print("🎤 🚫 Sentence filter: Rejected as conversation: '\(cleanText)'")
+        return false
+    }
+    
+    /*
+     * Stops listening for speech input.
+     */
+    private func stopListening() {
+        guard isListening else { 
+            print("🎤 Not listening, skipping stop")
+            return 
+        }
+        
+        print("🎤 Stopping speech recognition...")
+        
+        // Stop audio engine first
+        if audioEngine.isRunning {
+            audioEngine.stop()
+        }
+        
+        // Remove tap safely
+        if audioEngine.inputNode.numberOfInputs > 0 {
+            audioEngine.inputNode.removeTap(onBus: 0)
+        }
+        
+        // End recognition
+        recognitionRequest?.endAudio()
+        recognitionTask?.cancel()
+        
+        recognitionRequest = nil
+        recognitionTask = nil
+        isListening = false
+        microphoneLabel.isHidden = true
+        
+        // Stop the timeout timer
+        stopSpeechTimeoutTimer()
+        
+        print("🎤 Stopped listening for speech input")
+    }
+    
+    /*
+     * Processes the spoken input from the user.
+     */
+    private func processSpokenInput(_ spokenText: String) {
+        print("🎤 processSpokenInput called with: '\(spokenText)'")
+        
+        // Try phonetic matching first (this handles "ARE" → "R" cases)
+        var recognizedLetter = phoneticMatch(for: spokenText)
+        if recognizedLetter != nil {
+            print("🎤 Found phonetic match: \(recognizedLetter!) from '\(spokenText)'")
+        } else {
+            // Extract single letters from the spoken text as fallback
+            let letters = spokenText.filter { $0.isLetter }
+            print("🎤 Filtered letters: '\(letters)'")
+            
+            // Look for ETDRS letters in the spoken text
+            for letter in etdrsLetters {
+                if letters.contains(letter) {
+                    recognizedLetter = letter
+                    print("🎤 Found direct letter match: \(letter)")
+                    break
+                }
+            }
+        }
+        
+        if let letter = recognizedLetter {
+            print("🎤 ✅ Recognized letter: \(letter) for current letter: \(currentLetter)")
+            handleLetterInput(letter)
+        } else {
+            print("🎤 ❌ Could not recognize a valid ETDRS letter from: '\(spokenText)'")
+            print("🎤 💡 Try saying the letter name clearly: \(currentLetter)")
         }
     }
-
-    // MARK: - Gesture Handling
+    
     /*
-     * Handles a user's swipe gesture and determines if it matches the direction of the letter.
-     *
-     * @param gesture The UISwipeGestureRecognizer that triggered this action
+     * Attempts to match spoken text to ETDRS letters using comprehensive phonetic matching.
+     * Uses a multi-layered approach to handle all speech recognition variations.
      */
-    @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
+    private func phoneticMatch(for spokenText: String) -> String? {
+        let text = spokenText.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        print("🎤 Phonetic matching for: '\(text)'")
+        
+        // === LAYER 1: EXACT PHONETIC MAPPINGS ===
+        // Most common and reliable phonetic transcriptions
+        let exactPhoneticMap: [String: String] = [
+            // C - commonly transcribed as "see", "sea"
+            "see": "C", "sea": "C", "cee": "C", "si": "C", "c": "C",
+            
+            // D - commonly transcribed as "dee"
+            "dee": "D", "di": "D", "d": "D", "de": "D", "dear": "D",
+            
+            // F - commonly transcribed as "ef", "eff"
+            "ef": "F", "eff": "F", "f": "F", "aff": "F",
+            
+            // H - commonly transcribed as "aitch", "atch"
+            "aitch": "H", "atch": "H", "aych": "H", "h": "H",
+            "haitch": "H", "eitch": "H",
+            
+            // K - commonly transcribed as "kay", "key"
+            "kay": "K", "key": "K", "k": "K", "kei": "K",
+            
+            // N - commonly transcribed as "en", "enn" 
+            "en": "N", "enn": "N", "n": "N", "ne": "N",
+            
+            // P - commonly transcribed as "pee", "pi"
+            "pee": "P", "pi": "P", "p": "P", "pe": "P",
+            
+            // R - commonly transcribed as "are", "ar" 
+            "are": "R", "ar": "R", "arr": "R", "or": "R", "r": "R",
+            
+            // U - commonly transcribed as "you", "yu"
+            "you": "U", "yu": "U", "u": "U", "yoo": "U",
+            
+            // V - commonly transcribed as "vee", "vi"
+            "vee": "V", "vi": "V", "v": "V", "ve": "V", "we": "V",
+            
+            // Z - commonly transcribed as "zee", "zed"
+            "zee": "Z", "zed": "Z", "zi": "Z", "z": "Z"
+        ]
+        
+        // === LAYER 2: ALTERNATIVE PHONETIC MAPPINGS ===
+        // Less common but still valid transcriptions
+        let alternativePhoneticMap: [String: String] = [
+            // C alternatives
+            "sie": "C", "sii": "C", "ce": "C", "sea sea": "C",
+            
+            // D alternatives  
+            "dea": "D", "dia": "D", "dii": "D", "the": "D", "tea": "D",
+            
+            // F alternatives
+            "eph": "F", "aef": "F", "afe": "F", "fe": "F", "if": "F",
+            
+            // H alternatives
+            "ache": "H", "hatch": "H", "itch": "H", "each": "H",
+            "age": "H", "hey": "H", "hay": "H", "eight": "H", "ate": "H",
+            
+            // K alternatives
+            "ca": "K", "cay": "K", "kae": "K", "kai": "K", "que": "K",
+            "okay": "K", "ok": "K", "kway": "K",
+            
+            // N alternatives
+            "an": "N", "ene": "N", "inn": "N", "and": "N", "ain": "N",
+            
+            // P alternatives
+            "pea": "P", "pia": "P", "pie": "P", "pii": "P",
+            
+            // R alternatives
+            "aar": "R", "aire": "R", "er": "R", "ore": "R", "arre": "R",
+            "our": "R", "hour": "R", "air": "R", "heir": "R", "ah": "R",
+            
+            // U alternatives  
+            "oo": "U", "ooo": "U", "uu": "U", "ou": "U", "yew": "U",
+            "ewe": "U", "hugh": "U", "hue": "U", "ew": "U", "ooh": "U",
+            "who": "U", "woo": "U", "wu": "U", "ue": "U",
+            
+            // V alternatives
+            "vea": "V", "via": "V", "vie": "V", "vii": "V", "bee": "V",
+            
+            // Z alternatives
+            "zea": "Z", "zia": "Z", "ze": "Z", "zeta": "Z", "said": "Z"
+        ]
+        
+        // === LAYER 3: REPEATED LETTER PATTERNS ===
+        // Handle cases like "RRR", "CCC", etc.
+        let repeatedPatternMap: [String: String] = [
+            "cc": "C", "ccc": "C", "cccc": "C",
+            "dd": "D", "ddd": "D", "dddd": "D", 
+            "ff": "F", "fff": "F", "ffff": "F",
+            "hh": "H", "hhh": "H", "hhhh": "H",
+            "kk": "K", "kkk": "K", "kkkk": "K",
+            "nn": "N", "nnn": "N", "nnnn": "N",
+            "pp": "P", "ppp": "P", "pppp": "P",
+            "rr": "R", "rrr": "R", "rrrr": "R",
+            "uu": "U", "uuu": "U", "uuuu": "U",
+            "vv": "V", "vvv": "V", "vvvv": "V",
+            "zz": "Z", "zzz": "Z", "zzzz": "Z"
+        ]
+        
+        // === MATCHING ALGORITHM ===
+        
+        // STEP 1: Check exact phonetic matches (highest priority)
+        if let letter = exactPhoneticMap[text] {
+            print("🎤 ✅ Layer 1 - Exact phonetic match: '\(text)' → '\(letter)'")
+            return letter
+        }
+        
+        // STEP 2: Check alternative phonetic matches
+        if let letter = alternativePhoneticMap[text] {
+            print("🎤 ✅ Layer 2 - Alternative phonetic match: '\(text)' → '\(letter)'")
+            return letter
+        }
+        
+        // STEP 3: Check repeated letter patterns
+        if let letter = repeatedPatternMap[text] {
+            print("🎤 ✅ Layer 3 - Repeated pattern match: '\(text)' → '\(letter)'")
+            return letter
+        }
+        
+        // STEP 4: Check if text contains any exact phonetic patterns
+        let allMaps = [exactPhoneticMap, alternativePhoneticMap, repeatedPatternMap]
+        for (mapIndex, map) in allMaps.enumerated() {
+            // Sort by length (longer patterns first) to avoid partial matches
+            let sortedPhonetics = map.keys.sorted { $0.count > $1.count }
+            
+            for phonetic in sortedPhonetics {
+                if text.contains(phonetic) {
+                    let letter = map[phonetic]!
+                    print("🎤 ✅ Layer \(mapIndex + 1) - Contains pattern: '\(text)' contains '\(phonetic)' → '\(letter)'")
+                    return letter
+                }
+            }
+        }
+        
+        // STEP 5: Single letter direct match
+        if text.count == 1 && text.first!.isLetter {
+            let letter = text.uppercased()
+            if etdrsLetters.contains(letter) {
+                print("🎤 ✅ Direct single letter match: '\(text)' → '\(letter)'")
+                return letter
+            }
+        }
+        
+        // STEP 6: Check for repeated single letters (like "RRR" → "R")
+        if text.count > 1 {
+            let uniqueLetters = Set(text.filter { $0.isLetter })
+            if uniqueLetters.count == 1, let singleLetter = uniqueLetters.first {
+                let letter = String(singleLetter).uppercased()
+                if etdrsLetters.contains(letter) {
+                    print("🎤 ✅ Repeated letter match: '\(text)' → '\(letter)'")
+                    return letter
+                }
+            }
+        }
+        
+        // STEP 7: Fuzzy matching for edge cases
+        return fuzzyPhoneticMatch(for: text)
+    }
+    
+    /*
+     * Advanced fuzzy matching for edge cases and unusual transcriptions.
+     */
+    private func fuzzyPhoneticMatch(for text: String) -> String? {
+        // Handle edge cases where letters might be transcribed as words
+        let edgeCaseMap: [String: String] = [
+            // Common word confusions
+            "why": "Y", "wine": "Y", "y": "Y",
+            "ex": "X", "x": "X", "axe": "X",
+            "oh": "O", "zero": "O", "o": "O",
+            "be": "B", "bee": "B", "b": "B",
+            "tea": "T", "tee": "T", "t": "T",
+            "em": "M", "m": "M",
+            "el": "L", "l": "L", "elle": "L",
+            "jay": "J", "j": "J",
+            "eye": "I", "i": "I", "aye": "I",
+            "gee": "G", "g": "G",
+            "a": "A", "ay": "A", "hey": "A",
+            "queue": "Q", "q": "Q", "cue": "Q",
+            "yes": "S", "s": "S", "ess": "S",
+            "double you": "W", "w": "W",
+        ]
+        
+        if let letter = edgeCaseMap[text] {
+            // Only return if it's an ETDRS letter
+            if etdrsLetters.contains(letter) {
+                print("🎤 ✅ Fuzzy match: '\(text)' → '\(letter)'")
+                return letter
+            }
+        }
+        
+        print("🎤 ❌ No phonetic match found for: '\(text)'")
+        return nil
+    }
+
+    // MARK: - Letter Input Handling
+    /*
+     * Handles a letter input from speech recognition and determines if it matches the current letter.
+     *
+     * @param inputLetter The letter recognized from speech
+     */
+    private func handleLetterInput(_ inputLetter: String) {
+        // Mark test as started on first input
+        testStarted = true
+        
         var isCorrect = 0
         
-        switch (gesture.direction, currentRotation) {
-        case (.right, 0), (.down, 90), (.left, 180), (.up, 270):
+        if inputLetter == currentLetter {
             isCorrect = 1
             score += 1
             correctAnswersInSet += 1 // Track correct answers in the current set of 10
-        default:
+        } else {
             isCorrect = 0
         }
         
         totalAttempts += 1
         trial += 1 // Increment the trial count within this set
+        
+        print("🎯 Letter: \(currentLetter), Input: \(inputLetter), Correct: \(isCorrect == 1)")
         
         // Animate the letter flying off screen before processing next trial
         animateLetterFlyOff { [weak self] in
@@ -677,13 +1320,22 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
        determining acuity level changes, calculating final scores, and resetting trial counters.
      */
     private func processNextTrial() {
-        print("trial:", trial, "correctAnswersInSet:",correctAnswersInSet)
+        print("🔍 ETDRS processNextTrial called - trial:", trial, "correctAnswersInSet:",correctAnswersInSet, "testStarted:", testStarted)
+        
+        // Don't process trials until the test has actually started with user input
+        guard testStarted else {
+            print("🔍 ETDRS: Test not started yet, skipping processNextTrial")
+            return
+        }
+        
         let acuity = acuityList[currentAcuityIndex]
         correctAnswersAcrossAcuityLevels[acuity] = correctAnswersInSet
         print("correctAnswersAcrossAcuityLevels:", correctAnswersAcrossAcuityLevels)
-        print(currentAcuityIndex, acuity)
+        print("currentAcuityIndex:", currentAcuityIndex, "acuity:", acuity)
+        
         // Check if trial count has reached 10 or if the user has first 5 correct
         if (trial > 10) || ((trial == SKIP + 1) && (correctAnswersInSet == SKIP)) {
+            print("🔍 ETDRS: Ending acuity level - trial > 10 or skip condition met")
             if (trial == SKIP + 1) && (correctAnswersInSet == SKIP){
                 print("skip")
                 correctAnswersAcrossAcuityLevels[acuity] = MAX_CORRECT
@@ -705,7 +1357,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
                         print("Going back to larger acuity...")
                         currentAcuityIndex -= 1
                         resetLetterScaling() // Reset scaling for new acuity level
-                        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER) // Update the letter size
+                        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
                     }
                 }
             } else { // User gets at least 6 letters correct, advance to next level
@@ -716,33 +1368,24 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
                     print("Advancing to smaller acuity...")
                     currentAcuityIndex += 1
                     resetLetterScaling() // Reset scaling for new acuity level
-                    set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER) // Update the letter size
+                    set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
                 }
             }
             // Reset trial counter and correct answers count
             trial = 1
             correctAnswersInSet = 0
         }
-        generateNewE() // Generate the next letter with updated size or same size
+        generateNewLetter() // Generate the next letter with updated size or same size
     }
     
-    /* Generates a new tumbling E with a random rotation.
-       Animates the rotation of the letter to one of four possible orientations.
+    /* Generates a new ETDRS letter randomly.
      */
-    private func generateNewE() {
-        // Current position can be 0°, 90°, 180°, or 270°
-        // Add random increment (90°, 180°, or 270°) to get next position
-        let currentRotationValue = currentRotation
-        let increments = [90.0, 180.0, 270.0]
+    private func generateNewLetter() {
+        // Select a random ETDRS letter
+        currentLetter = etdrsLetters.randomElement() ?? "C"
+        letterLabel.text = currentLetter
         
-        var newRotation: Double
-        let randomIncrement = increments.randomElement() ?? 0.0
-        newRotation = (currentRotationValue + randomIncrement).truncatingRemainder(dividingBy: 360)
-        
-        currentRotation = newRotation
-        
-        // Apply rotation without animation
-        letterLabel.transform = CGAffineTransform(rotationAngle: CGFloat(currentRotation) * .pi / 180)
+        print("📝 New letter generated: \(currentLetter)")
     }
     
     /* Prepares for navigation to the results screen.
@@ -791,6 +1434,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
                 
                 // Update letter size for the new distance
                 updateLetterSizeForDistance(liveDistance)
+                
+                // Resume speech recognition
+                startListening()
             } else {
                 // Still out of range - update directional indicators
                 updateDirectionalIndicators(tooClose: tooClose, tooFar: tooFar, distance: liveDistance)
@@ -804,6 +1450,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
                 updateDirectionalIndicators(tooClose: tooClose, tooFar: tooFar, distance: liveDistance)
                 print("⚠️ PAUSING TEST - Distance Out of Range: \(String(format: "%.1f", liveDistance)) cm")
                 pauseTest()
+                
+                // Stop speech recognition when paused
+                stopListening()
             } else {
                 // Distance is within acceptable bounds - update letter size if needed
                 updateLetterSizeForDistance(liveDistance)
@@ -914,19 +1563,19 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     }
 
     /* Pauses the visual acuity test when the user is not at the proper distance.
-       Updates UI elements and disables user interaction.
+       Updates UI elements and disables speech recognition.
      */
     private func pauseTest() {
         instructionLabel.text = "Paused: Adjust your distance"
-        view.isUserInteractionEnabled = false // Disable swipes
+        stopListening()
     }
 
     /* Resumes the visual acuity test when the user returns to the proper distance.
-       Updates UI elements and re-enables user interaction.
+       Updates UI elements and re-enables speech recognition.
      */
     private func resumeTest() {
-        instructionLabel.text = "Please swipe in the direction the C is pointing."
-        view.isUserInteractionEnabled = true // Re-enable swipes
+        instructionLabel.text = "Please say the letter you see out loud."
+        startListening()
     }
     
     /* Updates the test based on current distance from the device.
@@ -1067,6 +1716,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
        @param totalLetters Total number of letters shown at each acuity level
      */
     func calculateScore(finishAcuity1: Int, amtCorrect1: Int, finishAcuity2: Int, amtCorrect2: Int, totalLetters: Int = 10) {
+        print("🔍 ETDRS calculateScore called - this should only happen at the end of the test!")
         print("finishAcuity1", finishAcuity1)
         let amtWrongCurrent1 = Double(totalLetters - amtCorrect1)
         let amtWrongCurrent2 = Double(totalLetters - amtCorrect2)
@@ -1096,6 +1746,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             if let leftInstrucVC = storyboard.instantiateViewController(withIdentifier: "OneEyeInstruc") as? OneEyeInstruc {
                 navigationController?.pushViewController(leftInstrucVC, animated: true)
+                print("🔍 ETDRS: Navigating to left eye instructions after right eye completion")
             }
             
         } else {
@@ -1103,19 +1754,75 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             finalAcuityDictionary[1] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
             
             performSegue(withIdentifier: "ShowResults", sender: self)
+            print("🔍 ETDRS: Navigating to results after left eye completion")
         }
     }
 
     private func playAudioInstructions() {
-        let instructionText = "Swipe in the direction the C opening points."
-        SharedAudioManager.shared.playText(instructionText, source: "Vision Test")
+        let instructionText = "Say the letter you see."
+        SharedAudioManager.shared.playText(instructionText, source: "ETDRS Vision Test")
+    }
+    
+    // MARK: - SFSpeechRecognizerDelegate
+    
+    func speechRecognizer(_ speechRecognizer: SFSpeechRecognizer, availabilityDidChange available: Bool) {
+        print("🎤 Speech recognizer availability changed: \(available)")
+    }
+    
+    // MARK: - Speech Timeout Management
+    
+    /*
+     * Starts a timer to restart speech recognition if it gets stuck or disrupted.
+     */
+    private func startSpeechTimeoutTimer() {
+        stopSpeechTimeoutTimer() // Clear any existing timer
+        
+        speechTimeoutTimer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: false) { [weak self] _ in
+            guard let self = self else { return }
+            print("🎤 ⏰ Speech recognition timeout - restarting...")
+            
+            if self.isListening {
+                self.stopListening()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    if !isPaused {
+                        self.startListening()
+                    }
+                }
+            }
+        }
+    }
+    
+    /*
+     * Stops the speech timeout timer.
+     */
+    private func stopSpeechTimeoutTimer() {
+        speechTimeoutTimer?.invalidate()
+        speechTimeoutTimer = nil
+    }
+    
+    /*
+     * Immediately resets speech recognition to clear unwanted transcription.
+     * Used when sentences or invalid input is detected.
+     */
+    private func resetSpeechRecognition() {
+        print("🎤 🔄 Resetting speech recognition due to invalid input")
+        
+        // Stop current recognition
+        stopListening()
+        
+        // Restart immediately to clear the transcription buffer
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            if !isPaused {
+                self.startListening()
+            }
+        }
     }
     
     // MARK: - Animation Methods
     
     /*
-     * Animates the Landolt C letter flying off screen with a smooth transition.
-     * Provides visual feedback when a swipe gesture response is completed.
+     * Animates the letter flying off screen with a smooth transition.
+     * Provides visual feedback when a letter response is completed.
      */
     private func animateLetterFlyOff(completion: @escaping () -> Void) {
         // Create a snapshot of the current letter for animation
@@ -1168,3 +1875,5 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
     }
 }
+
+

@@ -11,6 +11,11 @@ import AVFoundation
 let LETTER = "C" // Landold C-- the letter that is displayed on the acuity selection scene.
 var selectedAcuity: Int?
 
+// Global test type preference
+var isETDRSTest: Bool {
+    return UserDefaults.standard.bool(forKey: "etdrs_test_enabled")
+}
+
 /* Select_Acuity class is designed to display the acuity selection scene.
     On this page, the user is given a list of acuity levels to start the test at.
 */
@@ -29,19 +34,39 @@ class Select_Acuity: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print(averageDistanceCM)
+        print("🔍 Select_Acuity averageDistanceCM:", averageDistanceCM)
+        
+        // Ensure we have a valid distance before setting up buttons
+        if averageDistanceCM <= 0 {
+            // Try to load from UserDefaults
+            if let savedDistance = UserDefaults.standard.object(forKey: "SavedTargetDistance") as? Double,
+               savedDistance > 0 {
+                print("🔍 Loading saved distance for acuity selection: \(savedDistance) cm")
+                averageDistanceCM = savedDistance
+                DistanceTracker.shared.targetDistanceCM = savedDistance
+            } else {
+                print("🔍 No valid distance found - using default of 40 cm for acuity selection")
+                averageDistanceCM = 40.0
+                DistanceTracker.shared.targetDistanceCM = 40.0
+            }
+        }
+        
+        print("🔍 Using distance for acuity selection: \(averageDistanceCM) cm")
+        
+        // Choose letter based on test type
+        let displayLetter = isETDRSTest ? "C" : LETTER
         
         // Set up all buttons with their appropriate letter sizes
-        Button_ETDRS(B200, dAcuity: 200, letText: LETTER)
-        Button_ETDRS(B160, dAcuity: 160, letText: LETTER)
-        Button_ETDRS(B125, dAcuity: 125, letText: LETTER)
-        Button_ETDRS(B100, dAcuity: 100, letText: LETTER)
-        Button_ETDRS(B80, dAcuity: 80, letText: LETTER)
-        Button_ETDRS(B63, dAcuity: 63, letText: LETTER)
-        Button_ETDRS(B50, dAcuity: 50, letText: LETTER)
-        Button_ETDRS(B40, dAcuity: 40, letText: LETTER)
-        Button_ETDRS(B20, dAcuity: 32, letText: LETTER)
-        Button_ETDRS(B10, dAcuity: 20, letText: LETTER)
+        Button_ETDRS(B200, dAcuity: 200, letText: displayLetter)
+        Button_ETDRS(B160, dAcuity: 160, letText: displayLetter)
+        Button_ETDRS(B125, dAcuity: 125, letText: displayLetter)
+        Button_ETDRS(B100, dAcuity: 100, letText: displayLetter)
+        Button_ETDRS(B80, dAcuity: 80, letText: displayLetter)
+        Button_ETDRS(B63, dAcuity: 63, letText: displayLetter)
+        Button_ETDRS(B50, dAcuity: 50, letText: displayLetter)
+        Button_ETDRS(B40, dAcuity: 40, letText: displayLetter)
+        Button_ETDRS(B20, dAcuity: 32, letText: displayLetter)
+        Button_ETDRS(B10, dAcuity: 20, letText: displayLetter)
         
         // Configure the stack view and buttons for dynamic sizing
         configureButtonConstraints()
@@ -55,7 +80,7 @@ class Select_Acuity: UIViewController {
     /* Plays audio instructions to the user.
     */
     private func playAudioInstructions() {
-        let instructionText = "Choose your starting acuity level by tapping one of the letter options. The letters are sized according to different vision levels. Select the largest letter you can clearly see to begin your test."
+        let instructionText = "Tap the smallest letter you can clearly see."
         SharedAudioManager.shared.playText(instructionText, source: "Acuity Selection")
     }
     
@@ -91,8 +116,8 @@ class Select_Acuity: UIViewController {
             right: horizontalPadding   // Minimal horizontal padding
         )
         
-        // Configure button appearance for better visual feedback
-        button.layer.cornerRadius = 12 // Slightly larger radius for full-width buttons
+        // Configure button appearance for connected buttons
+        button.layer.cornerRadius = 0 // No corner radius for connected buttons
         button.layer.borderWidth = 1
         button.layer.borderColor = UIColor.lightGray.cgColor
         button.backgroundColor = UIColor.systemBackground
@@ -166,6 +191,26 @@ class Select_Acuity: UIViewController {
     */
     private func proceedToTest() {
         print("Proceeding to test with acuity: \(String(describing: selectedAcuity))")
+        
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        
+        if isETDRSTest {
+            // Navigate to ETDRS test
+            if let etdrsVC = storyboard.instantiateViewController(withIdentifier: "ETDRSViewController") as? ETDRSViewController {
+                navigationController?.pushViewController(etdrsVC, animated: true)
+                print("🔤 ✅ Successfully navigating to ETDRS test")
+            } else {
+                print("🔤 ❌ Failed to instantiate ETDRSViewController from storyboard")
+            }
+        } else {
+            // Navigate to Landolt C test
+            if let tumblingVC = storyboard.instantiateViewController(withIdentifier: "TumblingEViewController") as? TumblingEViewController {
+                navigationController?.pushViewController(tumblingVC, animated: true)
+                print("🔄 ✅ Successfully navigating to Landolt C test")
+            } else {
+                print("🔄 ❌ Failed to instantiate TumblingEViewController from storyboard")
+            }
+        }
     }
     
     /* Configures the button constraints for the acuity selection scene.
@@ -174,13 +219,16 @@ class Select_Acuity: UIViewController {
         // Get all the buttons
         let buttons = [B200, B160, B125, B100, B80, B63, B50, B40, B20, B10]
         
-        // Configure the stack view for full-width buttons
+        // Configure the stack view for connected buttons (no spacing)
         if let firstButton = buttons.compactMap({ $0 }).first,
            let stackView = firstButton.superview as? UIStackView {
             stackView.distribution = .fillEqually
             stackView.alignment = .fill
-            stackView.spacing = 8 // Add some spacing between buttons
-            print("✅ Stack view configured: distribution=fillEqually, alignment=fill, spacing=8")
+            stackView.spacing = 0 // Remove spacing to connect buttons
+            print("✅ Stack view configured: distribution=fillEqually, alignment=fill, spacing=0")
+            
+            // Apply rounded corners only to top and bottom buttons
+            configureConnectedButtonCorners(buttons: buttons.compactMap({ $0 }))
         } else {
             print("⚠️ Could not find stack view - buttons may not be in a UIStackView")
         }
@@ -220,5 +268,32 @@ class Select_Acuity: UIViewController {
         view.layoutIfNeeded()
         
         print("✅ Button constraints configured for full-width dynamic sizing")
+    }
+    
+    /*
+     * Configures rounded corners for connected buttons - only top and bottom buttons get rounded corners.
+     */
+    private func configureConnectedButtonCorners(buttons: [UIButton]) {
+        guard !buttons.isEmpty else { return }
+        
+        let cornerRadius: CGFloat = 12
+        
+        for (index, button) in buttons.enumerated() {
+            if index == 0 {
+                // First button - round top corners only
+                button.layer.cornerRadius = cornerRadius
+                button.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+            } else if index == buttons.count - 1 {
+                // Last button - round bottom corners only
+                button.layer.cornerRadius = cornerRadius
+                button.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+            } else {
+                // Middle buttons - no rounded corners
+                button.layer.cornerRadius = 0
+                button.layer.maskedCorners = []
+            }
+        }
+        
+        print("✅ Configured connected button corners: top and bottom buttons rounded, middle buttons square")
     }
 }

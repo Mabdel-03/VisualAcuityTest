@@ -10,5 +10,9 @@
 	<array>
 		<string>Sloan.otf</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app uses the microphone for voice input during the ETDRS visual acuity test. Please speak the letters you see clearly.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app uses speech recognition to identify letters during the ETDRS visual acuity test. Your voice input helps determine your vision acuity.</string>
 </dict>
 </plist>

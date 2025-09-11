@@ -98,7 +98,7 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     /* Plays audio instructions to the user.
     */
     private func playAudioInstructions() {
-        let instructionText = "Hold your phone at a comfortable distance where you can clearly see the white flower image. When the image appears sharp and clear, tap the 'Capture Distance' button to save this distance for your test."
+        let instructionText = "Position phone for clear flower view, then tap Capture Distance."
         SharedAudioManager.shared.playText(instructionText, source: "Distance Optimization")
     }
     

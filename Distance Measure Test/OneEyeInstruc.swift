@@ -48,24 +48,45 @@ class OneEyeInstruc: UIViewController {
     /* Plays audio instructions to the user.
     */
     private func playAudioInstructions() {
-        let instructionText: String
-        if eyeNumber == 2 {
-            instructionText = "Prepare for your right eye vision test. Cover your left eye and look at the screen with your right eye. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
-        } else {
-            instructionText = "Prepare for your left eye vision test. Cover your right eye and look at the screen with your left eye. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
-        }
+        let eyeName = eyeNumber == 2 ? "right" : "left"
+        let coverEye = eyeNumber == 2 ? "left" : "right"
+        
+        let instructionText = "Cover your \(coverEye) eye, test with \(eyeName) eye."
+        
         SharedAudioManager.shared.playText(instructionText, source: "Eye Instructions")
     }
     
     /* Updates the text on the one eye instructions scene.
     */
     private func updateText() {
+        let testType = isETDRSTest ? "ETDRS" : "Landolt C"
+        
         if eyeNumber == 2 {
-            oneEyeInstructions.text = "Right Test"
-            instructionText.text = "Close your left eye and look at the screen with your right eye. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
+            oneEyeInstructions.text = "Right Eye (\(testType))"
+            instructionText.text = "Cover left eye. Tap Begin Test when ready."
         } else {
-            oneEyeInstructions.text = "Left Test"
-            instructionText.text = "Close your right eye and look at the screen with your left eye. When ready, tap 'Begin Test' to start, or tap 'Skip' to skip this eye."
+            oneEyeInstructions.text = "Left Eye (\(testType))"
+            instructionText.text = "Cover right eye. Tap Begin Test when ready."
+        }
+    }
+    
+    /* Begins the appropriate test based on the selected test type.
+    */
+    @IBAction func beginTestButtonPressed(_ sender: Any) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        
+        if isETDRSTest {
+            // Navigate to ETDRS test
+            if let etdrsVC = storyboard.instantiateViewController(withIdentifier: "ETDRSViewController") as? ETDRSViewController {
+                navigationController?.pushViewController(etdrsVC, animated: true)
+                print("🔤 Starting ETDRS test for eye \(eyeNumber)")
+            }
+        } else {
+            // Navigate to Landolt C test
+            if let tumblingVC = storyboard.instantiateViewController(withIdentifier: "TumblingEViewController") as? TumblingEViewController {
+                navigationController?.pushViewController(tumblingVC, animated: true)
+                print("🔄 Starting Landolt C test for eye \(eyeNumber)")
+            }
         }
     }
     

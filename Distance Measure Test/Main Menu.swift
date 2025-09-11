@@ -58,6 +58,15 @@ class SharedAudioManager: NSObject {
         }
     }
     
+    func isETDRSTestEnabled() -> Bool {
+        return UserDefaults.standard.bool(forKey: "etdrs_test_enabled")
+    }
+    
+    func setETDRSTestEnabled(_ enabled: Bool) {
+        UserDefaults.standard.set(enabled, forKey: "etdrs_test_enabled")
+        print("🔧 Shared Audio Manager - Test type set to: \(enabled ? "ETDRS" : "Landolt C")")
+    }
+    
     func playText(_ text: String, source: String = "Unknown") {
         print("🔊 [\(source)] playText called")
         print("🔊 [\(source)] Audio enabled: \(isAudioEnabled())")
@@ -138,26 +147,13 @@ let CORNER_RADIUS: CGFloat = 2.0
 */
 class MainMenu: UIViewController {
     
-    /* Settings button is a button that allows the user to toggle their audio instructions.
-    */
-    private lazy var settingsButton: UIButton = {
-        let button = UIButton(type: .custom)
-        button.setTitle("⚙️ Audio", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .medium)
-        button.layer.cornerRadius = CORNER_RADIUS
-        button.layer.masksToBounds = true
-        button.addTarget(self, action: #selector(audioToggleButtonTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         initializeAudioSettings()
-        updateAudioButtonAppearance()
+        initializeTestTypeSettings()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -171,6 +167,15 @@ class MainMenu: UIViewController {
         SharedAudioManager.shared.initializeDefaultSettings()
     }
     
+    /* Initializes the test type settings for the user.
+    */
+    private func initializeTestTypeSettings() {
+        // Default to Landolt C test if no preference is set
+        if UserDefaults.standard.object(forKey: "etdrs_test_enabled") == nil {
+            SharedAudioManager.shared.setETDRSTestEnabled(false)
+        }
+    }
+    
     /* Checks if the audio is enabled for the user.
     */
     private func isAudioEnabled() -> Bool {
@@ -181,22 +186,26 @@ class MainMenu: UIViewController {
     */
     private func setAudioEnabled(_ enabled: Bool) {
         SharedAudioManager.shared.setAudioEnabled(enabled)
-        updateAudioButtonAppearance()
     }
     
-    /* Updates the appearance of the audio button.
+    /* Checks if the ETDRS test is enabled for the user.
     */
-    private func updateAudioButtonAppearance() {
-        let isEnabled = isAudioEnabled()
-        settingsButton.setTitle(isEnabled ? "🔊 Audio On" : "🔇 Audio Off", for: .normal)
-        settingsButton.backgroundColor = isEnabled ? UIColor.systemGreen.withAlphaComponent(0.3) : UIColor.systemGray6
-        print("🔊 Main Menu - Button updated - Audio is: \(isEnabled ? "ON" : "OFF")")
+    private func isETDRSTestEnabled() -> Bool {
+        return SharedAudioManager.shared.isETDRSTestEnabled()
     }
+    
+    /* Sets the test type enabled for the user.
+    */
+    private func setETDRSTestEnabled(_ enabled: Bool) {
+        SharedAudioManager.shared.setETDRSTestEnabled(enabled)
+    }
+    
     
     /* Plays audio instructions to the user.
     */
     private func playAudioInstructions() {
-        let instructionText = "Welcome to the Visual Acuity Test app. Tap 'Start Test' to begin a new vision test, or tap 'Completed Tests' to view your test history. You can toggle audio instructions using the audio button."
+        let testType = isETDRSTestEnabled() ? "ETDRS" : "Landolt C"
+        let instructionText = "Visual acuity test - \(testType) mode. Tap Start Test to begin."
         SharedAudioManager.shared.playText(instructionText, source: "Main Menu")
     }
     
@@ -204,14 +213,6 @@ class MainMenu: UIViewController {
     */
     private func setupUI() {
         view.backgroundColor = UIColor.white
-        view.addSubview(settingsButton)
-        
-        NSLayoutConstraint.activate([
-            settingsButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-            settingsButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            settingsButton.widthAnchor.constraint(equalToConstant: 140),
-            settingsButton.heightAnchor.constraint(equalToConstant: 44),
-        ])
     }
     
     /* Navigates to the test history scene.
@@ -221,18 +222,16 @@ class MainMenu: UIViewController {
         navigationController?.pushViewController(testHistoryVC, animated: true)
     }
     
-    /* Toggles the audio instructions for the user.
-    */
-    @objc private func audioToggleButtonTapped() {
-        let currentState = isAudioEnabled()
-        setAudioEnabled(!currentState)
+    @IBAction func goToSettings(_ sender: Any) {
+        let settingsVC = SettingsViewController()
+        navigationController?.pushViewController(settingsVC, animated: true)
         
-        // Provide audio feedback
-        let message = isAudioEnabled() ? "Audio instructions enabled" : "Audio instructions disabled"
         if isAudioEnabled() {
-            SharedAudioManager.shared.playText(message, source: "Main Menu Toggle")
+            SharedAudioManager.shared.playText("Opening settings screen", source: "Main Menu")
         }
     }
+    
+    
     
     /* Tests the audio instructions for the user.
     */
@@ -241,7 +240,6 @@ class MainMenu: UIViewController {
         
         // Force enable audio for testing
         SharedAudioManager.shared.setAudioEnabled(true)
-        updateAudioButtonAppearance()
         
         let testText = "This is a test of the audio system. If you can hear this, audio is working correctly."
         SharedAudioManager.shared.playText(testText, source: "Main Menu Test")

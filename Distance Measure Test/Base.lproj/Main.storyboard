@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="J9j-Di-vhq">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23727" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="J9j-Di-vhq">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23721"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -58,6 +58,9 @@
                                     <color key="baseForegroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     <color key="baseBackgroundColor" red="0.2235293984" green="0.42352938649999999" blue="0.42745098469999998" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                 </buttonConfiguration>
+                                <connections>
+                                    <action selector="goToSettings:" destination="lbh-aZ-5cA" eventType="touchUpInside" id="Set-Btn-Connection"/>
+                                </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="JwZ-uV-ako">
                                 <rect key="frame" x="75" y="684" width="242" height="50"/>
@@ -271,7 +274,7 @@
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="J9j-Di-vhq" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="ld9-fF-WVp">
-                        <rect key="frame" x="0.0" y="59" width="393" height="44"/>
+                        <rect key="frame" x="0.0" y="118" width="393" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
@@ -315,7 +318,6 @@
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
                                                     <action selector="option1:" destination="yoH-g8-Akd" eventType="touchUpInside" id="qZg-1X-OAC"/>
-                                                    <segue destination="jDS-WX-1Ad" kind="show" id="rVk-69-JMU"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="BRf-c2-1wi">
@@ -336,7 +338,6 @@
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
                                                     <action selector="option2:" destination="yoH-g8-Akd" eventType="touchUpInside" id="Ox5-rg-jlX"/>
-                                                    <segue destination="jDS-WX-1Ad" kind="show" id="2Wi-cK-MoZ"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hft-Mq-dAO">
@@ -357,7 +358,6 @@
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
                                                     <action selector="option3:" destination="yoH-g8-Akd" eventType="touchUpInside" id="xId-tV-1jn"/>
-                                                    <segue destination="jDS-WX-1Ad" kind="show" id="Qx0-K1-CSO"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ZQe-Ay-lCU">
@@ -378,7 +378,6 @@
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
                                                     <action selector="option4:" destination="yoH-g8-Akd" eventType="touchUpInside" id="dvA-3a-c2K"/>
-                                                    <segue destination="jDS-WX-1Ad" kind="show" id="4cI-eV-Uop"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tmq-GW-PHJ">
@@ -399,7 +398,6 @@
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
                                                     <action selector="option5:" destination="yoH-g8-Akd" eventType="touchUpInside" id="fLW-Xz-Inz"/>
-                                                    <segue destination="jDS-WX-1Ad" kind="show" id="KFK-1d-PqS"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6l4-Ab-jUs">
@@ -420,7 +418,6 @@
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
                                                     <action selector="option6:" destination="yoH-g8-Akd" eventType="touchUpInside" id="TJy-ZQ-zU7"/>
-                                                    <segue destination="jDS-WX-1Ad" kind="show" id="tRk-sc-cOs"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AXf-Fr-moD">
@@ -441,7 +438,6 @@
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
                                                     <action selector="option7:" destination="yoH-g8-Akd" eventType="touchUpInside" id="XDM-4v-Vf1"/>
-                                                    <segue destination="jDS-WX-1Ad" kind="show" id="wEi-gh-o6e"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vwp-NZ-fXd">
@@ -462,7 +458,6 @@
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
                                                     <action selector="option8:" destination="yoH-g8-Akd" eventType="touchUpInside" id="iKh-gA-8qV"/>
-                                                    <segue destination="jDS-WX-1Ad" kind="show" id="MUL-Ss-RNG"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QOt-gF-U6n" userLabel="B32">
@@ -483,7 +478,6 @@
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
                                                     <action selector="option9:" destination="yoH-g8-Akd" eventType="touchUpInside" id="BLE-fW-a2j"/>
-                                                    <segue destination="jDS-WX-1Ad" kind="show" id="CS9-e9-m3D"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cGy-Yd-Tp5" userLabel="B20">
@@ -504,7 +498,6 @@
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
                                                     <action selector="option10:" destination="yoH-g8-Akd" eventType="touchUpInside" id="M99-dX-yuO"/>
-                                                    <segue destination="jDS-WX-1Ad" kind="show" id="Xob-LH-A6O"/>
                                                 </connections>
                                             </button>
                                         </subviews>
@@ -555,7 +548,7 @@
         <!--TumblingE View Controller-->
         <scene sceneID="s8C-W6-as9">
             <objects>
-                <viewController id="jDS-WX-1Ad" customClass="TumblingEViewController" customModule="Distance_Measure_Test" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="TumblingEViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="jDS-WX-1Ad" customClass="TumblingEViewController" customModule="Distance_Measure_Test" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Uim-UU-HUM">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -571,12 +564,31 @@
             </objects>
             <point key="canvasLocation" x="4121" y="458"/>
         </scene>
+        <!--View Controller-->
+        <scene sceneID="ETD-RS-VCn">
+            <objects>
+                <viewController storyboardIdentifier="ETDRSViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="ETD-RS-123" customClass="ETDRSViewController" customModule="Distance_Measure_Test" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="ETD-RS-view">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="ETD-RS-safe"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="ETD-RS-nav"/>
+                    <connections>
+                        <segue destination="WvQ-vl-NzY" kind="show" identifier="ShowResults" id="ETD-RS-segue"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ETD-RS-resp" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="4121" y="800"/>
+        </scene>
         <!--Result View Controller-->
         <scene sceneID="tUx-f0-V0a">
             <objects>
                 <viewController storyboardIdentifier="ResultViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="WvQ-vl-NzY" customClass="ResultViewController" customModule="Distance_Measure_Test" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="ccy-fp-cVj">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="783"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Results" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="2l2-0S-e4l">
@@ -598,7 +610,7 @@
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
-        <segue reference="CS9-e9-m3D"/>
+        <segue reference="bks-u1-tH2"/>
     </inferredMetricsTieBreakers>
     <resources>
         <image name="AiAppLogo" width="666.66668701171875" height="666.66668701171875"/>
