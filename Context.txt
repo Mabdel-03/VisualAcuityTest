@@ -1,0 +1,521 @@
+# Visual Acuity Test App - Complete Codebase Context
+
+## PROJECT OVERVIEW
+
+**App Name**: OHSU COOL Lab Visual Acuity Test App
+**Total Codebase**: 5,590 lines of Swift code across 12 files
+**Platform**: iOS (Swift, UIKit, ARKit)
+**Purpose**: Medical-grade visual acuity testing with AR distance tracking and speech recognition
+**Target Users**: Patients and researchers conducting clinical vision assessments
+
+**Development Team**: 
+- Mahmoud Abdelmoneum (mabdel03@mit.edu)
+- Maggie Bao (mbao202@mit.edu) 
+- Anderson Men
+**Supervised by**: Dr. David Huang, Dr. Hiroshi Ishikawa (OHSU COOL Lab)
+
+## CORE FUNCTIONALITY
+
+### Primary Features
+1. **Dual Test Modes**:
+   - ETDRS (Early Treatment Diabetic Retinopathy Study) with voice recognition
+   - Landolt C (Tumbling E) with swipe gesture recognition
+
+2. **AR-Based Distance Tracking**:
+   - Real-time face tracking using ARKit
+   - Dynamic letter scaling based on user distance
+   - Distance optimization calibration
+
+3. **Medical-Grade Accuracy**:
+   - ETDRS-compliant calculations (5 arcminutes at 20/20 vision)
+   - LogMAR and Snellen scoring
+   - Precise visual angle calculations
+
+4. **Comprehensive Data Collection**:
+   - Test progression tracking with millisecond timing
+   - CSV export functionality for research analysis
+   - Session-based data organization
+
+5. **Accessibility Features**:
+   - Full audio instruction support
+   - VoiceOver integration
+   - Emergency override gestures
+
+## ARCHITECTURE BREAKDOWN
+
+### Core Test Controllers (3,044 lines)
+
+#### ETDRSViewController.swift (1,902 lines)
+**Purpose**: Implements ETDRS letter recognition test with speech input
+**Key Features**:
+- Advanced speech recognition with phonetic matching
+- Multi-layer conversation filtering (9-rule system)
+- Real-time audio processing with timeout management
+- Comprehensive phonetic mapping (100+ variations)
+- Response time tracking from letter display to speech input
+
+**Critical Methods**:
+- `startListening()`: Initiates speech recognition
+- `processSpokenInput()`: Handles voice input with phonetic matching
+- `phoneticMatch()`: Multi-layered phonetic matching algorithm
+- `isValidLetterAttempt()`: Filters conversation from letter responses
+- `handleLetterInput()`: Processes recognized letters and records data
+
+**Speech Recognition Details**:
+- Uses SFSpeechRecognizer with AVAudioEngine
+- Supports phonetic variations: "see"→"C", "are"→"R", "you"→"U"
+- Filters out sentences, questions, and conversation
+- Automatic timeout and restart mechanisms
+
+#### TumblingEViewController.swift (1,268 lines)
+**Purpose**: Implements Landolt C test with swipe gesture recognition
+**Key Features**:
+- Four-direction swipe gesture recognition
+- Letter rotation animation system
+- Real-time visual feedback
+- Response time tracking from display to gesture
+
+**Critical Methods**:
+- `handleSwipe()`: Processes swipe gestures and records data
+- `generateNewE()`: Creates randomly rotated C letters
+- `animateLetterFlyOff()`: Visual feedback animation
+- `getOrientationString()`: Converts rotation to readable format
+
+**Gesture Recognition**:
+- Supports up, down, left, right swipes
+- Matches swipe direction to C opening direction
+- Visual animation feedback for user engagement
+
+### UI & Navigation (1,987 lines)
+
+#### TestHistoryViewController.swift (462 lines)
+**Purpose**: Displays test history and manages CSV data export
+**Key Features**:
+- Dynamic UI layout with export buttons placed after each eye's results
+- Three export options: Left Eye, Right Eye, Combined
+- iOS share sheet integration for data export
+- Test history persistence and management
+
+**Export Functionality**:
+- Creates temporary CSV files for sharing
+- Integrates with iOS share sheet (email, AirDrop, Files app)
+- Automatic file cleanup after sharing
+- Response count display in button titles
+
+#### SettingsViewController.swift (394 lines)
+**Purpose**: App configuration and preferences
+**Features**:
+- Test type selection (ETDRS vs Landolt C)
+- Audio instruction toggle
+- Settings persistence via UserDefaults
+
+#### Other UI Controllers:
+- **ResultViewController.swift** (315 lines): Test results display with LogMAR/Snellen scoring
+- **Select_Acuity.swift** (299 lines): Dynamic acuity level selection with real-time scaling
+- **DistanceOptimization.swift** (261 lines): AR distance calibration interface
+- **Main Menu.swift** (269 lines): Navigation hub with SharedAudioManager
+- **OneEyeInstruc.swift** (110 lines): Eye-specific test instructions
+- **Instructions.swift** (38 lines): General app instructions
+- **AppDelegate.swift** (40 lines): App lifecycle management
+
+### Data Collection & Analytics (267 lines)
+
+#### TestProgressionDataCollector.swift (267 lines)
+**Purpose**: Comprehensive test progression data tracking and CSV export
+**Key Features**:
+- Session-based data collection with unique IDs
+- Persistent storage using UserDefaults with JSON encoding
+- CSV generation for research analysis
+- Response time tracking with millisecond precision
+
+**Data Model (TestResponseData)**:
+```swift
+struct TestResponseData {
+    let timestamp: Date
+    let eye: String // "Left" or "Right"
+    let testType: String // "ETDRS" or "Landolt_C"
+    let acuityLevel: String // "20/200", "20/100", etc.
+    let letterDisplayed: String // Letter or orientation shown
+    let distanceCM: Double // AR-tracked distance
+    let responseTimeMS: Int64 // Response time in milliseconds
+    let userResponse: String // User's actual input
+    let isCorrect: Bool // Response accuracy
+    let trialNumber: Int // Trial within acuity level
+    let sessionId: String // Unique session identifier
+}
+```
+
+## TECHNICAL IMPLEMENTATION DETAILS
+
+### ARKit Integration
+**Face Tracking Setup**:
+```swift
+let configuration = ARFaceTrackingConfiguration()
+configuration.maximumNumberOfTrackedFaces = 1
+sceneView.session.run(configuration)
+```
+
+**Distance Calculation**:
+- Uses ARFaceAnchor for eye position tracking
+- Calculates Euclidean distance between camera and eyes
+- Converts ARKit units to centimeters
+- Implements smoothing algorithm for stable readings
+
+### ETDRS Calculation Engine
+**Visual Angle Formula**:
+```swift
+let arcmin_per_letter = 5.0 // Standard ETDRS
+let visual_angle = ((Double(desired_acuity) / 20.0) * arcmin_per_letter / 60.0) * Double.pi / 180.0
+let scale_factor = distance * tan(visual_angle) * scaling_correction_factor
+let labelHeight = scale_factor * ppi
+```
+
+**Letter Sizing**:
+- Uses DevicePpi library for accurate screen resolution
+- Implements 5:1 width to height ratio for ETDRS compliance
+- Dynamic scaling based on viewing distance
+- Font size calculation: `0.3 * labelHeight`
+
+### Speech Recognition System
+**Multi-Layer Phonetic Matching**:
+1. **Exact Phonetic Map**: Direct mappings ("see"→"C", "are"→"R")
+2. **Alternative Phonetic Map**: Less common variations ("ache"→"H")
+3. **Repeated Pattern Map**: Handle repeated letters ("RRR"→"R")
+4. **Fuzzy Matching**: Edge cases and unusual transcriptions
+
+**Conversation Filtering Rules**:
+1. Length filter (reject >15 characters)
+2. Letter count filter (reject >5 letters)
+3. Word count filter (reject >4 words)
+4. Sentence starter detection
+5. Question pattern rejection
+6. Number sequence filtering
+
+### Distance Tracking System
+**Components**:
+- **DistanceTracker**: Singleton managing distance readings
+- **Smoothing Algorithm**: Rolling average of 5 recent readings
+- **Hysteresis**: Prevents rapid pause/resume cycles
+- **Validation**: Filters invalid readings (outside 5-200cm range)
+
+**Bounds Management**:
+- Target distance ±20% tolerance
+- Lower bound: 0.8 * target distance
+- Upper bound: 1.2 * target distance
+- Additional 3cm buffer when already paused
+
+## GLOBAL VARIABLES & STATE MANAGEMENT
+
+### Critical Global Variables
+```swift
+var averageDistanceCM: Double = 0.0  // Target testing distance
+var selectedAcuity: Int?  // User-selected starting acuity level
+var eyeNumber: Int = 2  // Current eye (2=Right first, 1=Left second)
+var finalAcuityDictionary: [Int: String] = [:]  // Final results storage
+var isPaused: Bool = false  // Distance-based pause state
+var logMARValue: Double = -1.000  // Current LogMAR score
+var snellenValue: Double = -1  // Current Snellen score
+```
+
+### Test Flow State
+- **Test Sequence**: Right eye first, then left eye
+- **Acuity Progression**: Start with user-selected level, advance/regress based on performance
+- **Trial Management**: 10 trials per acuity level, advance with 6+ correct
+- **Session Management**: Unique session per eye per test type
+
+## DATA PERSISTENCE
+
+### UserDefaults Keys
+- `"audio_enabled"`: Audio instruction preferences
+- `"etdrs_test_enabled"`: Test type selection (ETDRS vs Landolt C)
+- `"SavedTargetDistance"`: Calibrated testing distance
+- `"TestProgressionData"`: JSON-encoded test progression data
+- `"allTestsDictionary"`: Final test results storage
+
+### TestDataManager
+**Purpose**: Manages final test results (LogMAR/Snellen scores)
+**Storage Format**: JSON dictionary with timestamp keys
+**Methods**: `saveTestResults()`, `getAllTests()`, `clearAllTests()`
+
+### TestProgressionDataCollector
+**Purpose**: Manages detailed response-level data
+**Storage Format**: JSON array of TestResponseData structs
+**Methods**: `recordResponse()`, `generateCSV()`, `clearAllProgressionData()`
+
+## UI/UX PATTERNS
+
+### Navigation Flow
+1. **Main Menu** → Settings/Instructions/Start Test
+2. **Instructions** → Distance Optimization
+3. **Distance Optimization** → Acuity Selection
+4. **Acuity Selection** → Eye Instructions (Right first)
+5. **Eye Instructions** → Test Controller (ETDRS or Landolt C)
+6. **Test Controller** → Results (after both eyes) or Eye Instructions (left eye)
+7. **Results** → Main Menu (with data persistence)
+
+### Audio Integration
+**SharedAudioManager**: Singleton managing TTS throughout app
+- Configurable audio instructions on/off
+- Context-aware instruction delivery
+- AVSpeechSynthesizer with rate/volume optimization
+- Source tracking for debugging
+
+### Accessibility
+- VoiceOver support throughout
+- Audio instructions for each screen
+- Triple-tap emergency override for distance issues
+- Clear visual feedback for all interactions
+
+## DEPENDENCIES & REQUIREMENTS
+
+### iOS Frameworks
+- **ARKit**: Face tracking and 3D positioning
+- **AVFoundation**: Audio recording, playback, speech synthesis
+- **Speech**: Real-time speech-to-text recognition
+- **SceneKit**: 3D rendering for AR visualization
+- **UIKit**: User interface and gesture recognition
+
+### Third-Party Libraries
+- **DevicePpi** (v1.2.18): Accurate screen resolution detection
+  - GitHub: https://github.com/Clafou/DevicePpi
+  - Used for precise letter scaling calculations
+
+### System Requirements
+- **iOS 13.0+**: Required for ARKit face tracking
+- **TrueDepth Camera**: Face ID compatible devices for optimal performance
+- **Microphone Access**: Required for ETDRS speech recognition
+- **Camera Access**: Required for AR distance tracking
+
+## MEDICAL & CLINICAL CONTEXT
+
+### ETDRS Standard Compliance
+- **5 Arcminute Letters**: Standard optotype size at 20/20 vision
+- **LogMAR Scoring**: Logarithm of Minimum Angle of Resolution
+- **Acuity Levels**: Standard progression from 20/200 to 20/16
+- **Error Adjustment**: Score modification based on incorrect responses
+
+### Clinical Validation
+- **Distance Accuracy**: Critical for valid visual angle calculations
+- **Font Requirements**: Uses Sloan font for medical accuracy
+- **Test Reliability**: Standardized progression and scoring algorithms
+- **Binocular Assessment**: Separate testing of each eye
+
+## COMMON DEVELOPMENT PATTERNS
+
+### Error Handling
+- Comprehensive validation for distance readings
+- Fallback mechanisms for AR tracking failures
+- Speech recognition timeout and restart logic
+- Data persistence error handling
+
+### Performance Optimization
+- **AR Processing**: Throttled to 100ms intervals
+- **Distance Updates**: CADisplayLink at 10fps
+- **Background Processing**: Distance calculations off main thread
+- **Memory Management**: Proper cleanup of AR sessions and audio engines
+
+### Code Organization
+- **MARK comments**: Extensive use for code organization
+- **Documentation**: Comprehensive inline documentation
+- **Separation of Concerns**: Clear separation between UI, logic, and data
+- **Singleton Patterns**: SharedAudioManager, DistanceTracker, TestProgressionDataCollector
+
+## DEBUGGING & TESTING
+
+### Debug Features
+- Extensive console logging with emoji prefixes for easy filtering
+- Debug flags for bypassing distance checking
+- Triple-tap emergency override for distance issues
+- Detailed speech recognition logging
+
+### Common Debug Patterns
+```swift
+print("🔍 ETDRSViewController - viewDidLoad started")  // Lifecycle tracking
+print("🎤 Heard: '\(spokenText)'")  // Speech recognition
+print("📏 Distance: \(distance) cm")  // Distance tracking
+print("📊 Recorded response: \(letter)")  // Data collection
+```
+
+## EXTENSION POINTS & FUTURE DEVELOPMENT
+
+### Ready for Extension
+1. **Backend Integration**: CSV data can be uploaded to clinical systems
+2. **Additional Test Types**: Framework supports new visual acuity tests
+3. **Multi-language Support**: Audio system ready for localization
+4. **Clinical Protocols**: Data collection system supports research workflows
+
+### Planned Enhancements (from README)
+- RESTful API with Django/Flask backend
+- MongoDB database integration
+- FHIR compatibility for medical records
+- Multi-language support
+- Advanced analytics with ML
+
+## CRITICAL IMPLEMENTATION NOTES
+
+### Distance Tracking Gotchas
+- **Target vs Current Distance**: Distinguish between calibrated target and live readings
+- **AR Validation**: Filter readings outside 5-200cm range
+- **Hysteresis Implementation**: Prevent rapid pause/resume cycles
+- **Scaling Factors**: Use transforms for efficiency, not font changes
+
+### Speech Recognition Challenges
+- **Conversation Filtering**: Critical to prevent false positives from background speech
+- **Phonetic Variations**: Extensive mapping required for accuracy
+- **Audio Session Management**: Proper setup for recording and playback
+- **Timeout Handling**: Automatic restart when recognition gets stuck
+
+### Data Collection Considerations
+- **Session Management**: Unique IDs prevent data mixing
+- **Response Timing**: Accurate measurement from display to input
+- **Privacy**: All data stored locally until explicit export
+- **Performance**: Minimal impact on test experience
+
+## FILE-BY-FILE BREAKDOWN
+
+### ETDRSViewController.swift (1,902 lines)
+**Key Classes**: ETDRSViewController
+**Protocols**: ARSCNViewDelegate, SFSpeechRecognizerDelegate
+**Major Sections**:
+- Speech Recognition Setup (lines 662-694)
+- Phonetic Matching Engine (lines 1073-1266)
+- Distance Monitoring (lines 1383-1620)
+- Data Collection Integration (lines 1286-1325)
+
+### TumblingEViewController.swift (1,268 lines)
+**Key Classes**: TumblingEViewController
+**Protocols**: ARSCNViewDelegate
+**Major Sections**:
+- Gesture Recognition (lines 637-673)
+- Letter Generation & Rotation (lines 732-746)
+- Distance Tracking (lines 765-990)
+- Animation System (lines 1120-1181)
+
+### TestProgressionDataCollector.swift (267 lines)
+**Key Classes**: TestProgressionDataCollector, TestResponseData
+**Purpose**: Singleton data collection system
+**Major Sections**:
+- Session Management (lines 36-55)
+- Data Recording (lines 57-88)
+- CSV Generation (lines 107-155)
+- Data Statistics (lines 157-170)
+
+### TestHistoryViewController.swift (462 lines)
+**Key Classes**: TestHistoryViewController
+**Major Sections**:
+- Dynamic UI Layout (lines 158-306)
+- CSV Export Actions (lines 365-433)
+- Data Management (lines 320-364)
+
+### Main Menu.swift (269 lines)
+**Key Classes**: MainMenu, SharedAudioManager
+**Purpose**: Navigation hub and audio management singleton
+**Audio System**: AVSpeechSynthesizer with comprehensive delegate handling
+
+### Other Controllers
+- **SettingsViewController.swift**: Test type and audio preferences
+- **ResultViewController.swift**: Final score display with data persistence
+- **Select_Acuity.swift**: Dynamic button scaling for acuity selection
+- **DistanceOptimization.swift**: AR-based distance calibration
+- **OneEyeInstruc.swift**: Eye-specific test instructions
+- **Instructions.swift**: General app instructions
+- **AppDelegate.swift**: Standard iOS app lifecycle
+
+## TESTING & VALIDATION
+
+### Device Requirements
+- **Physical iOS Device**: Required for ARKit face tracking
+- **TrueDepth Camera**: Optimal for face tracking accuracy
+- **Microphone Access**: Essential for ETDRS tests
+- **Adequate Lighting**: Important for AR tracking stability
+
+### Common Issues & Solutions
+1. **Distance Tracking Failures**: Triple-tap override gesture implemented
+2. **Speech Recognition Stuck**: Automatic timeout and restart (15s)
+3. **Invalid Distance Readings**: Validation and fallback to target distance
+4. **Audio Conflicts**: Proper audio session management
+
+## DEVELOPMENT WORKFLOW
+
+### Build Configuration
+- **Xcode Project**: Distance Measure Test.xcodeproj
+- **Workspace**: Distance Measure Test.xcworkspace (for Swift Package Manager)
+- **Target**: Distance Measure Test
+- **Bundle ID**: Configurable in project settings
+
+### Key Build Steps
+1. Open workspace file (not project file)
+2. Select physical iOS device (simulator limited for AR)
+3. Configure signing and bundle ID
+4. Build and run (Cmd+R)
+
+### Code Style & Patterns
+- Extensive use of lazy properties for UI elements
+- MARK comments for code organization
+- Comprehensive inline documentation
+- Error handling with print statements for debugging
+- Singleton pattern for shared services
+
+## CLINICAL TRIAL READINESS
+
+### Current Data Export
+**CSV Fields**: Timestamp, Eye, Test_Type, Acuity_Level, Letter_Displayed, Distance_CM, Response_Time_MS, User_Response, Is_Correct, Trial_Number, Session_ID
+
+### Research Applications
+- **Behavioral Analysis**: Response time patterns, learning effects
+- **Clinical Research**: Test reliability, method comparison
+- **Accessibility Studies**: Voice vs gesture interface effectiveness
+- **Remote Monitoring**: Vision change tracking over time
+
+### Privacy & Compliance
+- **Local Storage**: All data remains on device until export
+- **User Control**: Explicit export actions required
+- **Data Clearing**: Complete history deletion available
+- **No Automatic Upload**: Manual data sharing only
+
+## EXPANSION ROADMAP
+
+### Immediate Backend Needs
+1. **Patient Management System**: Registration, demographics, consent
+2. **Secure Data Upload**: HIPAA-compliant data transmission
+3. **Clinical Dashboard**: Real-time study monitoring
+4. **Multi-site Coordination**: Centralized data management
+
+### Advanced Features
+1. **Statistical Analysis**: Automated trend analysis and reporting
+2. **Integration APIs**: EMR, CTMS, EDC system connections
+3. **Advanced Analytics**: ML-based vision trend prediction
+4. **Regulatory Compliance**: 21 CFR Part 11, FDA validation
+
+## DEVELOPMENT BEST PRACTICES
+
+### When Adding Features
+1. **Follow Existing Patterns**: Use established singleton and delegate patterns
+2. **Maintain Medical Accuracy**: Preserve ETDRS calculations and distance requirements
+3. **Consider Accessibility**: Audio instructions and VoiceOver support
+4. **Data Collection**: Integrate with TestProgressionDataCollector for new metrics
+5. **Error Handling**: Comprehensive validation and fallback mechanisms
+
+### Code Quality Standards
+- **Documentation**: Inline comments for all public methods
+- **Error Handling**: Graceful degradation with user feedback
+- **Performance**: Background processing for intensive operations
+- **Memory Management**: Proper cleanup of resources
+- **Testing**: Physical device testing required for AR features
+
+## KNOWN LIMITATIONS & CONSIDERATIONS
+
+### Technical Constraints
+- **AR Dependency**: Requires TrueDepth camera for optimal performance
+- **iOS Only**: No cross-platform support currently
+- **Internet Independent**: Fully offline capable (good for clinical settings)
+- **Device Variation**: Some variation in AR accuracy across device models
+
+### Clinical Considerations
+- **Lighting Sensitivity**: AR tracking affected by poor lighting
+- **User Training**: Some users need instruction on proper positioning
+- **Distance Compliance**: Critical for test validity
+- **Standardization**: Device-to-device consistency important for multi-site trials
+
+This context provides everything needed to understand, maintain, and extend the Visual Acuity Test app for clinical research applications.
+

@@ -231,6 +231,15 @@ class MainMenu: UIViewController {
         }
     }
     
+    @IBAction func goToDataCollection(_ sender: Any) {
+        let dataCollectionVC = DataCollectionViewController()
+        navigationController?.pushViewController(dataCollectionVC, animated: true)
+        
+        if isAudioEnabled() {
+            SharedAudioManager.shared.playText("Opening data collection for algorithm optimization", source: "Main Menu")
+        }
+    }
+    
     
     
     /* Tests the audio instructions for the user.

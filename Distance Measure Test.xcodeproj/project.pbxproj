@@ -11,6 +11,7 @@
 		C0C9870A2CC9F413003EEEFF /* ResultViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987092CC9F413003EEEFF /* ResultViewController.swift */; };
 		E0E987052CC9F141003EEEFF /* ETDRSViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E987042CC9F139003EEEFF /* ETDRSViewController.swift */; };
 		E0F987052CC9F141003EEEFF /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F987042CC9F139003EEEFF /* SettingsViewController.swift */; };
+		DC123ABC2CC9F141003EEEFF /* DataCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC123ABD2CC9F139003EEEFF /* DataCollectionViewController.swift */; };
 		C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD6292A687790002A58BA /* AppDelegate.swift */; };
 		C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */; };
 		C0CDD6312A687790002A58BA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD62F2A687790002A58BA /* Main.storyboard */; };
@@ -35,6 +36,7 @@
 		C0C987092CC9F413003EEEFF /* ResultViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultViewController.swift; sourceTree = "<group>"; };
 		E0E987042CC9F139003EEEFF /* ETDRSViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETDRSViewController.swift; sourceTree = "<group>"; };
 		E0F987042CC9F139003EEEFF /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
+		DC123ABD2CC9F139003EEEFF /* DataCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataCollectionViewController.swift; sourceTree = "<group>"; };
 		C0CDD6262A687790002A58BA /* Distance Measure Test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Distance Measure Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0CDD6292A687790002A58BA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceOptimization.swift; sourceTree = "<group>"; };
@@ -96,6 +98,7 @@
 				C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */,
 				E0E987042CC9F139003EEEFF /* ETDRSViewController.swift */,
 				E0F987042CC9F139003EEEFF /* SettingsViewController.swift */,
+				DC123ABD2CC9F139003EEEFF /* DataCollectionViewController.swift */,
 				C0C987092CC9F413003EEEFF /* ResultViewController.swift */,
 				D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */,
 				F1A2B3C32E4F5D670089AB12 /* TestProgressionDataCollector.swift */,
@@ -211,6 +214,7 @@
 				C0C987052CC9F141003EEEFF /* TumblingEViewController.swift in Sources */,
 				E0E987052CC9F141003EEEFF /* ETDRSViewController.swift in Sources */,
 				E0F987052CC9F141003EEEFF /* SettingsViewController.swift in Sources */,
+				DC123ABC2CC9F141003EEEFF /* DataCollectionViewController.swift in Sources */,
 				D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */,
 				C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */,
 			);
