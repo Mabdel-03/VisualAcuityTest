@@ -66,7 +66,13 @@ class SettingsViewController: UIViewController {
         button.layer.cornerRadius = 8
         button.layer.borderWidth = 2
         button.contentHorizontalAlignment = .center
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.filled()
+            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
+            button.configuration = config
+        } else {
+            button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        }
         button.addTarget(self, action: #selector(landoltCButtonTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -90,7 +96,13 @@ class SettingsViewController: UIViewController {
         button.layer.cornerRadius = 8
         button.layer.borderWidth = 2
         button.contentHorizontalAlignment = .center
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.filled()
+            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
+            button.configuration = config
+        } else {
+            button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        }
         button.addTarget(self, action: #selector(etdrsButtonTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>colors</key>
+	<array/>
+	<key>images</key>
+	<array>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/mahmoudabdelmoneum/Desktop/OHSU/Code/Version_Controlled/VisualAcuityTest/Distance Measure Test/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameAiAppLogo</string>
+			<key>relativePath</key>
+			<string>./AiAppLogo.imageset</string>
+			<key>swiftSymbol</key>
+			<string>aiAppLogo</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/mahmoudabdelmoneum/Desktop/OHSU/Code/Version_Controlled/VisualAcuityTest/Distance Measure Test/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameButton</string>
+			<key>relativePath</key>
+			<string>./Button.imageset</string>
+			<key>swiftSymbol</key>
+			<string>button</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/mahmoudabdelmoneum/Desktop/OHSU/Code/Version_Controlled/VisualAcuityTest/Distance Measure Test/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameTargetImage</string>
+			<key>relativePath</key>
+			<string>./TargetImage.imageset</string>
+			<key>swiftSymbol</key>
+			<string>target</string>
+		</dict>
+	</array>
+	<key>symbols</key>
+	<array/>
+</dict>
+</plist>

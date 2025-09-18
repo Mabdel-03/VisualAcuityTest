@@ -12,6 +12,7 @@ import AVFoundation
     visual acuity app. It is a singleton class that is used to play audio instructions
     to the user.
 */
+@MainActor
 class SharedAudioManager: NSObject {
     static let shared = SharedAudioManager()
     private let speechSynthesizer = AVSpeechSynthesizer()

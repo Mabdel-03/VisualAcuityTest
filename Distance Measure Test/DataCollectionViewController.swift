@@ -51,7 +51,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     // MARK: - Speech Recognition Properties
     
     /// Speech recognizer for voice input
-    private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))!
+    private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     
     /// Audio engine for speech recognition
     private let audioEngine = AVAudioEngine()
@@ -308,7 +308,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
             return
         }
         
-        guard speechRecognizer?.isAvailable == true else {
+        guard let speechRecognizer = speechRecognizer, speechRecognizer.isAvailable else {
             print("🎤 Speech recognizer not available")
             return
         }
@@ -320,7 +320,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         // Configure audio session
         let audioSession = AVAudioSession.sharedInstance()
         do {
-            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetoothA2DP])
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
             print("🎤 Audio session configured for data collection")
         } catch {
@@ -361,7 +361,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         }
         
         // Start recognition task
-        recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { [weak self] result, error in
+        recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
             guard let self = self else { return }
             
             if let result = result {
@@ -753,7 +753,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     // MARK: - ARSCNViewDelegate (minimal implementation for distance tracking)
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
+        guard anchor is ARFaceAnchor else { return }
         
         node.addChildNode(leftEye)
         node.addChildNode(rightEye)

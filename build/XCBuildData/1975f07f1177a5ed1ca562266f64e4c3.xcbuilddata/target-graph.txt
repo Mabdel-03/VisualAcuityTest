@@ -1,0 +1,6 @@
+Target dependency graph (3 targets)
+Target 'Distance Measure Test' in project 'Distance Measure Test'
+➜ Explicit dependency on target 'DevicePpi' in project 'DevicePpi'
+Target 'DevicePpi' in project 'DevicePpi'
+➜ Explicit dependency on target 'DevicePpi' in project 'DevicePpi'
+Target 'DevicePpi' in project 'DevicePpi' (no dependencies)

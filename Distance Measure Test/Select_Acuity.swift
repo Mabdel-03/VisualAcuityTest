@@ -108,13 +108,27 @@ class Select_Acuity: UIViewController {
         let verticalPadding: CGFloat = 20 + (CGFloat(fontSize) * 0.15) // Scale vertical padding with font size
         let horizontalPadding: CGFloat = 16 // Minimal horizontal padding since button spans full width
         
-        // Set content edge insets optimized for full-width layout
-        button.contentEdgeInsets = UIEdgeInsets(
-            top: verticalPadding,      // Adequate vertical padding
-            left: horizontalPadding,   // Minimal horizontal padding
-            bottom: verticalPadding,   // Adequate vertical padding
-            right: horizontalPadding   // Minimal horizontal padding
-        )
+        // Set content edge insets optimized for full-width layout using modern configuration
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.filled()
+            config.contentInsets = NSDirectionalEdgeInsets(
+                top: verticalPadding,
+                leading: horizontalPadding,
+                bottom: verticalPadding,
+                trailing: horizontalPadding
+            )
+            config.title = buttonTitle
+            config.baseBackgroundColor = buttonColor
+            config.baseForegroundColor = .white
+            button.configuration = config
+        } else {
+            button.contentEdgeInsets = UIEdgeInsets(
+                top: verticalPadding,      // Adequate vertical padding
+                left: horizontalPadding,   // Minimal horizontal padding
+                bottom: verticalPadding,   // Adequate vertical padding
+                right: horizontalPadding   // Minimal horizontal padding
+            )
+        }
         
         // Configure button appearance for connected buttons
         button.layer.cornerRadius = 0 // No corner radius for connected buttons
