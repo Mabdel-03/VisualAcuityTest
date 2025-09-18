@@ -68,8 +68,11 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     /// Timer to restart speech recognition if it gets stuck
     private var speechTimeoutTimer: Timer?
     
-    /// Cloud upload URL (can be configured for different storage services)
-    private let cloudUploadURL = "https://your-server.com/upload" // Replace with actual upload endpoint
+    /// Cloud upload URL (configured for Google Drive upload server)
+    private let cloudUploadURL = "http://localhost:5000/upload" // Change to your deployed server URL
+    
+    /// Google Drive folder ID for data collection
+    private let googleDriveFolderID = "1gQNIG23hqthx7XncvycEDuJPaf8yV012"
     
     // MARK: - UI Elements
     
@@ -679,6 +682,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
             "content": csvContent,
             "timestamp": ISO8601DateFormatter().string(from: Date()),
             "source": "visual_acuity_ios_app",
+            "google_drive_folder_id": googleDriveFolderID,
             "email_recipient": "mabdel03@mit.edu"
         ]
         
