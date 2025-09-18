@@ -13,7 +13,7 @@ import AVFoundation
     to the user.
 */
 @MainActor
-class SharedAudioManager: NSObject {
+class SharedAudioManager: NSObject, @unchecked Sendable {
     static let shared = SharedAudioManager()
     private let speechSynthesizer = AVSpeechSynthesizer()
     

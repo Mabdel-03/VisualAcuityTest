@@ -117,8 +117,8 @@ class Select_Acuity: UIViewController {
                 bottom: verticalPadding,
                 trailing: horizontalPadding
             )
-            config.title = buttonTitle
-            config.baseBackgroundColor = buttonColor
+            config.title = letText
+            config.baseBackgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
             config.baseForegroundColor = .white
             button.configuration = config
         } else {
