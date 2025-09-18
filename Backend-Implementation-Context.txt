@@ -1,0 +1,1178 @@
+# Backend Implementation Context - Visual Acuity Test Cloud Platform
+
+## PROJECT OVERVIEW
+
+**Objective**: Replace email-based CSV delivery with a professional cloud-based backend for Visual Acuity Test data collection, providing real-time analytics, algorithm optimization capabilities, and research-grade data management.
+
+**Current State**: iOS app collects voice recognition data (letter shown, transcription, mapping) and emails CSV files to mabdel03@mit.edu.
+
+**Target State**: iOS app streams data to cloud backend with real-time analytics dashboard, automated algorithm optimization, and research collaboration tools.
+
+## ARCHITECTURE OVERVIEW (Option 2: Professional REST API + Database)
+
+### High-Level Architecture
+```
+iOS App → Load Balancer → REST API → Database Cluster → Analytics Dashboard
+         ↓                    ↓            ↓              ↓
+    Authentication      Business Logic   Data Storage   Visualization
+    Rate Limiting       Validation       Backup         Research Tools
+    SSL/TLS            Processing       Archival       ML Pipeline
+```
+
+### Technology Stack Decision Matrix
+
+**API Framework**: Node.js/Express vs Python/FastAPI
+- **Recommendation**: Python/FastAPI
+- **Rationale**: 
+  - Superior performance for data-heavy operations
+  - Automatic OpenAPI documentation
+  - Excellent async support
+  - Native integration with ML/analytics libraries (pandas, scikit-learn)
+  - Type safety with Pydantic models
+
+**Database Strategy**: Hybrid Approach
+- **Primary Database**: PostgreSQL 14+
+  - Structured data (sessions, responses, users)
+  - ACID compliance for research integrity
+  - Advanced analytics capabilities
+  - JSON/JSONB support for flexible schemas
+- **Analytics Database**: ClickHouse or TimescaleDB
+  - Time-series analytics
+  - Real-time aggregations
+  - High-performance queries
+- **Cache Layer**: Redis
+  - Session management
+  - API rate limiting
+  - Real-time metrics
+
+**Cloud Provider**: AWS (Primary recommendation)
+- **Alternative**: Google Cloud Platform
+- **Services Needed**:
+  - Compute: ECS/Fargate or EC2
+  - Database: RDS PostgreSQL + ElastiCache Redis
+  - Storage: S3 for file storage
+  - CDN: CloudFront
+  - Monitoring: CloudWatch + DataDog
+  - Load Balancing: Application Load Balancer
+
+## DETAILED IMPLEMENTATION PLAN
+
+### Phase 1: Foundation Infrastructure (Weeks 1-2)
+
+#### 1.1 Database Design & Setup
+
+**Core Tables Schema**:
+
+```sql
+-- Users and authentication
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    hashed_password VARCHAR(255),
+    role VARCHAR(50) DEFAULT 'researcher',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    last_login TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN DEFAULT true,
+    metadata JSONB DEFAULT '{}'
+);
+
+-- Device registration and tracking
+CREATE TABLE devices (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    device_identifier VARCHAR(255) UNIQUE NOT NULL,
+    device_type VARCHAR(100), -- 'iPhone 15 Pro', etc.
+    os_version VARCHAR(50),
+    app_version VARCHAR(20),
+    first_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    last_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    total_sessions INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true
+);
+
+-- Data collection sessions
+CREATE TABLE data_collection_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    device_id UUID REFERENCES devices(id),
+    session_type VARCHAR(50) DEFAULT 'algorithm_optimization',
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    completed_at TIMESTAMP WITH TIME ZONE,
+    total_letters INTEGER DEFAULT 25,
+    letters_completed INTEGER DEFAULT 0,
+    session_duration_ms BIGINT,
+    app_version VARCHAR(20),
+    algorithm_version VARCHAR(20),
+    distance_cm FLOAT DEFAULT 40.0,
+    target_acuity VARCHAR(20) DEFAULT '20/200',
+    is_completed BOOLEAN DEFAULT false,
+    metadata JSONB DEFAULT '{}',
+    
+    -- Analytics fields
+    accuracy_rate FLOAT,
+    avg_response_time_ms FLOAT,
+    total_transcription_errors INTEGER DEFAULT 0,
+    
+    -- Indexes for performance
+    INDEX idx_sessions_device_started (device_id, started_at),
+    INDEX idx_sessions_completed (completed_at) WHERE completed_at IS NOT NULL,
+    INDEX idx_sessions_type_date (session_type, started_at)
+);
+
+-- Individual letter responses
+CREATE TABLE letter_responses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id UUID REFERENCES data_collection_sessions(id) ON DELETE CASCADE,
+    sequence_number INTEGER NOT NULL, -- 1-25 within session
+    
+    -- Core data (matches current CSV format)
+    letter_displayed CHAR(1) NOT NULL,
+    transcribed_text TEXT NOT NULL,
+    mapped_result VARCHAR(20), -- Could be 'NO_MATCH' or letter
+    
+    -- Enhanced metrics
+    response_time_ms INTEGER NOT NULL,
+    confidence_score FLOAT, -- Future: speech recognition confidence
+    audio_duration_ms INTEGER,
+    
+    -- Technical metadata
+    recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    processing_time_ms INTEGER,
+    algorithm_version VARCHAR(20),
+    
+    -- Optional audio storage
+    audio_file_url TEXT,
+    audio_file_size BIGINT,
+    
+    -- Analysis fields
+    is_correct BOOLEAN,
+    phonetic_distance FLOAT, -- Future: similarity metrics
+    
+    -- Performance indexes
+    INDEX idx_responses_session_sequence (session_id, sequence_number),
+    INDEX idx_responses_letter_mapping (letter_displayed, mapped_result),
+    INDEX idx_responses_recorded_at (recorded_at),
+    
+    -- Ensure sequence integrity
+    UNIQUE(session_id, sequence_number)
+);
+
+-- Algorithm versions and performance tracking
+CREATE TABLE algorithm_versions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    version_name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    implementation_details JSONB,
+    deployed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    deprecated_at TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN DEFAULT true,
+    
+    -- Performance metrics (calculated periodically)
+    total_responses BIGINT DEFAULT 0,
+    accuracy_rate FLOAT,
+    avg_response_time_ms FLOAT,
+    last_metrics_update TIMESTAMP WITH TIME ZONE
+);
+
+-- Confusion matrix for algorithm analysis
+CREATE TABLE confusion_matrix (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    algorithm_version VARCHAR(50) REFERENCES algorithm_versions(version_name),
+    actual_letter CHAR(1),
+    predicted_letter VARCHAR(20),
+    occurrence_count INTEGER DEFAULT 1,
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    
+    -- Composite index for fast lookups
+    UNIQUE(algorithm_version, actual_letter, predicted_letter)
+);
+
+-- Research studies and experiments
+CREATE TABLE research_studies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    study_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    principal_investigator VARCHAR(255),
+    start_date DATE,
+    end_date DATE,
+    target_sample_size INTEGER,
+    current_sample_size INTEGER DEFAULT 0,
+    study_parameters JSONB,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Link sessions to studies
+CREATE TABLE study_sessions (
+    study_id UUID REFERENCES research_studies(id),
+    session_id UUID REFERENCES data_collection_sessions(id),
+    participant_id VARCHAR(100), -- Anonymous participant identifier
+    PRIMARY KEY (study_id, session_id)
+);
+```
+
+**Database Optimization Strategy**:
+- Partitioning: `letter_responses` by month for time-series queries
+- Read replicas: Analytics queries on separate read-only instances
+- Connection pooling: pgBouncer for connection management
+- Monitoring: pg_stat_statements for query performance analysis
+
+#### 1.2 API Foundation Setup
+
+**Project Structure**:
+```
+visual-acuity-backend/
+├── app/
+│   ├── __init__.py
+│   ├── main.py                 # FastAPI application entry
+│   ├── config.py              # Environment configuration
+│   ├── database.py            # Database connection management
+│   ├── models/                # Pydantic models
+│   │   ├── __init__.py
+│   │   ├── session.py
+│   │   ├── response.py
+│   │   ├── user.py
+│   │   └── analytics.py
+│   ├── schemas/               # Database ORM models
+│   │   ├── __init__.py
+│   │   ├── session.py
+│   │   ├── response.py
+│   │   └── user.py
+│   ├── api/                   # API route handlers
+│   │   ├── __init__.py
+│   │   ├── v1/
+│   │   │   ├── __init__.py
+│   │   │   ├── sessions.py
+│   │   │   ├── responses.py
+│   │   │   ├── analytics.py
+│   │   │   └── auth.py
+│   ├── services/              # Business logic
+│   │   ├── __init__.py
+│   │   ├── session_service.py
+│   │   ├── analytics_service.py
+│   │   ├── algorithm_service.py
+│   │   └── auth_service.py
+│   ├── utils/                 # Utilities
+│   │   ├── __init__.py
+│   │   ├── security.py
+│   │   ├── validators.py
+│   │   └── helpers.py
+│   └── tests/                 # Test suite
+├── migrations/                # Database migrations (Alembic)
+├── docker/                   # Docker configurations
+├── scripts/                  # Deployment and utility scripts
+├── requirements.txt          # Python dependencies
+├── docker-compose.yml        # Local development setup
+└── README.md
+```
+
+**Core Dependencies** (requirements.txt):
+```
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+sqlalchemy==2.0.23
+alembic==1.12.1
+asyncpg==0.29.0           # PostgreSQL async driver
+redis==5.0.1
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+httpx==0.25.2             # For external API calls
+pandas==2.1.3             # Data analysis
+numpy==1.25.2
+scikit-learn==1.3.2       # ML capabilities
+pytest==7.4.3
+pytest-asyncio==0.21.1
+```
+
+#### 1.3 Authentication & Security
+
+**JWT Token Strategy**:
+- Access tokens: 15-minute expiry
+- Refresh tokens: 7-day expiry
+- Device tokens: Long-lived for iOS app authentication
+- Scoped permissions: read, write, admin, research
+
+**Security Implementation**:
+```python
+# app/utils/security.py
+from passlib.context import CryptContext
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+class SecurityManager:
+    def __init__(self, secret_key: str, algorithm: str = "HS256"):
+        self.secret_key = secret_key
+        self.algorithm = algorithm
+    
+    def create_access_token(self, data: dict, expires_delta: timedelta = None):
+        to_encode = data.copy()
+        expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
+        to_encode.update({"exp": expire})
+        return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
+    
+    def create_device_token(self, device_id: str, expires_days: int = 365):
+        """Long-lived token for iOS app authentication"""
+        expires_delta = timedelta(days=expires_days)
+        data = {"sub": device_id, "type": "device"}
+        return self.create_access_token(data, expires_delta)
+```
+
+### Phase 2: Core API Development (Weeks 3-4)
+
+#### 2.1 Session Management API
+
+**Key Endpoints**:
+```python
+# app/api/v1/sessions.py
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from app.models.session import SessionCreate, SessionResponse, SessionUpdate
+from app.services.session_service import SessionService
+
+router = APIRouter()
+
+@router.post("/sessions/start", response_model=SessionResponse)
+async def start_session(
+    session_data: SessionCreate,
+    device_token: str = Depends(verify_device_token),
+    session_service: SessionService = Depends()
+):
+    """
+    Initialize a new data collection session.
+    
+    - Validates device authentication
+    - Creates session record
+    - Returns session_id for subsequent requests
+    - Logs session start for analytics
+    """
+    session = await session_service.create_session(
+        device_id=device_token.device_id,
+        session_type=session_data.session_type,
+        metadata=session_data.metadata
+    )
+    return SessionResponse.from_orm(session)
+
+@router.post("/sessions/{session_id}/responses")
+async def submit_response(
+    session_id: UUID,
+    response: ResponseCreate,
+    background_tasks: BackgroundTasks,
+    session_service: SessionService = Depends()
+):
+    """
+    Submit individual letter response.
+    
+    - Validates session exists and is active
+    - Stores response data
+    - Updates session progress
+    - Triggers real-time analytics update (background)
+    """
+    await session_service.add_response(session_id, response)
+    
+    # Background task for analytics
+    background_tasks.add_task(
+        update_realtime_metrics, 
+        session_id, 
+        response.letter_displayed, 
+        response.mapped_result
+    )
+    
+    return {"status": "success", "sequence_number": response.sequence_number}
+
+@router.put("/sessions/{session_id}/complete")
+async def complete_session(
+    session_id: UUID,
+    completion_data: SessionComplete,
+    background_tasks: BackgroundTasks,
+    session_service: SessionService = Depends()
+):
+    """
+    Mark session as completed and trigger analysis.
+    
+    - Updates session completion timestamp
+    - Calculates session-level metrics
+    - Triggers algorithm performance update
+    - Sends data to analytics pipeline
+    """
+    session = await session_service.complete_session(
+        session_id, 
+        completion_data.total_duration_ms
+    )
+    
+    # Background analytics processing
+    background_tasks.add_task(
+        process_completed_session, 
+        session_id
+    )
+    
+    return {"status": "completed", "accuracy_rate": session.accuracy_rate}
+```
+
+#### 2.2 Real-time Analytics Service
+
+**Analytics Engine**:
+```python
+# app/services/analytics_service.py
+from typing import Dict, List, Optional
+import pandas as pd
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.schemas.response import LetterResponse
+
+class AnalyticsService:
+    def __init__(self, db: AsyncSession, redis_client):
+        self.db = db
+        self.redis = redis_client
+    
+    async def update_realtime_metrics(self, session_id: UUID, letter: str, mapping: str):
+        """Update real-time metrics in Redis for dashboard"""
+        # Increment counters
+        await self.redis.incr(f"daily_responses:{datetime.now().date()}")
+        await self.redis.incr(f"letter_frequency:{letter}")
+        
+        # Update accuracy metrics
+        is_correct = letter == mapping
+        if is_correct:
+            await self.redis.incr(f"correct_mappings:{datetime.now().date()}")
+        
+        # Update confusion matrix
+        await self.redis.zincrby(
+            "confusion_matrix", 
+            1, 
+            f"{letter}->{mapping}"
+        )
+    
+    async def calculate_algorithm_performance(
+        self, 
+        algorithm_version: str, 
+        time_range: str = "24h"
+    ) -> Dict:
+        """Calculate comprehensive algorithm performance metrics"""
+        
+        # Query recent responses
+        query = """
+        SELECT 
+            letter_displayed,
+            mapped_result,
+            response_time_ms,
+            is_correct
+        FROM letter_responses lr
+        JOIN data_collection_sessions dcs ON lr.session_id = dcs.id
+        WHERE dcs.algorithm_version = :algorithm_version
+        AND lr.recorded_at > NOW() - INTERVAL :time_range
+        """
+        
+        results = await self.db.execute(query, {
+            "algorithm_version": algorithm_version,
+            "time_range": time_range
+        })
+        
+        df = pd.DataFrame(results.fetchall())
+        
+        if df.empty:
+            return {"error": "No data available"}
+        
+        # Calculate metrics
+        accuracy = df['is_correct'].mean()
+        avg_response_time = df['response_time_ms'].mean()
+        
+        # Confusion matrix
+        confusion_matrix = df.groupby(['letter_displayed', 'mapped_result']).size().unstack(fill_value=0)
+        
+        # Per-letter accuracy
+        per_letter_accuracy = df.groupby('letter_displayed')['is_correct'].mean()
+        
+        return {
+            "algorithm_version": algorithm_version,
+            "time_range": time_range,
+            "total_responses": len(df),
+            "overall_accuracy": accuracy,
+            "avg_response_time_ms": avg_response_time,
+            "confusion_matrix": confusion_matrix.to_dict(),
+            "per_letter_accuracy": per_letter_accuracy.to_dict(),
+            "calculated_at": datetime.utcnow().isoformat()
+        }
+```
+
+#### 2.3 Data Validation & Quality Assurance
+
+**Input Validation**:
+```python
+# app/models/response.py
+from pydantic import BaseModel, validator, Field
+from typing import Optional
+from datetime import datetime
+
+class ResponseCreate(BaseModel):
+    sequence_number: int = Field(..., ge=1, le=25, description="Letter sequence within session")
+    letter_displayed: str = Field(..., regex="^[CDFHKNPRUVZ]$", description="ETDRS letter shown")
+    transcribed_text: str = Field(..., min_length=1, max_length=500, description="Speech-to-text output")
+    mapped_result: str = Field(..., max_length=20, description="Algorithm mapping result")
+    response_time_ms: int = Field(..., ge=0, le=30000, description="Response time in milliseconds")
+    confidence_score: Optional[float] = Field(None, ge=0.0, le=1.0)
+    
+    @validator('transcribed_text')
+    def validate_transcription(cls, v):
+        # Remove excessive whitespace
+        cleaned = ' '.join(v.split())
+        if len(cleaned) == 0:
+            raise ValueError('Transcription cannot be empty')
+        return cleaned
+    
+    @validator('mapped_result')
+    def validate_mapping(cls, v):
+        valid_results = {'C', 'D', 'F', 'H', 'K', 'N', 'P', 'R', 'U', 'V', 'Z', 'NO_MATCH'}
+        if v not in valid_results:
+            raise ValueError(f'Invalid mapping result: {v}')
+        return v
+
+class SessionCreate(BaseModel):
+    device_identifier: str = Field(..., min_length=10, max_length=100)
+    app_version: str = Field(..., regex="^\\d+\\.\\d+\\.\\d+$")
+    session_type: str = Field(default="algorithm_optimization")
+    target_letters: int = Field(default=25, ge=1, le=100)
+    expected_duration_minutes: Optional[int] = Field(None, ge=1, le=60)
+    metadata: Optional[dict] = Field(default_factory=dict)
+```
+
+### Phase 3: Advanced Analytics & ML Pipeline (Weeks 5-6)
+
+#### 3.1 Machine Learning Integration
+
+**Algorithm Optimization Pipeline**:
+```python
+# app/services/algorithm_service.py
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+import joblib
+from typing import Tuple, Dict
+
+class AlgorithmOptimizationService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.models = {}
+    
+    async def prepare_training_data(self, min_samples: int = 1000) -> pd.DataFrame:
+        """Extract and prepare data for model training"""
+        query = """
+        SELECT 
+            lr.letter_displayed,
+            lr.transcribed_text,
+            lr.mapped_result,
+            lr.response_time_ms,
+            lr.confidence_score,
+            lr.is_correct,
+            dcs.algorithm_version
+        FROM letter_responses lr
+        JOIN data_collection_sessions dcs ON lr.session_id = dcs.id
+        WHERE dcs.is_completed = true
+        ORDER BY lr.recorded_at DESC
+        LIMIT :limit
+        """
+        
+        results = await self.db.execute(query, {"limit": min_samples * 2})
+        df = pd.DataFrame(results.fetchall())
+        
+        # Feature engineering
+        df['transcription_length'] = df['transcribed_text'].str.len()
+        df['transcription_words'] = df['transcribed_text'].str.split().str.len()
+        df['exact_match'] = (df['letter_displayed'] == df['transcribed_text'].str.upper())
+        
+        return df
+    
+    async def train_improved_mapping_model(self) -> Dict:
+        """Train an improved phonetic mapping model"""
+        df = await self.prepare_training_data()
+        
+        # Prepare features
+        features = [
+            'transcription_length', 
+            'transcription_words', 
+            'response_time_ms', 
+            'confidence_score'
+        ]
+        
+        # Add text similarity features
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        vectorizer = TfidfVectorizer(max_features=100, ngram_range=(1, 2))
+        text_features = vectorizer.fit_transform(df['transcribed_text'])
+        
+        # Combine features
+        X = np.hstack([df[features].fillna(0).values, text_features.toarray()])
+        y = df['letter_displayed']
+        
+        # Train model
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X_train, y_train)
+        
+        # Evaluate
+        y_pred = model.predict(X_test)
+        accuracy = (y_pred == y_test).mean()
+        
+        # Save model
+        model_version = f"rf_v{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        joblib.dump({
+            'model': model,
+            'vectorizer': vectorizer,
+            'features': features,
+            'accuracy': accuracy
+        }, f'models/{model_version}.pkl')
+        
+        return {
+            'model_version': model_version,
+            'accuracy': accuracy,
+            'training_samples': len(X_train),
+            'test_samples': len(X_test),
+            'feature_importance': dict(zip(features, model.feature_importances_[:len(features)]))
+        }
+    
+    async def evaluate_algorithm_versions(self) -> Dict:
+        """Compare performance across different algorithm versions"""
+        query = """
+        SELECT 
+            dcs.algorithm_version,
+            COUNT(*) as total_responses,
+            AVG(CASE WHEN lr.is_correct THEN 1.0 ELSE 0.0 END) as accuracy,
+            AVG(lr.response_time_ms) as avg_response_time,
+            STDDEV(lr.response_time_ms) as response_time_std
+        FROM letter_responses lr
+        JOIN data_collection_sessions dcs ON lr.session_id = dcs.id
+        WHERE dcs.completed_at > NOW() - INTERVAL '30 days'
+        GROUP BY dcs.algorithm_version
+        ORDER BY accuracy DESC
+        """
+        
+        results = await self.db.execute(query)
+        return [dict(row) for row in results.fetchall()]
+```
+
+#### 3.2 Real-time Dashboard Backend
+
+**WebSocket Support for Live Updates**:
+```python
+# app/api/v1/websockets.py
+from fastapi import WebSocket, WebSocketDisconnect
+from typing import List
+import json
+
+class DashboardConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+    
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+    
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+    
+    async def broadcast_update(self, data: dict):
+        for connection in self.active_connections:
+            try:
+                await connection.send_text(json.dumps(data))
+            except:
+                # Connection closed, remove it
+                self.active_connections.remove(connection)
+
+manager = DashboardConnectionManager()
+
+@router.websocket("/ws/dashboard")
+async def websocket_dashboard(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            # Keep connection alive
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+# Background task to send periodic updates
+async def broadcast_analytics_updates():
+    while True:
+        # Get latest metrics
+        metrics = await get_realtime_metrics()
+        await manager.broadcast_update({
+            'type': 'metrics_update',
+            'data': metrics,
+            'timestamp': datetime.utcnow().isoformat()
+        })
+        await asyncio.sleep(5)  # Update every 5 seconds
+```
+
+### Phase 4: iOS Integration (Week 7)
+
+#### 4.1 iOS Networking Layer
+
+**Replace Email with API Calls**:
+```swift
+// DataCollectionNetworkService.swift
+import Foundation
+
+class DataCollectionNetworkService {
+    private let baseURL = "https://api.visualacuitytest.com/v1"
+    private let session = URLSession.shared
+    private var deviceToken: String?
+    private var currentSessionId: String?
+    
+    // MARK: - Authentication
+    func registerDevice() async throws -> String {
+        let deviceInfo = [
+            "device_identifier": UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString,
+            "device_type": UIDevice.current.model,
+            "os_version": UIDevice.current.systemVersion,
+            "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+        ]
+        
+        let response: DeviceRegistrationResponse = try await post("/auth/device/register", body: deviceInfo)
+        self.deviceToken = response.device_token
+        return response.device_token
+    }
+    
+    // MARK: - Session Management
+    func startDataCollectionSession() async throws -> String {
+        guard let deviceToken = deviceToken else {
+            throw NetworkError.noDeviceToken
+        }
+        
+        let sessionData = [
+            "session_type": "algorithm_optimization",
+            "target_letters": 25,
+            "expected_duration_minutes": 10
+        ]
+        
+        let response: SessionResponse = try await post("/sessions/start", body: sessionData, token: deviceToken)
+        self.currentSessionId = response.session_id
+        return response.session_id
+    }
+    
+    func submitResponse(
+        sequenceNumber: Int,
+        letterDisplayed: String,
+        transcribedText: String,
+        mappedResult: String,
+        responseTimeMs: Int
+    ) async throws {
+        guard let sessionId = currentSessionId else {
+            throw NetworkError.noActiveSession
+        }
+        
+        let responseData = [
+            "sequence_number": sequenceNumber,
+            "letter_displayed": letterDisplayed,
+            "transcribed_text": transcribedText,
+            "mapped_result": mappedResult,
+            "response_time_ms": responseTimeMs
+        ] as [String : Any]
+        
+        let _: SuccessResponse = try await post("/sessions/\(sessionId)/responses", body: responseData, token: deviceToken)
+    }
+    
+    func completeSession(totalDurationMs: Int) async throws {
+        guard let sessionId = currentSessionId else {
+            throw NetworkError.noActiveSession
+        }
+        
+        let completionData = [
+            "total_duration_ms": totalDurationMs,
+            "completed_successfully": true
+        ]
+        
+        let _: SessionCompletionResponse = try await put("/sessions/\(sessionId)/complete", body: completionData, token: deviceToken)
+        self.currentSessionId = nil
+    }
+    
+    // MARK: - Generic Network Methods
+    private func post<T: Codable>(_ endpoint: String, body: [String: Any], token: String? = nil) async throws -> T {
+        var request = URLRequest(url: URL(string: baseURL + endpoint)!)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        if let token = token {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              200...299 ~= httpResponse.statusCode else {
+            throw NetworkError.serverError
+        }
+        
+        return try JSONDecoder().decode(T.self, from: data)
+    }
+}
+
+// MARK: - Response Models
+struct DeviceRegistrationResponse: Codable {
+    let device_token: String
+    let expires_at: String
+}
+
+struct SessionResponse: Codable {
+    let session_id: String
+    let started_at: String
+}
+
+struct SuccessResponse: Codable {
+    let status: String
+}
+
+struct SessionCompletionResponse: Codable {
+    let status: String
+    let accuracy_rate: Double?
+    let total_responses: Int
+}
+
+enum NetworkError: Error {
+    case noDeviceToken
+    case noActiveSession
+    case serverError
+    case invalidResponse
+}
+```
+
+#### 4.2 Update DataCollectionViewController
+
+**Integration Points**:
+```swift
+// Add to DataCollectionViewController.swift
+class DataCollectionViewController: UIViewController {
+    private let networkService = DataCollectionNetworkService()
+    private var sessionStartTime: Date?
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // ... existing setup ...
+        
+        Task {
+            await initializeNetworkSession()
+        }
+    }
+    
+    private func initializeNetworkSession() async {
+        do {
+            // Register device if needed
+            if networkService.deviceToken == nil {
+                _ = try await networkService.registerDevice()
+            }
+            
+            // Start session
+            _ = try await networkService.startDataCollectionSession()
+            sessionStartTime = Date()
+            
+            print("🌐 Cloud session initialized successfully")
+        } catch {
+            print("🌐 Failed to initialize cloud session: \(error)")
+            // Fallback to email-based collection
+            showNetworkErrorAlert()
+        }
+    }
+    
+    private func processSpokenInputForDataCollection(_ spokenText: String) {
+        // ... existing processing ...
+        
+        // Submit to cloud instead of storing locally
+        Task {
+            await submitResponseToCloud(
+                sequenceNumber: currentLetterIndex + 1,
+                letterDisplayed: currentLetter,
+                transcribedText: spokenText,
+                mappedResult: mappingResult,
+                responseTimeMs: responseTime
+            )
+        }
+    }
+    
+    private func submitResponseToCloud(
+        sequenceNumber: Int,
+        letterDisplayed: String,
+        transcribedText: String,
+        mappedResult: String,
+        responseTimeMs: Int64
+    ) async {
+        do {
+            try await networkService.submitResponse(
+                sequenceNumber: sequenceNumber,
+                letterDisplayed: letterDisplayed,
+                transcribedText: transcribedText,
+                mappedResult: mappedResult,
+                responseTimeMs: Int(responseTimeMs)
+            )
+            
+            print("🌐 Response submitted to cloud: \(letterDisplayed) -> \(mappedResult)")
+        } catch {
+            print("🌐 Failed to submit response: \(error)")
+            // Store locally as backup
+            storeResponseLocally(sequenceNumber, letterDisplayed, transcribedText, mappingResult, responseTimeMs)
+        }
+    }
+    
+    private func completeDataCollection() {
+        guard let startTime = sessionStartTime else { return }
+        let totalDuration = Int(Date().timeIntervalSince(startTime) * 1000)
+        
+        Task {
+            do {
+                try await networkService.completeSession(totalDurationMs: totalDuration)
+                
+                DispatchQueue.main.async {
+                    self.showCloudSuccessAlert()
+                }
+            } catch {
+                print("🌐 Failed to complete cloud session: \(error)")
+                // Fallback to email
+                generateAndEmailCSV()
+            }
+        }
+    }
+}
+```
+
+### Phase 5: Analytics Dashboard (Week 8)
+
+#### 5.1 Dashboard Framework
+
+**Technology Choice**: React + TypeScript + Chart.js
+- Real-time updates via WebSocket
+- Responsive design for mobile/desktop
+- Export capabilities for research
+
+**Key Dashboard Components**:
+1. **Real-time Metrics**: Live accuracy, response times, session counts
+2. **Algorithm Comparison**: Side-by-side performance analysis
+3. **Confusion Matrix Visualization**: Interactive heatmaps
+4. **Time Series Analysis**: Trends over time
+5. **Export Tools**: CSV, PDF reports for research
+
+#### 5.2 Dashboard API Endpoints
+
+```python
+# app/api/v1/dashboard.py
+@router.get("/dashboard/realtime-metrics")
+async def get_realtime_metrics():
+    """Get current real-time metrics for dashboard"""
+    return {
+        "active_sessions": await get_active_session_count(),
+        "today_responses": await get_today_response_count(),
+        "current_accuracy": await get_current_accuracy_rate(),
+        "avg_response_time": await get_avg_response_time(),
+        "top_confusion_pairs": await get_top_confusion_pairs(),
+        "algorithm_performance": await get_algorithm_performance_summary()
+    }
+
+@router.get("/dashboard/confusion-matrix/{algorithm_version}")
+async def get_confusion_matrix(algorithm_version: str, days: int = 7):
+    """Get confusion matrix data for visualization"""
+    # Implementation returns matrix data suitable for heatmap
+    pass
+
+@router.get("/dashboard/export/session-data")
+async def export_session_data(
+    start_date: date,
+    end_date: date,
+    format: str = "csv"
+):
+    """Export session data for research analysis"""
+    # Implementation returns downloadable file
+    pass
+```
+
+### Phase 6: Deployment & DevOps (Week 9)
+
+#### 6.1 Docker Configuration
+
+```dockerfile
+# Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY app/ ./app/
+COPY migrations/ ./migrations/
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash appuser
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Start application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+#### 6.2 AWS Deployment Architecture
+
+**Infrastructure as Code (Terraform)**:
+```hcl
+# infrastructure/main.tf
+resource "aws_ecs_cluster" "visual_acuity_cluster" {
+  name = "visual-acuity-backend"
+  
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+}
+
+resource "aws_ecs_service" "api_service" {
+  name            = "visual-acuity-api"
+  cluster         = aws_ecs_cluster.visual_acuity_cluster.id
+  task_definition = aws_ecs_task_definition.api_task.arn
+  desired_count   = 2
+  
+  load_balancer {
+    target_group_arn = aws_lb_target_group.api_tg.arn
+    container_name   = "api"
+    container_port   = 8000
+  }
+}
+
+resource "aws_db_instance" "postgres" {
+  identifier     = "visual-acuity-db"
+  engine         = "postgres"
+  engine_version = "14.9"
+  instance_class = "db.t3.medium"
+  
+  allocated_storage     = 100
+  max_allocated_storage = 1000
+  storage_encrypted     = true
+  
+  db_name  = "visualacuity"
+  username = var.db_username
+  password = var.db_password
+  
+  backup_retention_period = 7
+  backup_window          = "03:00-04:00"
+  maintenance_window     = "sun:04:00-sun:05:00"
+  
+  skip_final_snapshot = false
+  final_snapshot_identifier = "visual-acuity-final-snapshot"
+}
+```
+
+## MONITORING & OBSERVABILITY
+
+### Application Monitoring
+- **Metrics**: Prometheus + Grafana
+- **Logging**: ELK Stack (Elasticsearch, Logstash, Kibana)
+- **Tracing**: Jaeger for distributed tracing
+- **Alerting**: PagerDuty integration
+
+### Key Metrics to Track
+- API response times and error rates
+- Database query performance
+- Session completion rates
+- Algorithm accuracy trends
+- System resource utilization
+
+### Health Checks & SLAs
+- API availability: 99.9% uptime
+- Response time: < 200ms for 95th percentile
+- Database connections: Monitor connection pool usage
+- Background job processing: Queue depth and processing time
+
+## SECURITY CONSIDERATIONS
+
+### Data Protection
+- Encryption at rest: All database data encrypted
+- Encryption in transit: TLS 1.3 for all API communication
+- API authentication: JWT tokens with proper expiration
+- Rate limiting: Prevent abuse and DDoS attacks
+
+### Privacy & Compliance
+- Data anonymization: Remove PII from research datasets
+- Data retention: Configurable retention policies
+- Audit logging: Track all data access and modifications
+- GDPR compliance: Data deletion and export capabilities
+
+### Access Control
+- Role-based permissions: Researcher, Admin, Read-only
+- API key management: Rotating keys for iOS app
+- Network security: VPC with private subnets for database
+- Secrets management: AWS Secrets Manager for sensitive data
+
+## TESTING STRATEGY
+
+### Unit Testing
+- FastAPI test client for API endpoints
+- Database transaction rollback for test isolation
+- Mock external dependencies
+- Aim for >90% code coverage
+
+### Integration Testing
+- End-to-end API workflow testing
+- Database integration tests
+- iOS app integration with staging API
+- Performance testing under load
+
+### Load Testing
+- Simulate concurrent iOS app sessions
+- Database performance under high query load
+- API response time under stress
+- Auto-scaling validation
+
+## FUTURE ENHANCEMENTS
+
+### Phase 7: Advanced ML Features
+- Real-time algorithm A/B testing
+- Personalized algorithm adaptation
+- Acoustic analysis of voice recordings
+- Multi-language support for international studies
+
+### Phase 8: Research Platform
+- Multi-study management
+- Participant recruitment tools
+- Statistical analysis integration (R/Python notebooks)
+- Collaboration features for research teams
+
+### Phase 9: Clinical Integration
+- HIPAA compliance for patient data
+- EMR system integration
+- Regulatory reporting tools
+- Multi-site clinical trial support
+
+## ESTIMATED TIMELINE & RESOURCES
+
+**Total Development Time**: 9 weeks
+**Team Size**: 2-3 developers
+**Infrastructure Costs**: ~$500-1000/month for production
+**Ongoing Maintenance**: ~20% of development effort
+
+**Critical Path Dependencies**:
+1. Database design and API foundation (Weeks 1-2)
+2. iOS integration depends on API completion (Week 7)
+3. Dashboard requires WebSocket implementation (Week 8)
+4. Load testing requires full system deployment (Week 9)
+
+## SUCCESS METRICS
+
+### Technical Metrics
+- API uptime: >99.9%
+- Response time: <200ms 95th percentile
+- Data accuracy: 100% consistency between iOS and backend
+- System scalability: Handle 1000+ concurrent sessions
+
+### Research Metrics
+- Data collection efficiency: 10x faster than email workflow
+- Algorithm improvement: Measurable accuracy gains
+- Research productivity: Faster hypothesis testing and validation
+- User adoption: High usage rates among researchers
+
+This implementation plan provides a comprehensive roadmap for building a professional, scalable backend system that will significantly enhance your visual acuity research capabilities while maintaining the highest standards of data quality and system reliability.
