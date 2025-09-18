@@ -1,0 +1,4 @@
+module GoogleSignIn {
+umbrella header "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/Public/GoogleSignIn/GoogleSignIn.h"
+export *
+}

@@ -11,9 +11,6 @@ import ARKit
 import AVFoundation
 import Speech
 import MessageUI
-import GoogleAPIClientForREST_Drive
-import GoogleSignIn
-import GTMSessionFetcher
 
 /* DataCollectionViewController implements a data collection system for optimizing
    voice recognition mapping algorithms. Shows extremely large letters (20/200 at 40cm)
@@ -71,8 +68,8 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     /// Timer to restart speech recognition if it gets stuck
     private var speechTimeoutTimer: Timer?
     
-    /// Google Drive service for cloud storage
-    private var driveService: GTLRDriveService?
+    /// Cloud upload URL (can be configured for different storage services)
+    private let cloudUploadURL = "https://your-server.com/upload" // Replace with actual upload endpoint
     
     // MARK: - UI Elements
     
@@ -153,7 +150,6 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         setupUI()
         setupARTracking()
         setupSpeechRecognition()
-        setupGoogleDrive()
         
         // Generate first letter
         generateNextLetter()
@@ -566,71 +562,13 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         letterLabel.text = "✓"
         transcriptionLabel.text = ""
         
-        // Generate and upload CSV to Google Drive
-        generateAndUploadToGoogleDrive()
+        // Generate and upload CSV (with cloud backup option)
+        generateAndUploadCSV()
     }
     
-    // MARK: - Google Drive Setup
+    // MARK: - CSV Generation and Cloud Upload
     
-    private func setupGoogleDrive() {
-        // Configure Google Sign-In
-        guard let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
-              let plist = NSDictionary(contentsOfFile: path),
-              let clientId = plist["CLIENT_ID"] as? String else {
-            print("🔴 Google Drive: GoogleService-Info.plist not found or missing CLIENT_ID")
-            return
-        }
-        
-        guard let config = GIDConfiguration(clientID: clientId) else {
-            print("🔴 Google Drive: Failed to create GIDConfiguration")
-            return
-        }
-        
-        GIDSignIn.sharedInstance.configuration = config
-        
-        // Set up Drive service
-        driveService = GTLRDriveService()
-        driveService?.shouldFetchNextPages = true
-        
-        print("🔵 Google Drive: Setup completed")
-    }
-    
-    private func authenticateGoogleDrive() async throws {
-        return try await withCheckedThrowingContinuation { continuation in
-            guard let presentingViewController = self else {
-                continuation.resume(throwing: GoogleDriveError.noViewController)
-                return
-            }
-            
-            // Check if already signed in
-            if let user = GIDSignIn.sharedInstance.currentUser,
-               user.grantedScopes?.contains("https://www.googleapis.com/auth/drive.file") == true {
-                driveService?.authorizer = user.fetcherAuthorizer
-                continuation.resume()
-                return
-            }
-            
-            // Sign in with Drive scope
-            GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController, hint: nil, additionalScopes: ["https://www.googleapis.com/auth/drive.file"]) { result, error in
-                if let error = error {
-                    continuation.resume(throwing: error)
-                    return
-                }
-                
-                guard let user = result?.user else {
-                    continuation.resume(throwing: GoogleDriveError.noUser)
-                    return
-                }
-                
-                self.driveService?.authorizer = user.fetcherAuthorizer
-                continuation.resume()
-            }
-        }
-    }
-    
-    // MARK: - CSV Generation and Google Drive Upload
-    
-    private func generateAndUploadToGoogleDrive() {
+    private func generateAndUploadCSV() {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd-HHmmss"
         let timestamp = dateFormatter.string(from: Date())
@@ -652,9 +590,9 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
             try csvContent.write(to: tempFileURL, atomically: true, encoding: .utf8)
             print("🔬 CSV file created: \(fileName)")
             
-            // Upload to Google Drive
+            // Try cloud upload first, fallback to email
             Task {
-                await uploadToGoogleDrive(fileURL: tempFileURL, fileName: fileName, csvContent: csvContent)
+                await uploadToCloudWithEmailFallback(fileURL: tempFileURL, fileName: fileName, csvContent: csvContent)
             }
             
         } catch {
@@ -695,86 +633,94 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         }
     }
     
-    private func uploadToGoogleDrive(fileURL: URL, fileName: String, csvContent: String) async {
+    private func uploadToCloudWithEmailFallback(fileURL: URL, fileName: String, csvContent: String) async {
+        // Try cloud upload first
         do {
-            // Authenticate with Google Drive
-            try await authenticateGoogleDrive()
+            let success = try await uploadToSimpleCloud(csvContent: csvContent, fileName: fileName)
             
-            guard let driveService = driveService else {
-                throw GoogleDriveError.serviceNotInitialized
-            }
-            
-            // Update UI
-            DispatchQueue.main.async {
-                self.instructionLabel.text = "Uploading to Google Drive..."
-            }
-            
-            // Create file metadata
-            let file = GTLRDrive_File()
-            file.name = fileName
-            file.parents = ["1YourSharedFolderID"] // Replace with actual shared folder ID
-            
-            // Create upload parameters
-            let uploadParameters = GTLRUploadParameters(data: csvContent.data(using: .utf8)!, mimeType: "text/csv")
-            uploadParameters.filename = fileName
-            
-            // Create upload query
-            let query = GTLRDriveQuery_FilesCreate.query(withObject: file, uploadParameters: uploadParameters)
-            
-            // Execute upload
-            let result = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<GTLRDrive_File, Error>) in
-                driveService.executeQuery(query) { (ticket, file, error) in
-                    if let error = error {
-                        continuation.resume(throwing: error)
-                    } else if let file = file as? GTLRDrive_File {
-                        continuation.resume(returning: file)
-                    } else {
-                        continuation.resume(throwing: GoogleDriveError.uploadFailed)
-                    }
+            if success {
+                print("☁️ Cloud upload successful: \(fileName)")
+                
+                // Clean up local file
+                try? FileManager.default.removeItem(at: fileURL)
+                
+                DispatchQueue.main.async {
+                    self.showCloudSuccessAlert(fileName: fileName)
                 }
+                return
             }
-            
-            print("🔵 Google Drive: File uploaded successfully - ID: \(result.identifier ?? "unknown")")
-            
-            // Clean up local file
-            try? FileManager.default.removeItem(at: fileURL)
-            
-            DispatchQueue.main.async {
-                self.showGoogleDriveSuccessAlert(fileName: fileName)
-            }
-            
         } catch {
-            print("🔴 Google Drive upload failed: \(error)")
-            
-            DispatchQueue.main.async {
-                // Fallback to email if Google Drive fails
-                self.instructionLabel.text = "Google Drive failed, trying email..."
-                self.emailCSV(fileURL: fileURL, fileName: fileName)
-            }
+            print("☁️ Cloud upload failed: \(error)")
+        }
+        
+        // Fallback to email
+        DispatchQueue.main.async {
+            self.instructionLabel.text = "Cloud unavailable, using email..."
+            self.emailCSV(fileURL: fileURL, fileName: fileName)
         }
     }
     
-    // MARK: - Google Drive Error Handling
+    private func uploadToSimpleCloud(csvContent: String, fileName: String) async throws -> Bool {
+        // Simple HTTP upload to a basic server endpoint
+        // This can be replaced with any cloud storage service
+        
+        guard let url = URL(string: cloudUploadURL) else {
+            throw CloudUploadError.invalidURL
+        }
+        
+        // Create request
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // Create upload payload
+        let uploadData = [
+            "filename": fileName,
+            "content": csvContent,
+            "timestamp": ISO8601DateFormatter().string(from: Date()),
+            "source": "visual_acuity_ios_app",
+            "email_recipient": "mabdel03@mit.edu"
+        ]
+        
+        request.httpBody = try JSONSerialization.data(withJSONObject: uploadData)
+        
+        // Execute request with timeout
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw CloudUploadError.noResponse
+        }
+        
+        if 200...299 ~= httpResponse.statusCode {
+            print("☁️ Cloud upload successful: \(httpResponse.statusCode)")
+            return true
+        } else {
+            print("☁️ Cloud upload failed: \(httpResponse.statusCode)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("☁️ Response: \(responseString)")
+            }
+            throw CloudUploadError.serverError(httpResponse.statusCode)
+        }
+    }
     
-    enum GoogleDriveError: Error {
-        case noViewController
-        case noUser
-        case serviceNotInitialized
-        case uploadFailed
-        case authenticationFailed
+    // MARK: - Cloud Upload Error Handling
+    
+    enum CloudUploadError: Error {
+        case invalidURL
+        case noResponse
+        case serverError(Int)
+        case networkError
         
         var localizedDescription: String {
             switch self {
-            case .noViewController:
-                return "No view controller available for Google Sign-In"
-            case .noUser:
-                return "User authentication failed"
-            case .serviceNotInitialized:
-                return "Google Drive service not initialized"
-            case .uploadFailed:
-                return "File upload to Google Drive failed"
-            case .authenticationFailed:
-                return "Google Drive authentication failed"
+            case .invalidURL:
+                return "Invalid cloud upload URL"
+            case .noResponse:
+                return "No response from cloud server"
+            case .serverError(let code):
+                return "Cloud server error: \(code)"
+            case .networkError:
+                return "Network connection error"
             }
         }
     }
@@ -804,10 +750,10 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     
     // MARK: - Alert Methods
     
-    private func showGoogleDriveSuccessAlert(fileName: String) {
+    private func showCloudSuccessAlert(fileName: String) {
         let alert = UIAlertController(
-            title: "Data Uploaded to Google Drive",
-            message: "Your data collection file '\(fileName)' has been successfully uploaded to Google Drive. Thank you for contributing to algorithm optimization!",
+            title: "Data Uploaded to Cloud",
+            message: "Your data collection file '\(fileName)' has been successfully uploaded to cloud storage. Thank you for contributing to algorithm optimization!",
             preferredStyle: .alert
         )
         

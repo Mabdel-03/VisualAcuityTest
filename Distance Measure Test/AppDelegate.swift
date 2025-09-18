@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import GoogleSignIn
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -36,10 +35,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     }
     
-    // MARK: - Google Sign-In URL Handling
+    // MARK: - URL Handling (reserved for future cloud integrations)
     
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        return GIDSignIn.sharedInstance.handle(url)
+        // Handle custom URL schemes for cloud service authentication
+        return false
     }
 
 

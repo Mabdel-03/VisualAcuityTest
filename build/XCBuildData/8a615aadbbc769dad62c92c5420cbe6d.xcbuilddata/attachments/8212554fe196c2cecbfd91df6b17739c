@@ -1,0 +1,29 @@
+{
+  "" : {
+    "diagnostics" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/DevicePpi-primary.dia",
+    "emit-module-dependencies" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/DevicePpi-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/DevicePpi-primary-emit-module.dia",
+    "pch" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/DevicePpi-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/DevicePpi-primary.swiftdeps"
+  },
+  "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/Sources/DevicePpi/Ppi.swift" : {
+    "const-values" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/Ppi.swiftconstvalues",
+    "dependencies" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/Ppi.d",
+    "diagnostics" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/Ppi.dia",
+    "index-unit-output-path" : "/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/Ppi.o",
+    "llvm-bc" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/Ppi.bc",
+    "object" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/Ppi.o",
+    "swift-dependencies" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/Ppi.swiftdeps",
+    "swiftmodule" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/Ppi~partial.swiftmodule"
+  },
+  "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/Sources/DevicePpi/SysInfo.swift" : {
+    "const-values" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/SysInfo.swiftconstvalues",
+    "dependencies" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/SysInfo.d",
+    "diagnostics" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/SysInfo.dia",
+    "index-unit-output-path" : "/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/SysInfo.o",
+    "llvm-bc" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/SysInfo.bc",
+    "object" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/SysInfo.o",
+    "swift-dependencies" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/SysInfo.swiftdeps",
+    "swiftmodule" : "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/DevicePpi/build/DevicePpi.build/Debug-iphoneos/DevicePpi.build/Objects-normal/arm64/SysInfo~partial.swiftmodule"
+  }
+}
