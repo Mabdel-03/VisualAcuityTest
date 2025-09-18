@@ -140,6 +140,9 @@
 			name = "Distance Measure Test";
 			packageProductDependencies = (
 				D13F546C2ACA7C2A00673C13 /* DevicePpi */,
+				E1234567890ABCDEF123458 /* GoogleSignIn */,
+				E1234567890ABCDEF123459 /* GoogleAPIClientForREST_Drive */,
+				E1234567890ABCDEF123460 /* GTMSessionFetcher */,
 			);
 			productName = "Distance Measure Test";
 			productReference = C0CDD6262A687790002A58BA /* Distance Measure Test.app */;
@@ -171,6 +174,8 @@
 			mainGroup = C0CDD61D2A687790002A58BA;
 			packageReferences = (
 				D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */,
+				E1234567890ABCDEF123456 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				E1234567890ABCDEF123457 /* XCRemoteSwiftPackageReference "google-api-objectivec-client-for-rest" */,
 			);
 			productRefGroup = C0CDD6272A687790002A58BA /* Products */;
 			projectDirPath = "";
@@ -454,6 +459,22 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		E1234567890ABCDEF123456 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.0.0;
+			};
+		};
+		E1234567890ABCDEF123457 /* XCRemoteSwiftPackageReference "google-api-objectivec-client-for-rest" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/google-api-objectivec-client-for-rest";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -461,6 +482,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */;
 			productName = DevicePpi;
+		};
+		E1234567890ABCDEF123458 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1234567890ABCDEF123456 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		E1234567890ABCDEF123459 /* GoogleAPIClientForREST_Drive */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1234567890ABCDEF123457 /* XCRemoteSwiftPackageReference "google-api-objectivec-client-for-rest" */;
+			productName = GoogleAPIClientForREST_Drive;
+		};
+		E1234567890ABCDEF123460 /* GTMSessionFetcher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E1234567890ABCDEF123457 /* XCRemoteSwiftPackageReference "google-api-objectivec-client-for-rest" */;
+			productName = GTMSessionFetcher;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
