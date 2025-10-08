@@ -8,8 +8,8 @@
 import UIKit
 
 /*
- * SettingsViewController manages the app settings including test type selection
- * and audio preferences. Users can toggle between ETDRS and Landolt C tests.
+ * SettingsViewController manages the app settings for the Landolt-C only version.
+ * Users can toggle audio preferences. Test type is fixed to Landolt C.
  */
 class SettingsViewController: UIViewController {
     
@@ -37,10 +37,10 @@ class SettingsViewController: UIViewController {
         return label
     }()
     
-    // Test Type Section
+    // Test Type Info Section (Read-only)
     private lazy var testTypeLabel: UILabel = {
         let label = UILabel()
-        label.text = "Test Type"
+        label.text = "Test Type: Landolt C"
         label.font = UIFont.boldSystemFont(ofSize: 20)
         label.textColor = .darkGray
         label.textAlignment = .center
@@ -50,68 +50,8 @@ class SettingsViewController: UIViewController {
     
     private lazy var testTypeDescriptionLabel: UILabel = {
         let label = UILabel()
-        label.text = "Test Type"
-        label.font = UIFont.systemFont(ofSize: 14)
-        label.textColor = .gray
-        label.textAlignment = .center
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private lazy var landoltCButton: UIButton = {
-        let button = UIButton(type: .custom)
-        button.setTitle("📝 Landolt C Test", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.layer.cornerRadius = 8
-        button.layer.borderWidth = 2
-        button.contentHorizontalAlignment = .center
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.filled()
-            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
-            button.configuration = config
-        } else {
-            button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
-        }
-        button.addTarget(self, action: #selector(landoltCButtonTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
-    private lazy var landoltCDescriptionLabel: UILabel = {
-        let label = UILabel()
-        label.text = "C-shaped letters, swipe gestures"
-        label.font = UIFont.systemFont(ofSize: 12)
-        label.textColor = .gray
-        label.textAlignment = .center
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    private lazy var etdrsButton: UIButton = {
-        let button = UIButton(type: .custom)
-        button.setTitle("🎤 ETDRS Test", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.layer.cornerRadius = 8
-        button.layer.borderWidth = 2
-        button.contentHorizontalAlignment = .center
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.filled()
-            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
-            button.configuration = config
-        } else {
-            button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
-        }
-        button.addTarget(self, action: #selector(etdrsButtonTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
-    private lazy var etdrsDescriptionLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Standard letters, voice input"
-        label.font = UIFont.systemFont(ofSize: 12)
+        label.text = "📝 C-shaped letters with swipe gestures"
+        label.font = UIFont.systemFont(ofSize: 16)
         label.textColor = .gray
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -184,8 +124,10 @@ class SettingsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        updateButtonStates()
         updateAudioSwitch()
+        
+        // Ensure Landolt C is always selected in this version
+        setETDRSTestEnabled(false)
         
         // Play audio instructions for the settings screen
         if isAudioEnabled() {
@@ -206,10 +148,6 @@ class SettingsViewController: UIViewController {
         contentView.addSubview(titleLabel)
         contentView.addSubview(testTypeLabel)
         contentView.addSubview(testTypeDescriptionLabel)
-        contentView.addSubview(landoltCButton)
-        contentView.addSubview(landoltCDescriptionLabel)
-        contentView.addSubview(etdrsButton)
-        contentView.addSubview(etdrsDescriptionLabel)
         contentView.addSubview(audioLabel)
         contentView.addSubview(audioDescriptionLabel)
         contentView.addSubview(audioContainer)
@@ -251,28 +189,8 @@ class SettingsViewController: UIViewController {
             testTypeDescriptionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             testTypeDescriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
-            // Landolt C Button
-            landoltCButton.topAnchor.constraint(equalTo: testTypeDescriptionLabel.bottomAnchor, constant: 15),
-            landoltCButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            landoltCButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            landoltCButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            landoltCDescriptionLabel.topAnchor.constraint(equalTo: landoltCButton.bottomAnchor, constant: 8),
-            landoltCDescriptionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 36),
-            landoltCDescriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -36),
-            
-            // ETDRS Button
-            etdrsButton.topAnchor.constraint(equalTo: landoltCDescriptionLabel.bottomAnchor, constant: 15),
-            etdrsButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            etdrsButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            etdrsButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            etdrsDescriptionLabel.topAnchor.constraint(equalTo: etdrsButton.bottomAnchor, constant: 8),
-            etdrsDescriptionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 36),
-            etdrsDescriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -36),
-            
             // Audio Section
-            audioLabel.topAnchor.constraint(equalTo: etdrsDescriptionLabel.bottomAnchor, constant: 30),
+            audioLabel.topAnchor.constraint(equalTo: testTypeDescriptionLabel.bottomAnchor, constant: 30),
             audioLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             audioLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
@@ -305,24 +223,6 @@ class SettingsViewController: UIViewController {
     
     // MARK: - Actions
     
-    @objc private func landoltCButtonTapped() {
-        setETDRSTestEnabled(false)
-        updateButtonStates()
-        
-        if isAudioEnabled() {
-            SharedAudioManager.shared.playText("Landolt C test selected. This test uses swipe gestures to indicate the opening direction of C-shaped letters.", source: "Settings")
-        }
-    }
-    
-    @objc private func etdrsButtonTapped() {
-        setETDRSTestEnabled(true)
-        updateButtonStates()
-        
-        if isAudioEnabled() {
-            SharedAudioManager.shared.playText("ETDRS test selected. This test uses voice input to identify standard letters.", source: "Settings")
-        }
-    }
-    
     @objc private func audioSwitchChanged(_ sender: UISwitch) {
         setAudioEnabled(sender.isOn)
         
@@ -334,38 +234,13 @@ class SettingsViewController: UIViewController {
     
     @objc private func doneButtonTapped() {
         if isAudioEnabled() {
-            let testType = isETDRSTestEnabled() ? "ETDRS" : "Landolt C"
-            SharedAudioManager.shared.playText("Settings saved. \(testType) test selected. Returning to main menu.", source: "Settings")
+            SharedAudioManager.shared.playText("Settings saved. Landolt C test is active. Returning to main menu.", source: "Settings")
         }
         
         navigationController?.popViewController(animated: true)
     }
     
     // MARK: - Helper Methods
-    
-    private func updateButtonStates() {
-        let isETDRS = isETDRSTestEnabled()
-        
-        if isETDRS {
-            // ETDRS selected
-            etdrsButton.backgroundColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
-            etdrsButton.setTitleColor(.white, for: .normal)
-            etdrsButton.layer.borderColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0).cgColor
-            
-            landoltCButton.backgroundColor = .clear
-            landoltCButton.setTitleColor(.darkGray, for: .normal)
-            landoltCButton.layer.borderColor = UIColor.lightGray.cgColor
-        } else {
-            // Landolt C selected
-            landoltCButton.backgroundColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
-            landoltCButton.setTitleColor(.white, for: .normal)
-            landoltCButton.layer.borderColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0).cgColor
-            
-            etdrsButton.backgroundColor = .clear
-            etdrsButton.setTitleColor(.darkGray, for: .normal)
-            etdrsButton.layer.borderColor = UIColor.lightGray.cgColor
-        }
-    }
     
     private func updateAudioSwitch() {
         audioSwitch.isOn = isAudioEnabled()
@@ -392,13 +267,11 @@ class SettingsViewController: UIViewController {
     // MARK: - Audio Instructions
     
     private func playAudioInstructions() {
-        let testType = isETDRSTestEnabled() ? "ETDRS" : "Landolt C"
         let audioStatus = isAudioEnabled() ? "enabled" : "disabled"
         
         let instructionText = """
-        Settings screen. Currently using \(testType) test with audio instructions \(audioStatus). 
-        You can choose between Landolt C test with swipe gestures, or ETDRS test with voice input. 
-        You can also toggle audio instructions on or off. Tap Done when finished.
+        Settings screen. This app uses the Landolt C test with swipe gestures to indicate the opening direction of C-shaped letters. 
+        Audio instructions are currently \(audioStatus). You can toggle audio instructions on or off. Tap Done when finished.
         """
         
         SharedAudioManager.shared.playText(instructionText, source: "Settings")

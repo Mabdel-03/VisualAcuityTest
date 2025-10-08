@@ -4,6 +4,9 @@
 //
 //  Created by Visual Acuity Test Assistant
 //
+//  NOTE: This file is not used in the "Landolt-C Only" version of the app.
+//  The app has been modified to only use the Landolt C test (TumblingEViewController).
+//  This file is kept for reference and potential future use.
 
 import UIKit
 import DevicePpi

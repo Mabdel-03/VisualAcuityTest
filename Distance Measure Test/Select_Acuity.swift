@@ -11,9 +11,9 @@ import AVFoundation
 let LETTER = "C" // Landold C-- the letter that is displayed on the acuity selection scene.
 var selectedAcuity: Int?
 
-// Global test type preference
+// Global test type preference - Fixed to Landolt C in this version
 var isETDRSTest: Bool {
-    return UserDefaults.standard.bool(forKey: "etdrs_test_enabled")
+    return false  // Always use Landolt C test
 }
 
 /* Select_Acuity class is designed to display the acuity selection scene.

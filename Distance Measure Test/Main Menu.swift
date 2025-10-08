@@ -171,10 +171,8 @@ class MainMenu: UIViewController {
     /* Initializes the test type settings for the user.
     */
     private func initializeTestTypeSettings() {
-        // Default to Landolt C test if no preference is set
-        if UserDefaults.standard.object(forKey: "etdrs_test_enabled") == nil {
-            SharedAudioManager.shared.setETDRSTestEnabled(false)
-        }
+        // Always set to Landolt C test in this version
+        SharedAudioManager.shared.setETDRSTestEnabled(false)
     }
     
     /* Checks if the audio is enabled for the user.
@@ -205,8 +203,7 @@ class MainMenu: UIViewController {
     /* Plays audio instructions to the user.
     */
     private func playAudioInstructions() {
-        let testType = isETDRSTestEnabled() ? "ETDRS" : "Landolt C"
-        let instructionText = "Visual acuity test - \(testType) mode. Tap Start Test to begin."
+        let instructionText = "Visual acuity test - Landolt C mode. Tap Start Test to begin."
         SharedAudioManager.shared.playText(instructionText, source: "Main Menu")
     }
     

@@ -59,7 +59,7 @@ class OneEyeInstruc: UIViewController {
     /* Updates the text on the one eye instructions scene.
     */
     private func updateText() {
-        let testType = isETDRSTest ? "ETDRS" : "Landolt C"
+        let testType = "Landolt C"  // Fixed to Landolt C in this version
         
         if eyeNumber == 2 {
             oneEyeInstructions.text = "Right Eye (\(testType))"
@@ -70,23 +70,17 @@ class OneEyeInstruc: UIViewController {
         }
     }
     
-    /* Begins the appropriate test based on the selected test type.
+    /* Begins the Landolt C test (fixed test type in this version).
     */
     @IBAction func beginTestButtonPressed(_ sender: Any) {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         
-        if isETDRSTest {
-            // Navigate to ETDRS test
-            if let etdrsVC = storyboard.instantiateViewController(withIdentifier: "ETDRSViewController") as? ETDRSViewController {
-                navigationController?.pushViewController(etdrsVC, animated: true)
-                print("🔤 Starting ETDRS test for eye \(eyeNumber)")
-            }
+        // Always navigate to Landolt C test in this version
+        if let tumblingVC = storyboard.instantiateViewController(withIdentifier: "TumblingEViewController") as? TumblingEViewController {
+            navigationController?.pushViewController(tumblingVC, animated: true)
+            print("🔄 Starting Landolt C test for eye \(eyeNumber)")
         } else {
-            // Navigate to Landolt C test
-            if let tumblingVC = storyboard.instantiateViewController(withIdentifier: "TumblingEViewController") as? TumblingEViewController {
-                navigationController?.pushViewController(tumblingVC, animated: true)
-                print("🔄 Starting Landolt C test for eye \(eyeNumber)")
-            }
+            print("🔄 ❌ Failed to instantiate TumblingEViewController from storyboard")
         }
     }
     
