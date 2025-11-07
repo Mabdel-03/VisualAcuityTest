@@ -29,6 +29,8 @@
 		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
 		D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */; };
 		F1A2B3C42E4F5D670089AB12 /* TestProgressionDataCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C32E4F5D670089AB12 /* TestProgressionDataCollector.swift */; };
+		A1B2C3D42E5F6E780089CD23 /* SubjectNameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D32E5F6E780089CD23 /* SubjectNameManager.swift */; };
+		A1B2C3D62E5F6E890089CD23 /* UIViewController+NamePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D52E5F6E890089CD23 /* UIViewController+NamePrompt.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -55,6 +57,8 @@
 		D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Distance-Measure-Test-Info.plist"; sourceTree = SOURCE_ROOT; };
 		D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Select_Acuity.swift; sourceTree = "<group>"; };
 		F1A2B3C32E4F5D670089AB12 /* TestProgressionDataCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestProgressionDataCollector.swift; sourceTree = "<group>"; };
+		A1B2C3D32E5F6E780089CD23 /* SubjectNameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectNameManager.swift; sourceTree = "<group>"; };
+		A1B2C3D52E5F6E890089CD23 /* UIViewController+NamePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+NamePrompt.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +106,8 @@
 				C0C987092CC9F413003EEEFF /* ResultViewController.swift */,
 				D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */,
 				F1A2B3C32E4F5D670089AB12 /* TestProgressionDataCollector.swift */,
+				A1B2C3D32E5F6E780089CD23 /* SubjectNameManager.swift */,
+				A1B2C3D52E5F6E890089CD23 /* UIViewController+NamePrompt.swift */,
 				D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */,
 				C0CDD62F2A687790002A58BA /* Main.storyboard */,
 				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
@@ -216,6 +222,8 @@
 				E0F987052CC9F141003EEEFF /* SettingsViewController.swift in Sources */,
 				DC123ABC2CC9F141003EEEFF /* DataCollectionViewController.swift in Sources */,
 				D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */,
+				A1B2C3D42E5F6E780089CD23 /* SubjectNameManager.swift in Sources */,
+				A1B2C3D62E5F6E890089CD23 /* UIViewController+NamePrompt.swift in Sources */,
 				C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -572,10 +572,30 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     // MARK: - CSV Generation and Cloud Upload
     
     private func generateAndUploadCSV() {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd-HHmmss"
-        let timestamp = dateFormatter.string(from: Date())
-        let fileName = "\(timestamp).csv"
+        // Prompt for subject name first
+        promptForSubjectName(allowSkip: true) { [weak self] success in
+            guard let self = self, success else {
+                print("🔬 CSV export cancelled - no subject name provided")
+                // Show option to return to menu or try again
+                self?.showCancelledAlert()
+                return
+            }
+            
+            // Proceed with export now that we have a name
+            self.performCSVGeneration()
+        }
+    }
+    
+    private func performCSVGeneration() {
+        let nameManager = SubjectNameManager.shared
+        
+        // Generate filename with subject name
+        let fileName = nameManager.generateCSVFilename() ?? {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyyMMdd-HHmmss"
+            let timestamp = dateFormatter.string(from: Date())
+            return "\(timestamp).csv"
+        }()
         
         // Generate CSV content
         var csvContent = "Letter_Displayed,Transcribed_Text,Mapped_Result\n"
@@ -790,7 +810,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         )
         
         alert.addAction(UIAlertAction(title: "Try Again", style: .default) { _ in
-            self.generateAndEmailCSV()
+            self.generateAndUploadCSV()
         })
         
         alert.addAction(UIAlertAction(title: "Return to Menu", style: .cancel) { _ in

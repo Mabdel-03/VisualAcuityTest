@@ -333,26 +333,6 @@
                                                     <action selector="option1:" destination="yoH-g8-Akd" eventType="touchUpInside" id="qZg-1X-OAC"/>
                                                 </connections>
                                             </button>
-                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="BRf-c2-1wi">
-                                                <rect key="frame" x="0.0" y="150" width="393" height="150"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="150" id="jq2-no-s7y"/>
-                                                </constraints>
-                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
-                                                <color key="tintColor" systemColor="labelColor"/>
-                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                                <state key="normal" title="E">
-                                                    <color key="titleColor" systemColor="labelColor"/>
-                                                </state>
-                                                <userDefinedRuntimeAttributes>
-                                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                                        <integer key="value" value="0"/>
-                                                    </userDefinedRuntimeAttribute>
-                                                </userDefinedRuntimeAttributes>
-                                                <connections>
-                                                    <action selector="option2:" destination="yoH-g8-Akd" eventType="touchUpInside" id="Ox5-rg-jlX"/>
-                                                </connections>
-                                            </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hft-Mq-dAO">
                                                 <rect key="frame" x="0.0" y="300" width="393" height="150"/>
                                                 <constraints>
@@ -371,26 +351,6 @@
                                                 </userDefinedRuntimeAttributes>
                                                 <connections>
                                                     <action selector="option3:" destination="yoH-g8-Akd" eventType="touchUpInside" id="xId-tV-1jn"/>
-                                                </connections>
-                                            </button>
-                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ZQe-Ay-lCU">
-                                                <rect key="frame" x="0.0" y="450" width="393" height="150"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="150" id="whl-by-MCP"/>
-                                                </constraints>
-                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
-                                                <color key="tintColor" systemColor="labelColor"/>
-                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                                <state key="normal" title="E">
-                                                    <color key="titleColor" systemColor="labelColor"/>
-                                                </state>
-                                                <userDefinedRuntimeAttributes>
-                                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                                        <integer key="value" value="0"/>
-                                                    </userDefinedRuntimeAttribute>
-                                                </userDefinedRuntimeAttributes>
-                                                <connections>
-                                                    <action selector="option4:" destination="yoH-g8-Akd" eventType="touchUpInside" id="dvA-3a-c2K"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tmq-GW-PHJ">
@@ -413,26 +373,6 @@
                                                     <action selector="option5:" destination="yoH-g8-Akd" eventType="touchUpInside" id="fLW-Xz-Inz"/>
                                                 </connections>
                                             </button>
-                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6l4-Ab-jUs">
-                                                <rect key="frame" x="0.0" y="750" width="393" height="150"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="150" id="QDm-y5-6EA"/>
-                                                </constraints>
-                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
-                                                <color key="tintColor" systemColor="labelColor"/>
-                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                                <state key="normal" title="E">
-                                                    <color key="titleColor" systemColor="labelColor"/>
-                                                </state>
-                                                <userDefinedRuntimeAttributes>
-                                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                                        <integer key="value" value="0"/>
-                                                    </userDefinedRuntimeAttribute>
-                                                </userDefinedRuntimeAttributes>
-                                                <connections>
-                                                    <action selector="option6:" destination="yoH-g8-Akd" eventType="touchUpInside" id="TJy-ZQ-zU7"/>
-                                                </connections>
-                                            </button>
                                             <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AXf-Fr-moD">
                                                 <rect key="frame" x="0.0" y="900" width="393" height="150"/>
                                                 <constraints>
@@ -453,50 +393,10 @@
                                                     <action selector="option7:" destination="yoH-g8-Akd" eventType="touchUpInside" id="XDM-4v-Vf1"/>
                                                 </connections>
                                             </button>
-                                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vwp-NZ-fXd">
-                                                <rect key="frame" x="0.0" y="1050" width="393" height="150"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="150" id="vw4-fJ-Nuv"/>
-                                                </constraints>
-                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
-                                                <color key="tintColor" systemColor="labelColor"/>
-                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                                <state key="normal" title="E">
-                                                    <color key="titleColor" systemColor="labelColor"/>
-                                                </state>
-                                                <userDefinedRuntimeAttributes>
-                                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                                        <integer key="value" value="0"/>
-                                                    </userDefinedRuntimeAttribute>
-                                                </userDefinedRuntimeAttributes>
-                                                <connections>
-                                                    <action selector="option8:" destination="yoH-g8-Akd" eventType="touchUpInside" id="iKh-gA-8qV"/>
-                                                </connections>
-                                            </button>
-                                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QOt-gF-U6n" userLabel="B32">
+                                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cGy-Yd-Tp5" userLabel="B20">
                                                 <rect key="frame" x="0.0" y="1200" width="393" height="150"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="150" id="KxV-SW-KuU"/>
-                                                </constraints>
-                                                <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
-                                                <color key="tintColor" systemColor="labelColor"/>
-                                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                                <state key="normal" title="E">
-                                                    <color key="titleColor" systemColor="labelColor"/>
-                                                </state>
-                                                <userDefinedRuntimeAttributes>
-                                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                                        <integer key="value" value="0"/>
-                                                    </userDefinedRuntimeAttribute>
-                                                </userDefinedRuntimeAttributes>
-                                                <connections>
-                                                    <action selector="option9:" destination="yoH-g8-Akd" eventType="touchUpInside" id="BLE-fW-a2j"/>
-                                                </connections>
-                                            </button>
-                                            <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cGy-Yd-Tp5" userLabel="B20">
-                                                <rect key="frame" x="0.0" y="1350" width="393" height="150"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="150" id="I71-Uq-vsG"/>
                                                 </constraints>
                                                 <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
@@ -543,14 +443,9 @@
                     <navigationItem key="navigationItem" id="Bd8-4p-3rn"/>
                     <connections>
                         <outlet property="B10" destination="cGy-Yd-Tp5" id="tAg-0Y-xdN"/>
-                        <outlet property="B100" destination="ZQe-Ay-lCU" id="JkM-OX-FTI"/>
                         <outlet property="B125" destination="hft-Mq-dAO" id="TjV-ZD-SZ1"/>
-                        <outlet property="B160" destination="BRf-c2-1wi" id="LHb-Ys-OGl"/>
-                        <outlet property="B20" destination="QOt-gF-U6n" id="qQy-8W-pa3"/>
                         <outlet property="B200" destination="b8R-Hp-Jzj" id="AI7-t6-yts"/>
-                        <outlet property="B40" destination="vwp-NZ-fXd" id="nVp-9M-m7l"/>
                         <outlet property="B50" destination="AXf-Fr-moD" id="GGL-0J-MiU"/>
-                        <outlet property="B63" destination="6l4-Ab-jUs" id="dZ2-fA-Foa"/>
                         <outlet property="B80" destination="tmq-GW-PHJ" id="Tu9-c7-mGk"/>
                     </connections>
                 </viewController>

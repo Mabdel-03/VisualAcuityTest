@@ -22,14 +22,9 @@ var isETDRSTest: Bool {
 class Select_Acuity: UIViewController {
     
     @IBOutlet weak var B200: UIButton!
-    @IBOutlet weak var B160: UIButton!
-    @IBOutlet weak var B100: UIButton!
     @IBOutlet weak var B125: UIButton!
     @IBOutlet weak var B80: UIButton!
-    @IBOutlet weak var B63: UIButton!
     @IBOutlet weak var B50: UIButton!
-    @IBOutlet weak var B40: UIButton!
-    @IBOutlet weak var B20: UIButton!
     @IBOutlet weak var B10: UIButton!
     
     override func viewDidLoad() {
@@ -58,14 +53,9 @@ class Select_Acuity: UIViewController {
         
         // Set up all buttons with their appropriate letter sizes
         Button_ETDRS(B200, dAcuity: 200, letText: displayLetter)
-        Button_ETDRS(B160, dAcuity: 160, letText: displayLetter)
         Button_ETDRS(B125, dAcuity: 125, letText: displayLetter)
-        Button_ETDRS(B100, dAcuity: 100, letText: displayLetter)
         Button_ETDRS(B80, dAcuity: 80, letText: displayLetter)
-        Button_ETDRS(B63, dAcuity: 63, letText: displayLetter)
         Button_ETDRS(B50, dAcuity: 50, letText: displayLetter)
-        Button_ETDRS(B40, dAcuity: 40, letText: displayLetter)
-        Button_ETDRS(B20, dAcuity: 32, letText: displayLetter)
         Button_ETDRS(B10, dAcuity: 20, letText: displayLetter)
         
         // Configure the stack view and buttons for dynamic sizing
@@ -105,7 +95,7 @@ class Select_Acuity: UIViewController {
         button.titleLabel?.font = UIFont(name: "Sloan", size: CGFloat(fontSize))
         
         // Calculate appropriate padding based on letter size for full-width buttons
-        let verticalPadding: CGFloat = 20 + (CGFloat(fontSize) * 0.15) // Scale vertical padding with font size
+        let verticalPadding: CGFloat = 12 + (CGFloat(fontSize) * 0.10) // Scale vertical padding with font size
         let horizontalPadding: CGFloat = 16 // Minimal horizontal padding since button spans full width
         
         // Set content edge insets optimized for full-width layout using modern configuration
@@ -158,40 +148,19 @@ class Select_Acuity: UIViewController {
         selectedAcuity = 200
         proceedToTest()
     }
-    @IBAction func option2(_ sender: Any) {
-        selectedAcuity = 160
-        proceedToTest()
-    }
+    
     @IBAction func option3(_ sender: Any) {
         selectedAcuity = 125
         proceedToTest()
     }
 
-    @IBAction func option4(_ sender: Any) {
-        selectedAcuity = 100
-        proceedToTest()
-    }
     @IBAction func option5(_ sender: Any) {
         selectedAcuity = 80
-        proceedToTest()
-    }
-    @IBAction func option6(_ sender: Any) {
-        selectedAcuity = 63
         proceedToTest()
     }
 
     @IBAction func option7(_ sender: Any) {
         selectedAcuity = 50
-        proceedToTest()
-    }
-
-    @IBAction func option8(_ sender: Any) {
-        selectedAcuity = 40
-        proceedToTest()
-    }
-    
-    @IBAction func option9(_ sender: Any) {
-        selectedAcuity = 32
         proceedToTest()
     }
     
@@ -231,7 +200,7 @@ class Select_Acuity: UIViewController {
     */
     private func configureButtonConstraints() {
         // Get all the buttons
-        let buttons = [B200, B160, B125, B100, B80, B63, B50, B40, B20, B10]
+        let buttons = [B200, B125, B80, B50, B10]
         
         // Configure the stack view for connected buttons (no spacing)
         if let firstButton = buttons.compactMap({ $0 }).first,

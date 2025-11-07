@@ -339,6 +339,9 @@ class TestHistoryViewController: UIViewController {
         // Clear all progression data
         TestProgressionDataCollector.shared.clearAllProgressionData()
         
+        // Clear subject name for privacy
+        SubjectNameManager.shared.clearSubjectName()
+        
         // Remove all dynamically added subviews (except title and clear button)
         contentView.subviews.forEach { subview in
             if subview != titleLabel && subview != clearButton {
@@ -352,7 +355,7 @@ class TestHistoryViewController: UIViewController {
         // Show confirmation
         let successAlert = UIAlertController(
             title: "History Cleared",
-            message: "All test history and progression data has been successfully deleted.",
+            message: "All test history, progression data, and subject information has been successfully deleted.",
             preferredStyle: .alert
         )
         successAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
@@ -377,17 +380,36 @@ class TestHistoryViewController: UIViewController {
      * Exports CSV data for the specified eye or combined data
      */
     private func exportCSV(for eye: String?) {
+        // Prompt for subject name first
+        promptForSubjectName(allowSkip: true) { [weak self] success in
+            guard let self = self, success else {
+                print("📊 CSV export cancelled - no subject name provided")
+                return
+            }
+            
+            // Proceed with export now that we have a name
+            self.performCSVExport(for: eye)
+        }
+    }
+    
+    /*
+     * Performs the actual CSV export after subject name is confirmed
+     */
+    private func performCSVExport(for eye: String?) {
         let progressionDataCollector = TestProgressionDataCollector.shared
+        let nameManager = SubjectNameManager.shared
         
         let csvContent: String
         let fileName: String
         
+        // Generate filename with subject name
         if let eye = eye {
             csvContent = progressionDataCollector.generateCSV(for: eye)
-            fileName = "visual_acuity_\(eye.lowercased())_eye_data.csv"
+            let suffix = "\(eye.lowercased())_eye"
+            fileName = nameManager.generateCSVFilename(withSuffix: suffix) ?? "visual_acuity_\(eye.lowercased())_eye_data.csv"
         } else {
             csvContent = progressionDataCollector.generateCombinedCSV()
-            fileName = "visual_acuity_combined_data.csv"
+            fileName = nameManager.generateCSVFilename(withSuffix: "combined") ?? "visual_acuity_combined_data.csv"
         }
         
         // Create temporary file
@@ -395,6 +417,8 @@ class TestHistoryViewController: UIViewController {
         
         do {
             try csvContent.write(to: tempURL, atomically: true, encoding: .utf8)
+            
+            print("📊 CSV file created: \(fileName)")
             
             // Present activity view controller for sharing
             let activityViewController = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
