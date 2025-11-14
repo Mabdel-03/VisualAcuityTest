@@ -1,5 +1,6 @@
 import UIKit
 import AVFoundation
+import MessageUI
 
 var finalAcuityDictionary: [Int: String] = [:] // Dictionary to store final acuity values
 var eyeNumber: Int = 2 // Start with right eye first (1 for left eye, 2 for right eye)
@@ -76,9 +77,15 @@ class TestDataManager {
 /* ResultViewController class is designed to display the results of the test.
     On this page, the user is given the results of the test for both eyes.
 */
-class ResultViewController: UIViewController {
+class ResultViewController: UIViewController, MFMailComposeViewControllerDelegate {
     var score: Int = 0
     var totalAttempts: Int = 0
+    
+    // Flag to prevent duplicate CSV export prompts
+    private var hasTriggeredExport = false
+    
+    // Track temporary CSV file for cleanup
+    private var tempCSVFileURL: URL?
     
     // UI ELEMENTS
     private lazy var scrollView: UIScrollView = {
@@ -245,6 +252,15 @@ class ResultViewController: UIViewController {
         }
         
         doneButton.isHidden = false
+        
+        // Trigger CSV export only once
+        if !hasTriggeredExport {
+            hasTriggeredExport = true
+            // Delay slightly to let the UI settle before showing prompts
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.initiateCSVExport()
+            }
+        }
     }
     
     // Helper function to check if the result contains default/invalid values
@@ -310,6 +326,171 @@ class ResultViewController: UIViewController {
         
         // Navigate back to the main screen
         navigationController?.popToRootViewController(animated: true)
+    }
+    
+    // MARK: - CSV Export Methods
+    
+    /* Initiates the CSV export flow with name prompting and email composition.
+    */
+    private func initiateCSVExport() {
+        print("📊 Initiating CSV export flow")
+        
+        // Prompt for subject name first
+        promptForSubjectName(allowSkip: true) { [weak self] success in
+            guard let self = self, success else {
+                print("📊 CSV export cancelled - no subject name provided")
+                return
+            }
+            
+            // Proceed with CSV generation and email
+            self.generateAndEmailCSV()
+        }
+    }
+    
+    /* Generates CSV and presents email composer.
+    */
+    private func generateAndEmailCSV() {
+        let progressionDataCollector = TestProgressionDataCollector.shared
+        let nameManager = SubjectNameManager.shared
+        
+        // Generate CSV content
+        let csvContent = progressionDataCollector.generateCombinedCSV()
+        
+        // Check if we have actual data
+        if csvContent.contains("No test data available") {
+            print("📊 No test data available for export")
+            showNoDataAlert()
+            return
+        }
+        
+        // Generate filename with subject name - format: DateTime_FirstName_LastName.csv
+        let fileName = nameManager.generateCSVFilename() ?? {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyyMMdd-HHmmss"
+            let timestamp = dateFormatter.string(from: Date())
+            return "\(timestamp)_test_data.csv"
+        }()
+        
+        print("📊 Generated CSV filename: \(fileName)")
+        
+        // Check if device can send email
+        guard MFMailComposeViewController.canSendMail() else {
+            print("📊 Device cannot send email")
+            showCannotSendEmailAlert(csvContent: csvContent, fileName: fileName)
+            return
+        }
+        
+        // Create temporary CSV file
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+        
+        do {
+            try csvContent.write(to: tempURL, atomically: true, encoding: .utf8)
+            print("📊 CSV file created at: \(tempURL.path)")
+            
+            // Store the temp file URL for cleanup later
+            tempCSVFileURL = tempURL
+            
+            // Create mail composer
+            let mailComposer = MFMailComposeViewController()
+            mailComposer.mailComposeDelegate = self
+            
+            // Set recipient
+            mailComposer.setToRecipients(["mabdel03@mit.edu"])
+            
+            // Set subject with patient name if available
+            let subjectText: String
+            if let (firstName, lastName) = nameManager.getSubjectName() {
+                subjectText = "Visual Acuity Test Results - \(firstName) \(lastName)"
+            } else {
+                subjectText = "Visual Acuity Test Results"
+            }
+            mailComposer.setSubject(subjectText)
+            
+            // Set email body
+            let bodyText = "Please find attached the visual acuity test results.\n\nTest Date: \(Date())\n"
+            mailComposer.setMessageBody(bodyText, isHTML: false)
+            
+            // Attach CSV file
+            if let csvData = try? Data(contentsOf: tempURL) {
+                mailComposer.addAttachmentData(csvData, mimeType: "text/csv", fileName: fileName)
+                print("📊 CSV attachment added: \(fileName)")
+            }
+            
+            // Present mail composer
+            present(mailComposer, animated: true) {
+                print("📊 Mail composer presented")
+            }
+            
+        } catch {
+            print("📊 Error creating CSV file: \(error.localizedDescription)")
+            showExportErrorAlert(error: error)
+        }
+    }
+    
+    /* Shows alert when no data is available for export.
+    */
+    private func showNoDataAlert() {
+        let alert = UIAlertController(
+            title: "No Data Available",
+            message: "There is no test data available to export.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    /* Shows alert when device cannot send email.
+    */
+    private func showCannotSendEmailAlert(csvContent: String, fileName: String) {
+        let alert = UIAlertController(
+            title: "Cannot Send Email",
+            message: "Your device is not configured to send email. The CSV data has been saved and can be accessed from the Test History screen.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    /* Shows alert when CSV export fails.
+    */
+    private func showExportErrorAlert(error: Error) {
+        let alert = UIAlertController(
+            title: "Export Error",
+            message: "Failed to create CSV file: \(error.localizedDescription)",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    // MARK: - MFMailComposeViewControllerDelegate
+    
+    /* Handles mail composer dismissal.
+    */
+    func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
+        // Clean up temporary CSV file
+        if let tempURL = tempCSVFileURL {
+            try? FileManager.default.removeItem(at: tempURL)
+            print("📊 Cleaned up temporary file: \(tempURL.path)")
+            tempCSVFileURL = nil
+        }
+        
+        // Handle result
+        switch result {
+        case .sent:
+            print("📊 Email sent successfully")
+        case .saved:
+            print("📊 Email saved as draft")
+        case .cancelled:
+            print("📊 Email cancelled by user")
+        case .failed:
+            print("📊 Email failed to send: \(error?.localizedDescription ?? "unknown error")")
+        @unknown default:
+            print("📊 Unknown mail composer result")
+        }
+        
+        // Dismiss the mail composer
+        controller.dismiss(animated: true)
     }
 
 }

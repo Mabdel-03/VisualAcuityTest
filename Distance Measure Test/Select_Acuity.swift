@@ -91,40 +91,55 @@ class Select_Acuity: UIViewController {
         // The 0.3 factor (instead of 0.6) accounts for font rendering differences
         let fontSize = 0.3 * letterHeight 
         
-        button.setTitle(letText, for: .normal)
-        button.titleLabel?.font = UIFont(name: "Sloan", size: CGFloat(fontSize))
-        
         // Calculate appropriate padding based on letter size for full-width buttons
         let verticalPadding: CGFloat = 12 + (CGFloat(fontSize) * 0.10) // Scale vertical padding with font size
         let horizontalPadding: CGFloat = 16 // Minimal horizontal padding since button spans full width
         
-        // Set content edge insets optimized for full-width layout using modern configuration
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.filled()
-            config.contentInsets = NSDirectionalEdgeInsets(
-                top: verticalPadding,
-                leading: horizontalPadding,
-                bottom: verticalPadding,
-                trailing: horizontalPadding
-            )
-            config.title = letText
-            config.baseBackgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
-            config.baseForegroundColor = .white
-            button.configuration = config
+        // Get or create Sloan font at the calculated size
+        let sloanFont = UIFont(name: "Sloan", size: 100) // Start with a base font
+        let buttonFont: UIFont
+        
+        if let sloanFont = sloanFont {
+            // Use withSize() to preserve font family, just like in TumblingEViewController
+            buttonFont = sloanFont.withSize(CGFloat(fontSize))
         } else {
-            button.contentEdgeInsets = UIEdgeInsets(
-                top: verticalPadding,      // Adequate vertical padding
-                left: horizontalPadding,   // Minimal horizontal padding
-                bottom: verticalPadding,   // Adequate vertical padding
-                right: horizontalPadding   // Minimal horizontal padding
-            )
+            print("⚠️ Sloan font not available, using system font for acuity \(dAcuity)")
+            buttonFont = UIFont.systemFont(ofSize: CGFloat(fontSize))
         }
+        
+        // DON'T use UIButton.Configuration - use direct styling for full control
+        // This matches the approach used in TumblingEViewController which works correctly
+        button.setTitle(letText, for: .normal)
+        
+        // Set content edge insets
+        button.contentEdgeInsets = UIEdgeInsets(
+            top: verticalPadding,
+            left: horizontalPadding,
+            bottom: verticalPadding,
+            right: horizontalPadding
+        )
+        
+        // Set button colors
+        button.backgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+        button.setTitleColor(.white, for: .normal)
+        
+        // CRITICAL: Set font properties AFTER other button setup to ensure they stick
+        // This must be done after contentEdgeInsets and before layout
+        button.titleLabel?.font = buttonFont
+        button.titleLabel?.adjustsFontSizeToFitWidth = false
+        button.titleLabel?.minimumScaleFactor = 1.0
+        button.titleLabel?.numberOfLines = 1
+        button.titleLabel?.lineBreakMode = .byClipping
+        button.titleLabel?.baselineAdjustment = .alignCenters
+        
+        // Force layout with the new font
+        button.setNeedsLayout()
+        button.layoutIfNeeded()
         
         // Configure button appearance for connected buttons
         button.layer.cornerRadius = 0 // No corner radius for connected buttons
         button.layer.borderWidth = 1
         button.layer.borderColor = UIColor.lightGray.cgColor
-        button.backgroundColor = UIColor.systemBackground
         
         // Ensure text is centered in the full-width button
         button.titleLabel?.textAlignment = .center
@@ -139,7 +154,8 @@ class Select_Acuity: UIViewController {
         
         // Debug output to verify scaling
         let intrinsicSize = button.intrinsicContentSize
-        print("Acuity: \(dAcuity), Letter height: \(letterHeight)px, Font size: \(fontSize)pt, Button intrinsic size: \(intrinsicSize.width)x\(intrinsicSize.height)px, V-Padding: \(verticalPadding)px")
+        let actualFont = button.titleLabel?.font
+        print("📏 Acuity \(dAcuity): Letter height: \(String(format: "%.2f", letterHeight))px, Font size: \(String(format: "%.2f", fontSize))pt, Actual font: \(actualFont?.pointSize ?? 0)pt, Button size: \(String(format: "%.1f", intrinsicSize.width))x\(String(format: "%.1f", intrinsicSize.height))px, Font: \(buttonFont.fontName), adjustsFontSize: \(button.titleLabel?.adjustsFontSizeToFitWidth ?? false)")
     }
 
     //DIFFERENT ACUITY LEVELS
