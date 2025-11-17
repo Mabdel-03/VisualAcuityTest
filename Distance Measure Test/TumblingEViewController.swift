@@ -129,9 +129,8 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     // Label indicating which eye is being tested
     private lazy var eyeTestLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        label.drawHeader2()
         label.textAlignment = .center
-        label.textColor = UIColor(red: 0.820, green: 0.106, blue: 0.376, alpha: 1.0) // #D11B60
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -140,7 +139,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     private lazy var instructionLabel: UILabel = {
         let label = UILabel()
         label.text = "Please swipe in the direction the C is pointing."
-        label.font = UIFont.systemFont(ofSize: 40, weight: .medium)
+        label.drawInstruction()
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 0

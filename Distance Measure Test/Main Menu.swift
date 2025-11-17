@@ -147,6 +147,8 @@ let CORNER_RADIUS: CGFloat = 2.0
     four buttons to navigate to the different scenes.
 */
 class MainMenu: UIViewController {
+    @IBOutlet weak var menuLabel: UITextField!
+    @IBOutlet weak var appDescriptionLabel: UILabel!
     
     
 
@@ -211,6 +213,43 @@ class MainMenu: UIViewController {
     */
     private func setupUI() {
         view.backgroundColor = UIColor.white
+        menuLabel?.drawHeader()
+        appDescriptionLabel?.drawSmallText()
+        addDecorativeDaisies()
+    }
+    
+    /* Adds decorative daisy flowers to the background for visual cohesion.
+    */
+    private func addDecorativeDaisies() {
+        // Decorative daisy 1 - top left (teal)
+        addDecorativeDaisy(
+            size: 120,
+            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
+            alpha: 0.15,
+            leadingOffset: 10,
+            topOffset: 50
+        )
+        
+        // Decorative daisy 2 - top right (magenta)
+        addDecorativeDaisy(
+            size: 110,
+            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
+            alpha: 0.1,
+            trailingOffset: 15,
+            topOffset: 130
+        )
+        
+        // Decorative daisy 3 - bottom left (teal)
+        addDecorativeDaisy(
+            size: 100,
+            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
+            alpha: 0.12,
+            leadingOffset: 20,
+            bottomOffset: 80
+        )
     }
     
     /* Navigates to the test history scene.

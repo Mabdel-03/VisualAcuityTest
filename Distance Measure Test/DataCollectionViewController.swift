@@ -89,10 +89,9 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     // Title label
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Data Collection Mode"
-        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        label.text = "Training Mode"
+        label.drawHeader()
         label.textAlignment = .center
-        label.textColor = UIColor(red: 0.820, green: 0.106, blue: 0.376, alpha: 1.0) // #D11B60
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -111,7 +110,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     private lazy var instructionLabel: UILabel = {
         let label = UILabel()
         label.text = "Say the letter you see out loud."
-        label.font = UIFont.systemFont(ofSize: 20, weight: .medium)
+        label.drawInstruction()
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 0
@@ -185,6 +184,9 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     // MARK: - UI Setup
     
     private func setupUI() {
+        // Add decorative circles
+        addDecorativeCircles()
+        
         // Add subviews
         view.addSubview(titleLabel)
         view.addSubview(progressLabel)
@@ -910,5 +912,31 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     
     func speechRecognizer(_ speechRecognizer: SFSpeechRecognizer, availabilityDidChange available: Bool) {
         print("🎤 Speech recognizer availability changed: \(available)")
+    }
+    
+    // MARK: - Decorative Elements
+    
+    /* Adds decorative daisy flowers to the background for visual cohesion.
+    */
+    private func addDecorativeCircles() {
+        // Decorative daisy 1 - top right (magenta)
+        addDecorativeDaisy(
+            size: 100,
+            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
+            alpha: 0.1,
+            trailingOffset: 20,
+            topOffset: 100
+        )
+        
+        // Decorative daisy 2 - bottom left (teal)
+        addDecorativeDaisy(
+            size: 92,
+            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
+            alpha: 0.12,
+            leadingOffset: 25,
+            bottomOffset: 110
+        )
     }
 }

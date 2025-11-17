@@ -20,9 +20,8 @@ class TestHistoryViewController: UIViewController {
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 32, weight: .bold)
+        label.drawHeader()
         label.textAlignment = .center
-        label.textColor = UIColor.black
         label.text = "Test History"
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -65,6 +64,9 @@ class TestHistoryViewController: UIViewController {
     */
     private func setupUI() {
         view.backgroundColor = UIColor.systemBackground
+        
+        // Add decorative circles
+        addDecorativeCircles()
         
         // Add scroll view and content view
         view.addSubview(scrollView)
@@ -119,7 +121,12 @@ class TestHistoryViewController: UIViewController {
             // Hide clear button when no tests
             clearButton.isHidden = true
             
-            let noTestsLabel = createLabel(text: "No test history available.\nComplete a test to see your results here.", fontSize: 18, weight: .regular)
+            let noTestsLabel = UILabel()
+            noTestsLabel.text = "No test history available.\nComplete a test to see your results here."
+            noTestsLabel.textAlignment = .center
+            noTestsLabel.numberOfLines = 0
+            noTestsLabel.drawSmallText()
+            noTestsLabel.translatesAutoresizingMaskIntoConstraints = false
             contentView.addSubview(noTestsLabel)
             
             NSLayoutConstraint.activate([
@@ -280,13 +287,9 @@ class TestHistoryViewController: UIViewController {
     private func createExportButton(title: String, eye: String?) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        button.drawStandardButton()
         button.titleLabel?.numberOfLines = 0
         button.titleLabel?.textAlignment = .center
-        button.layer.cornerRadius = 8
-        button.layer.masksToBounds = true
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.filled()
             config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
@@ -453,5 +456,29 @@ class TestHistoryViewController: UIViewController {
             errorAlert.addAction(UIAlertAction(title: "OK", style: .default))
             present(errorAlert, animated: true)
         }
+    }
+    
+    /* Adds decorative daisy flowers to the background for visual cohesion.
+    */
+    private func addDecorativeCircles() {
+        // Decorative daisy 1 - top left (teal)
+        addDecorativeDaisy(
+            size: 110,
+            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
+            alpha: 0.12,
+            leadingOffset: 15,
+            topOffset: 80
+        )
+        
+        // Decorative daisy 2 - bottom right (magenta)
+        addDecorativeDaisy(
+            size: 100,
+            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
+            alpha: 0.1,
+            trailingOffset: 20,
+            bottomOffset: 100
+        )
     }
 } 

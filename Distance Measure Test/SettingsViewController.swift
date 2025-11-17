@@ -30,9 +30,8 @@ class SettingsViewController: UIViewController {
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Settings"
-        label.font = UIFont.boldSystemFont(ofSize: 28)
+        label.drawHeader()
         label.textAlignment = .center
-        label.textColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -41,8 +40,7 @@ class SettingsViewController: UIViewController {
     private lazy var testTypeLabel: UILabel = {
         let label = UILabel()
         label.text = "Test Type: Landolt C"
-        label.font = UIFont.boldSystemFont(ofSize: 20)
-        label.textColor = .darkGray
+        label.drawHeader2()
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -50,9 +48,8 @@ class SettingsViewController: UIViewController {
     
     private lazy var testTypeDescriptionLabel: UILabel = {
         let label = UILabel()
-        label.text = "📝 C-shaped letters with swipe gestures"
-        label.font = UIFont.systemFont(ofSize: 16)
-        label.textColor = .gray
+        label.text = "C-shaped letters with swipe gestures"
+        label.drawSmallText()
         label.textAlignment = .center
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -63,8 +60,7 @@ class SettingsViewController: UIViewController {
     private lazy var audioLabel: UILabel = {
         let label = UILabel()
         label.text = "Audio Instructions"
-        label.font = UIFont.boldSystemFont(ofSize: 20)
-        label.textColor = .darkGray
+        label.drawHeader2()
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -73,8 +69,7 @@ class SettingsViewController: UIViewController {
     private lazy var audioDescriptionLabel: UILabel = {
         let label = UILabel()
         label.text = "Spoken instructions"
-        label.font = UIFont.systemFont(ofSize: 14)
-        label.textColor = .gray
+        label.drawSmallText()
         label.textAlignment = .center
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -99,8 +94,7 @@ class SettingsViewController: UIViewController {
     private lazy var audioTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "🔊 Enable Audio Instructions"
-        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .darkGray
+        label.drawSmallText()
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -110,10 +104,7 @@ class SettingsViewController: UIViewController {
     private lazy var doneButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Done", for: .normal)
-        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(red: 0.318, green: 0.522, blue: 0.624, alpha: 1.0) // #51859F
-        button.layer.cornerRadius = 8
+        button.drawStandardButton()
         button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -139,6 +130,9 @@ class SettingsViewController: UIViewController {
     
     private func setupUI() {
         view.backgroundColor = .white
+        
+        // Add decorative circles
+        addDecorativeCircles()
         
         // Add scroll view
         view.addSubview(scrollView)
@@ -213,10 +207,10 @@ class SettingsViewController: UIViewController {
             audioTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: audioSwitch.leadingAnchor, constant: -10),
             
             // Done Button
+            doneButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             doneButton.topAnchor.constraint(equalTo: audioContainer.bottomAnchor, constant: 30),
-            doneButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            doneButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            doneButton.heightAnchor.constraint(equalToConstant: 50),
+            doneButton.widthAnchor.constraint(equalToConstant: 242),
+            doneButton.heightAnchor.constraint(equalToConstant: 60),
             doneButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
         ])
     }
@@ -275,5 +269,31 @@ class SettingsViewController: UIViewController {
         """
         
         SharedAudioManager.shared.playText(instructionText, source: "Settings")
+    }
+    
+    // MARK: - Decorative Elements
+    
+    /* Adds decorative daisy flowers to the background for visual cohesion.
+    */
+    private func addDecorativeCircles() {
+        // Decorative daisy 1 - top right (magenta)
+        addDecorativeDaisy(
+            size: 105,
+            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
+            alpha: 0.11,
+            trailingOffset: 18,
+            topOffset: 90
+        )
+        
+        // Decorative daisy 2 - bottom left (teal)
+        addDecorativeDaisy(
+            size: 95,
+            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
+            alpha: 0.13,
+            leadingOffset: 22,
+            bottomOffset: 110
+        )
     }
 }

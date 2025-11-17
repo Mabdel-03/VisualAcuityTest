@@ -29,6 +29,10 @@ class Select_Acuity: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Set background to teal
+        view.backgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+        
         print("🔍 Select_Acuity averageDistanceCM:", averageDistanceCM)
         
         // Ensure we have a valid distance before setting up buttons
@@ -119,9 +123,9 @@ class Select_Acuity: UIViewController {
             right: horizontalPadding
         )
         
-        // Set button colors
-        button.backgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
-        button.setTitleColor(.white, for: .normal)
+        // Set button colors - white background with black text
+        button.backgroundColor = .white
+        button.setTitleColor(.black, for: .normal)
         
         // CRITICAL: Set font properties AFTER other button setup to ensure they stick
         // This must be done after contentEdgeInsets and before layout
