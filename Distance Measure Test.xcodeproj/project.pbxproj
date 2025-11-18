@@ -26,6 +26,7 @@
 		D14180E62D3049990070FB19 /* Sloan.otf in Resources */ = {isa = PBXBuildFile; fileRef = D14180E52D3049990070FB19 /* Sloan.otf */; };
 		D17FC2C82DAF9FB300B08D03 /* TestHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */; };
 		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
+		D1B67B5B2ECB1C3700BFAEF4 /* UIStyle+Text.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B67B5A2ECB1C3700BFAEF4 /* UIStyle+Text.swift */; };
 		D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */; };
 		DC123ABC2CC9F141003EEEFF /* DataCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC123ABD2CC9F139003EEEFF /* DataCollectionViewController.swift */; };
 		E0E987052CC9F141003EEEFF /* ETDRSViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E987042CC9F139003EEEFF /* ETDRSViewController.swift */; };
@@ -54,6 +55,7 @@
 		D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHistoryViewController.swift; sourceTree = "<group>"; };
 		D19933C42A955CCF0050CF92 /* info.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = info.txt; sourceTree = "<group>"; };
 		D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Distance-Measure-Test-Info.plist"; sourceTree = SOURCE_ROOT; };
+		D1B67B5A2ECB1C3700BFAEF4 /* UIStyle+Text.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIStyle+Text.swift"; sourceTree = "<group>"; };
 		D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Select_Acuity.swift; sourceTree = "<group>"; };
 		DC123ABD2CC9F139003EEEFF /* DataCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataCollectionViewController.swift; sourceTree = "<group>"; };
 		E0E987042CC9F139003EEEFF /* ETDRSViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETDRSViewController.swift; sourceTree = "<group>"; };
@@ -93,6 +95,7 @@
 		C0CDD6282A687790002A58BA /* Distance Measure Test */ = {
 			isa = PBXGroup;
 			children = (
+				D1B67B5A2ECB1C3700BFAEF4 /* UIStyle+Text.swift */,
 				C0CDD6292A687790002A58BA /* AppDelegate.swift */,
 				C94D36EA2A81B87500CAD336 /* Main Menu.swift */,
 				D11297502DF08938006DB97E /* OneEyeInstruc.swift */,
@@ -222,6 +225,7 @@
 				E0F987052CC9F141003EEEFF /* SettingsViewController.swift in Sources */,
 				DC123ABC2CC9F141003EEEFF /* DataCollectionViewController.swift in Sources */,
 				D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */,
+				D1B67B5B2ECB1C3700BFAEF4 /* UIStyle+Text.swift in Sources */,
 				A1B2C3D42E5F6E780089CD23 /* SubjectNameManager.swift in Sources */,
 				A1B2C3D62E5F6E890089CD23 /* UIViewController+NamePrompt.swift in Sources */,
 				C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */,
@@ -371,13 +375,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = HW8LWQ35S9;
+				DEVELOPMENT_TEAM = L4924K5F8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = VisiNear;
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone for voice input during the ETDRS visual acuity test. Please speak the letters you see clearly.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to identify letters during the ETDRS visual acuity test. Your voice input helps determine your vision acuity.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is recorded to transcribe the meeting. Audio recordings are discarded after transcription.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "You can view a text transcription of your meeting in the app.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -385,13 +388,12 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = momo.acuitytest;
+				PRODUCT_BUNDLE_IDENTIFIER = "HW8LWQ35S9.com.maggiebao.Distance-Measure-Test";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -406,13 +408,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = HW8LWQ35S9;
+				DEVELOPMENT_TEAM = L4924K5F8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = VisiNear;
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses the microphone for voice input during the ETDRS visual acuity test. Please speak the letters you see clearly.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to identify letters during the ETDRS visual acuity test. Your voice input helps determine your vision acuity.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is recorded to transcribe the meeting. Audio recordings are discarded after transcription.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "You can view a text transcription of your meeting in the app.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -420,13 +421,12 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = momo.acuitytest;
+				PRODUCT_BUNDLE_IDENTIFIER = "HW8LWQ35S9.com.maggiebao.Distance-Measure-Test";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

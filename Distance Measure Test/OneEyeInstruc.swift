@@ -16,6 +16,7 @@ import AVFoundation
 class OneEyeInstruc: UIViewController {
     @IBOutlet weak var instructionText: UILabel!
     @IBOutlet weak var oneEyeInstructions: UITextField!
+    @IBOutlet weak var testTypeLabel: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,13 +37,45 @@ class OneEyeInstruc: UIViewController {
     /* Sets up the UI for the one eye instructions scene.
     */
     private func setupCenteredUI() {
-        // Center the instruction text
+        // Center the instruction text and set standard font
         instructionText.textAlignment = .center
         instructionText.numberOfLines = 0
+        instructionText.drawInstruction()
         
         // Center the text field and set color
         oneEyeInstructions.textAlignment = .center
-        oneEyeInstructions.textColor = UIColor(red: 0.820, green: 0.106, blue: 0.376, alpha: 1.0) // #D11B60
+        oneEyeInstructions.drawHeader()
+        
+        // Center the test type label and apply header2 style
+        testTypeLabel?.textAlignment = .center
+        testTypeLabel?.drawHeader2()
+        
+        // Add decorative daisies
+        addDecorativeDaisies()
+    }
+    
+    /* Adds decorative daisy flowers to the background for visual cohesion.
+    */
+    private func addDecorativeDaisies() {
+        // Decorative daisy 1 - top left (teal)
+        addDecorativeDaisy(
+            size: 100,
+            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
+            alpha: 0.12,
+            leadingOffset: 20,
+            topOffset: 80
+        )
+        
+        // Decorative daisy 2 - bottom right (magenta)
+        addDecorativeDaisy(
+            size: 95,
+            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
+            alpha: 0.09,
+            trailingOffset: 25,
+            bottomOffset: 130
+        )
     }
     
     /* Plays audio instructions to the user.
@@ -59,15 +92,17 @@ class OneEyeInstruc: UIViewController {
     /* Updates the text on the one eye instructions scene.
     */
     private func updateText() {
-        let testType = "Landolt C"  // Fixed to Landolt C in this version
+        let testType = "Landolt C Test"  // Fixed to Landolt C in this version
         
         if eyeNumber == 2 {
-            oneEyeInstructions.text = "Right Eye (\(testType))"
-            instructionText.text = "Cover left eye. Tap Begin Test when ready."
+            oneEyeInstructions.text = "Right Eye"
+            instructionText.text = "Cover left eye. Tap \"Begin\" when ready to start the test."
         } else {
-            oneEyeInstructions.text = "Left Eye (\(testType))"
-            instructionText.text = "Cover right eye. Tap Begin Test when ready."
+            oneEyeInstructions.text = "Left Eye"
+            instructionText.text = "Cover right eye. Tap \"Begin\" when ready to start the test."
         }
+        
+        testTypeLabel?.text = testType
     }
     
     /* Begins the Landolt C test (fixed test type in this version).

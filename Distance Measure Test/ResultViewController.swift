@@ -102,10 +102,9 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
     
     private lazy var leftEyeTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 27, weight: .heavy)
-        label.textAlignment = .center
-        label.textColor = UIColor.black
         label.text = "Left Eye"
+        label.drawHeader2()
+        label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -122,10 +121,9 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
     
     private lazy var rightEyeTitleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 27, weight: .heavy)
-        label.textAlignment = .center
-        label.textColor = UIColor.black
         label.text = "Right Eye"
+        label.drawHeader2()
+        label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -140,15 +138,37 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
         return label
     }()
     
-    private lazy var doneButton: UIButton = {
+    private lazy var homeButton: UIButton = {
         let button = UIButton(type: .custom)
-        button.setTitle("Done", for: .normal)
+        button.setTitle("Home", for: .normal)
+        button.drawStandardButton()
+        button.addTarget(self, action: #selector(homeButtonTapped), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.isHidden = true
+        return button
+    }()
+    
+    private lazy var retestButton: UIButton = {
+        let button = UIButton(type: .custom)
+        button.setTitle("Retest", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 35, weight: .regular)
         button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0) // #396C6D
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 30)
-        button.layer.cornerRadius = CORNER_RADIUS
-        button.layer.masksToBounds = true
-        button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
+        button.backgroundColor = UIColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 1.0) // Same red as Test History clear button
+        button.layer.cornerRadius = 10
+        button.addTarget(self, action: #selector(retestButtonTapped), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.isHidden = true
+        return button
+    }()
+    
+    private lazy var saveButton: UIButton = {
+        let button = UIButton(type: .custom)
+        button.setTitle("Save", for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 35, weight: .regular)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor.systemBlue
+        button.layer.cornerRadius = 10
+        button.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.isHidden = true
         return button
@@ -170,6 +190,9 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
         view.backgroundColor = UIColor.systemBackground
         title = "Test Results"
         
+        // Add decorative circles
+        addDecorativeCircles()
+        
         // Add scroll view and content view
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -179,8 +202,9 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
         contentView.addSubview(leftEyeResultsLabel)
         contentView.addSubview(rightEyeTitleLabel)
         contentView.addSubview(rightEyeResultsLabel)
-        // contentView.addSubview(rightEyeButton)
-        contentView.addSubview(doneButton)
+        contentView.addSubview(homeButton)
+        contentView.addSubview(retestButton)
+        contentView.addSubview(saveButton)
         
         // Set up constraints
         NSLayoutConstraint.activate([
@@ -220,13 +244,25 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
             leftEyeResultsLabel.topAnchor.constraint(equalTo: leftEyeTitleLabel.bottomAnchor, constant: 20),
             leftEyeResultsLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
             leftEyeResultsLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
-//            
-            // Done button constraints
-            doneButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            doneButton.topAnchor.constraint(equalTo: leftEyeResultsLabel.bottomAnchor, constant: 50),
-            doneButton.widthAnchor.constraint(equalToConstant: 242),
-            doneButton.heightAnchor.constraint(equalToConstant: 50),
-            doneButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
+            
+            // Home button constraints (top button - teal)
+            homeButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            homeButton.topAnchor.constraint(equalTo: leftEyeResultsLabel.bottomAnchor, constant: 50),
+            homeButton.widthAnchor.constraint(equalToConstant: 242),
+            homeButton.heightAnchor.constraint(equalToConstant: 60),
+            
+            // Retest button constraints (middle button - red)
+            retestButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            retestButton.topAnchor.constraint(equalTo: homeButton.bottomAnchor, constant: 20),
+            retestButton.widthAnchor.constraint(equalToConstant: 242),
+            retestButton.heightAnchor.constraint(equalToConstant: 60),
+            
+            // Save button constraints (bottom button - green)
+            saveButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            saveButton.topAnchor.constraint(equalTo: retestButton.bottomAnchor, constant: 20),
+            saveButton.widthAnchor.constraint(equalToConstant: 242),
+            saveButton.heightAnchor.constraint(equalToConstant: 60),
+            saveButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
         ])
         
         displayResults()
@@ -251,16 +287,10 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
             rightEyeResultsLabel.text = "Not Tested"
         }
         
-        doneButton.isHidden = false
-        
-        // Trigger CSV export only once
-        if !hasTriggeredExport {
-            hasTriggeredExport = true
-            // Delay slightly to let the UI settle before showing prompts
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.initiateCSVExport()
-            }
-        }
+        // Show all three buttons
+        homeButton.isHidden = false
+        retestButton.isHidden = false
+        saveButton.isHidden = false
     }
     
     // Helper function to check if the result contains default/invalid values
@@ -272,30 +302,41 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
     /* Plays audio instructions to the user.
     */
     private func playAudioInstructions() {
-        let instructionText = "Here are your test results. Your visual acuity scores are displayed for each eye tested. Tap 'Done' when you're finished reviewing your results."
+        let instructionText = "Here are your test results. Your visual acuity scores are displayed for each eye tested. Choose Home to return to main menu, Retest to take the test again, or Save to save your results."
         SharedAudioManager.shared.playText(instructionText, source: "Results")
     }
 
-    /* Redoes the test.
+    /* Returns to home screen without saving.
     */
-    @IBAction func redoTest(_ sender: Any) {
+    @objc func homeButtonTapped() {
+        // Reset all global variables to their initial state
+        finalAcuityDictionary.removeAll()
+        eyeNumber = 2
+        finalAcuityScore = -Double.infinity
+        logMARValue = -1.000
+        snellenValue = -1
+        
+        // Navigate back to the main screen
+        navigationController?.popToRootViewController(animated: true)
+    }
+    
+    /* Retests by going back to test setup.
+    */
+    @objc func retestButtonTapped() {
+        // Reset all global variables to their initial state
+        finalAcuityDictionary.removeAll()
+        eyeNumber = 2
+        finalAcuityScore = -Double.infinity
+        logMARValue = -1.000
+        snellenValue = -1
+        
+        // Navigate back to the previous screen (test setup)
         navigationController?.popViewController(animated: true)
     }
     
-    /* Saves the results of the test and navigates back to the main menu.
+    /* Saves the results and initiates CSV export.
     */
-    // @IBAction func tapDone(_ sender: Any) {
-    //     // Store the final acuity score in the dictionary
-    //     finalAcuityDictionary[eyeNumber] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
-    //     print(finalAcuityDictionary)
-    //     // Increment eye number for the next test
-    //     //eyeNumber += 1
-    //     navigationController?.popToRootViewController(animated: true)
-    // }
-
-    /* Saves the results of the test and navigates back to the main menu.
-    */
-    @objc func doneButtonTapped() {
+    @objc func saveButtonTapped() {
         // Create a timestamp for this test
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -317,15 +358,11 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
         print("Test results saved for timestamp: \(timestamp)")
         print("All tests count: \(TestDataManager.shared.getTestCount())")
         
-        // Reset all global variables to their initial state
-        finalAcuityDictionary.removeAll()
-        eyeNumber = 2
-        finalAcuityScore = -Double.infinity
-        logMARValue = -1.000
-        snellenValue = -1
-        
-        // Navigate back to the main screen
-        navigationController?.popToRootViewController(animated: true)
+        // Now initiate CSV export with name prompt
+        if !hasTriggeredExport {
+            hasTriggeredExport = true
+            initiateCSVExport()
+        }
     }
     
     // MARK: - CSV Export Methods
@@ -489,8 +526,44 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
             print("📊 Unknown mail composer result")
         }
         
-        // Dismiss the mail composer
-        controller.dismiss(animated: true)
+        // Dismiss the mail composer and return to home
+        controller.dismiss(animated: true) { [weak self] in
+            guard let self = self else { return }
+            
+            // Reset all global variables
+            finalAcuityDictionary.removeAll()
+            eyeNumber = 2
+            finalAcuityScore = -Double.infinity
+            logMARValue = -1.000
+            snellenValue = -1
+            
+            // Navigate back to the main screen
+            self.navigationController?.popToRootViewController(animated: true)
+        }
+    }
+    
+    /* Adds decorative daisy flowers to the background for visual cohesion.
+    */
+    private func addDecorativeCircles() {
+        // Decorative daisy 1 - top left (teal)
+        addDecorativeDaisy(
+            size: 115,
+            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
+            alpha: 0.14,
+            leadingOffset: 12,
+            topOffset: 70
+        )
+        
+        // Decorative daisy 2 - bottom right (magenta)
+        addDecorativeDaisy(
+            size: 105,
+            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
+            alpha: 0.11,
+            trailingOffset: 17,
+            bottomOffset: 90
+        )
     }
 
 }

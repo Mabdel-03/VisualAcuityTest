@@ -65,9 +65,33 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     var distanceStable = false
     var stableReadingCount = 0
     var lastCapturedDistance: Double = 0.0
+    
+    // Header label
+    private lazy var headerLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Get Best Distance"
+        label.drawHeader()
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Add decorative daisies
+        addDecorativeDaisies()
+        
+        // Add header label
+        view.addSubview(headerLabel)
+        view.bringSubviewToFront(headerLabel)
+        
+        // Set up header constraints
+        NSLayoutConstraint.activate([
+            headerLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            headerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            headerLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+        ])
         
         // Set the view's delegate
         sceneView.delegate = self
@@ -248,7 +272,33 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
 
 extension SCNVector3 {
     func length() -> Float { return sqrtf(x * x + y * y + z * z) }
-    static func - (l: SCNVector3, r: SCNVector3) -> SCNVector3 { return SCNVector3Make(l.x - r.x, l.y - r.y, l.z - r.z) }
+    static func - (l: SCNVector3, r: SCNVector3) -> SCNVector3 { return SCNVector3Make(l.x - r.x, l.y - r.y, l.z - r.z)     }
+}
+
+extension DistanceOptimization {
+    /* Adds decorative daisy flowers to the background for visual cohesion.
+    */
+    func addDecorativeDaisies() {
+        // Decorative daisy 1 - top right (magenta)
+        addDecorativeDaisy(
+            size: 90,
+            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
+            alpha: 0.07,
+            trailingOffset: 25,
+            topOffset: 150
+        )
+        
+        // Decorative daisy 2 - bottom left (teal)
+        addDecorativeDaisy(
+            size: 85,
+            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
+            alpha: 0.11,
+            leadingOffset: 30,
+            bottomOffset: 100
+        )
+    }
 }
 
 // Helper function to calculate distance between two SCNVector3 points
