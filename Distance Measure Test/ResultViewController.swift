@@ -384,7 +384,7 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
         }
     }
     
-    /* Generates CSV and presents email composer.
+    /* Generates CSV and uploads to Dropbox, with email as fallback.
     */
     private func generateAndEmailCSV() {
         let progressionDataCollector = TestProgressionDataCollector.shared
@@ -409,6 +409,91 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
         }()
         
         print("📊 Generated CSV filename: \(fileName)")
+        
+        // Show uploading indicator
+        let uploadAlert = UIAlertController(
+            title: "Uploading",
+            message: "Uploading data to Dropbox...",
+            preferredStyle: .alert
+        )
+        present(uploadAlert, animated: true)
+        
+        // Try Dropbox upload first
+        let dropboxManager = DropboxUploadManager.shared
+        dropboxManager.uploadCSV(csvContent: csvContent, fileName: fileName) { [weak self] success, errorMessage in
+            guard let self = self else { return }
+            
+            // Dismiss upload alert
+            uploadAlert.dismiss(animated: true) {
+                if success {
+                    // Upload succeeded!
+                    self.showDropboxSuccessAlert()
+                } else {
+                    // Upload failed, fall back to email
+                    print("📊 Dropbox upload failed: \(errorMessage ?? "Unknown error")")
+                    self.showDropboxFailedAlertAndFallbackToEmail(
+                        csvContent: csvContent,
+                        fileName: fileName,
+                        errorMessage: errorMessage
+                    )
+                }
+            }
+        }
+    }
+    
+    /* Shows success alert after Dropbox upload and returns to home.
+    */
+    private func showDropboxSuccessAlert() {
+        let alert = UIAlertController(
+            title: "Upload Successful",
+            message: "Your test data has been successfully uploaded to Dropbox.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+            guard let self = self else { return }
+            
+            // Reset all global variables
+            finalAcuityDictionary.removeAll()
+            eyeNumber = 2
+            finalAcuityScore = -Double.infinity
+            logMARValue = -1.000
+            snellenValue = -1
+            
+            // Navigate back to the main screen
+            self.navigationController?.popToRootViewController(animated: true)
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    /* Shows alert when Dropbox upload fails and offers email fallback.
+    */
+    private func showDropboxFailedAlertAndFallbackToEmail(csvContent: String, fileName: String, errorMessage: String?) {
+        let message = "Dropbox upload failed: \(errorMessage ?? "Unknown error")\n\nWould you like to send the data via email instead?"
+        
+        let alert = UIAlertController(
+            title: "Upload Failed",
+            message: message,
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Send Email", style: .default) { [weak self] _ in
+            self?.fallbackToEmail(csvContent: csvContent, fileName: fileName)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
+            print("📊 User cancelled after Dropbox failure")
+            // Just stay on results screen
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    /* Falls back to email when Dropbox upload fails.
+    */
+    private func fallbackToEmail(csvContent: String, fileName: String) {
+        let nameManager = SubjectNameManager.shared
         
         // Check if device can send email
         guard MFMailComposeViewController.canSendMail() else {

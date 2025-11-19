@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		A1B2C3D42E5F6E780089CD23 /* SubjectNameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D32E5F6E780089CD23 /* SubjectNameManager.swift */; };
 		A1B2C3D62E5F6E890089CD23 /* UIViewController+NamePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D52E5F6E890089CD23 /* UIViewController+NamePrompt.swift */; };
+		B2C3D4E62F6G7H890089DE34 /* DropboxUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E52F6G7H890089DE34 /* DropboxUploadManager.swift */; };
 		C0C987052CC9F141003EEEFF /* TumblingEViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */; };
 		C0C9870A2CC9F413003EEEFF /* ResultViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987092CC9F413003EEEFF /* ResultViewController.swift */; };
 		C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD6292A687790002A58BA /* AppDelegate.swift */; };
@@ -37,6 +38,7 @@
 /* Begin PBXFileReference section */
 		A1B2C3D32E5F6E780089CD23 /* SubjectNameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectNameManager.swift; sourceTree = "<group>"; };
 		A1B2C3D52E5F6E890089CD23 /* UIViewController+NamePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+NamePrompt.swift"; sourceTree = "<group>"; };
+		B2C3D4E52F6G7H890089DE34 /* DropboxUploadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropboxUploadManager.swift; sourceTree = "<group>"; };
 		C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TumblingEViewController.swift; sourceTree = "<group>"; };
 		C0C987092CC9F413003EEEFF /* ResultViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultViewController.swift; sourceTree = "<group>"; };
 		C0CDD6262A687790002A58BA /* Distance Measure Test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Distance Measure Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -111,6 +113,7 @@
 				F1A2B3C32E4F5D670089AB12 /* TestProgressionDataCollector.swift */,
 				A1B2C3D32E5F6E780089CD23 /* SubjectNameManager.swift */,
 				A1B2C3D52E5F6E890089CD23 /* UIViewController+NamePrompt.swift */,
+				B2C3D4E52F6G7H890089DE34 /* DropboxUploadManager.swift */,
 				D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */,
 				C0CDD62F2A687790002A58BA /* Main.storyboard */,
 				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
@@ -228,6 +231,7 @@
 				D1B67B5B2ECB1C3700BFAEF4 /* UIStyle+Text.swift in Sources */,
 				A1B2C3D42E5F6E780089CD23 /* SubjectNameManager.swift in Sources */,
 				A1B2C3D62E5F6E890089CD23 /* UIViewController+NamePrompt.swift in Sources */,
+				B2C3D4E62F6G7H890089DE34 /* DropboxUploadManager.swift in Sources */,
 				C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -375,7 +379,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = L4924K5F8S;
+				DEVELOPMENT_TEAM = HW8LWQ35S9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
@@ -388,12 +392,13 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "HW8LWQ35S9.com.maggiebao.Distance-Measure-Test";
+				PRODUCT_BUNDLE_IDENTIFIER = "Momo-Acuity-App-Test";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -408,7 +413,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = L4924K5F8S;
+				DEVELOPMENT_TEAM = HW8LWQ35S9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
@@ -421,12 +426,13 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "HW8LWQ35S9.com.maggiebao.Distance-Measure-Test";
+				PRODUCT_BUNDLE_IDENTIFIER = "Momo-Acuity-App-Test";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
