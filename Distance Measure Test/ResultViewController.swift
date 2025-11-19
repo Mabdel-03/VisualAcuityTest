@@ -1,6 +1,5 @@
 import UIKit
 import AVFoundation
-import MessageUI
 
 var finalAcuityDictionary: [Int: String] = [:] // Dictionary to store final acuity values
 var eyeNumber: Int = 2 // Start with right eye first (1 for left eye, 2 for right eye)
@@ -77,15 +76,12 @@ class TestDataManager {
 /* ResultViewController class is designed to display the results of the test.
     On this page, the user is given the results of the test for both eyes.
 */
-class ResultViewController: UIViewController, MFMailComposeViewControllerDelegate {
+class ResultViewController: UIViewController {
     var score: Int = 0
     var totalAttempts: Int = 0
     
     // Flag to prevent duplicate CSV export prompts
     private var hasTriggeredExport = false
-    
-    // Track temporary CSV file for cleanup
-    private var tempCSVFileURL: URL?
     
     // UI ELEMENTS
     private lazy var scrollView: UIScrollView = {
@@ -418,7 +414,7 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
         )
         present(uploadAlert, animated: true)
         
-        // Try Dropbox upload first
+        // Upload to Dropbox
         let dropboxManager = DropboxUploadManager.shared
         dropboxManager.uploadCSV(csvContent: csvContent, fileName: fileName) { [weak self] success, errorMessage in
             guard let self = self else { return }
@@ -429,13 +425,9 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
                     // Upload succeeded!
                     self.showDropboxSuccessAlert()
                 } else {
-                    // Upload failed, fall back to email
+                    // Upload failed, show error
                     print("📊 Dropbox upload failed: \(errorMessage ?? "Unknown error")")
-                    self.showDropboxFailedAlertAndFallbackToEmail(
-                        csvContent: csvContent,
-                        fileName: fileName,
-                        errorMessage: errorMessage
-                    )
+                    self.showDropboxFailedAlert(errorMessage: errorMessage)
                 }
             }
         }
@@ -467,10 +459,10 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
         present(alert, animated: true)
     }
     
-    /* Shows alert when Dropbox upload fails and offers email fallback.
+    /* Shows alert when Dropbox upload fails.
     */
-    private func showDropboxFailedAlertAndFallbackToEmail(csvContent: String, fileName: String, errorMessage: String?) {
-        let message = "Dropbox upload failed: \(errorMessage ?? "Unknown error")\n\nWould you like to send the data via email instead?"
+    private func showDropboxFailedAlert(errorMessage: String?) {
+        let message = "Dropbox upload failed: \(errorMessage ?? "Unknown error")\n\nPlease check your internet connection and try again by tapping the Save button."
         
         let alert = UIAlertController(
             title: "Upload Failed",
@@ -478,75 +470,12 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "Send Email", style: .default) { [weak self] _ in
-            self?.fallbackToEmail(csvContent: csvContent, fileName: fileName)
-        })
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
-            print("📊 User cancelled after Dropbox failure")
-            // Just stay on results screen
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+            print("📊 User acknowledged Dropbox upload failure")
+            // Stay on results screen - user can retry with Save button
         })
         
         present(alert, animated: true)
-    }
-    
-    /* Falls back to email when Dropbox upload fails.
-    */
-    private func fallbackToEmail(csvContent: String, fileName: String) {
-        let nameManager = SubjectNameManager.shared
-        
-        // Check if device can send email
-        guard MFMailComposeViewController.canSendMail() else {
-            print("📊 Device cannot send email")
-            showCannotSendEmailAlert(csvContent: csvContent, fileName: fileName)
-            return
-        }
-        
-        // Create temporary CSV file
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-        
-        do {
-            try csvContent.write(to: tempURL, atomically: true, encoding: .utf8)
-            print("📊 CSV file created at: \(tempURL.path)")
-            
-            // Store the temp file URL for cleanup later
-            tempCSVFileURL = tempURL
-            
-            // Create mail composer
-            let mailComposer = MFMailComposeViewController()
-            mailComposer.mailComposeDelegate = self
-            
-            // Set recipient
-            mailComposer.setToRecipients(["mabdel03@mit.edu"])
-            
-            // Set subject with patient name if available
-            let subjectText: String
-            if let (firstName, lastName) = nameManager.getSubjectName() {
-                subjectText = "Visual Acuity Test Results - \(firstName) \(lastName)"
-            } else {
-                subjectText = "Visual Acuity Test Results"
-            }
-            mailComposer.setSubject(subjectText)
-            
-            // Set email body
-            let bodyText = "Please find attached the visual acuity test results.\n\nTest Date: \(Date())\n"
-            mailComposer.setMessageBody(bodyText, isHTML: false)
-            
-            // Attach CSV file
-            if let csvData = try? Data(contentsOf: tempURL) {
-                mailComposer.addAttachmentData(csvData, mimeType: "text/csv", fileName: fileName)
-                print("📊 CSV attachment added: \(fileName)")
-            }
-            
-            // Present mail composer
-            present(mailComposer, animated: true) {
-                print("📊 Mail composer presented")
-            }
-            
-        } catch {
-            print("📊 Error creating CSV file: \(error.localizedDescription)")
-            showExportErrorAlert(error: error)
-        }
     }
     
     /* Shows alert when no data is available for export.
@@ -559,72 +488,6 @@ class ResultViewController: UIViewController, MFMailComposeViewControllerDelegat
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
-    }
-    
-    /* Shows alert when device cannot send email.
-    */
-    private func showCannotSendEmailAlert(csvContent: String, fileName: String) {
-        let alert = UIAlertController(
-            title: "Cannot Send Email",
-            message: "Your device is not configured to send email. The CSV data has been saved and can be accessed from the Test History screen.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
-    }
-    
-    /* Shows alert when CSV export fails.
-    */
-    private func showExportErrorAlert(error: Error) {
-        let alert = UIAlertController(
-            title: "Export Error",
-            message: "Failed to create CSV file: \(error.localizedDescription)",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
-    }
-    
-    // MARK: - MFMailComposeViewControllerDelegate
-    
-    /* Handles mail composer dismissal.
-    */
-    func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
-        // Clean up temporary CSV file
-        if let tempURL = tempCSVFileURL {
-            try? FileManager.default.removeItem(at: tempURL)
-            print("📊 Cleaned up temporary file: \(tempURL.path)")
-            tempCSVFileURL = nil
-        }
-        
-        // Handle result
-        switch result {
-        case .sent:
-            print("📊 Email sent successfully")
-        case .saved:
-            print("📊 Email saved as draft")
-        case .cancelled:
-            print("📊 Email cancelled by user")
-        case .failed:
-            print("📊 Email failed to send: \(error?.localizedDescription ?? "unknown error")")
-        @unknown default:
-            print("📊 Unknown mail composer result")
-        }
-        
-        // Dismiss the mail composer and return to home
-        controller.dismiss(animated: true) { [weak self] in
-            guard let self = self else { return }
-            
-            // Reset all global variables
-            finalAcuityDictionary.removeAll()
-            eyeNumber = 2
-            finalAcuityScore = -Double.infinity
-            logMARValue = -1.000
-            snellenValue = -1
-            
-            // Navigate back to the main screen
-            self.navigationController?.popToRootViewController(animated: true)
-        }
     }
     
     /* Adds decorative daisy flowers to the background for visual cohesion.
