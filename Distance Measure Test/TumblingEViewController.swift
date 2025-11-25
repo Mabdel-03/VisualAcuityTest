@@ -785,6 +785,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         // Apply rotation without animation
         letterLabel.transform = CGAffineTransform(rotationAngle: CGFloat(currentRotation) * .pi / 180)
         
+        // Make the letter visible now that the new rotation is applied
+        letterLabel.alpha = 1
+        
         // Record the time when this letter is displayed for response time calculation
         letterDisplayTime = Date()
     }
@@ -1254,9 +1257,10 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             letterSnapshot.alpha = 0
             letterSnapshot.transform = CGAffineTransform(scaleX: 0.3, y: 0.3)
         }) { _ in
-            // Clean up and restore original label
+            // Clean up the snapshot
             letterSnapshot.removeFromSuperview()
-            self.letterLabel.alpha = 1
+            
+            // Keep the original label hidden - it will be shown in generateNewE after rotation is applied
             
             // Call completion after a brief pause
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {

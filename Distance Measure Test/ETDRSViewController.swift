@@ -1404,6 +1404,9 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         currentLetter = etdrsLetters.randomElement() ?? "C"
         letterLabel.text = currentLetter
         
+        // Make the letter visible now that the new letter is set
+        letterLabel.alpha = 1
+        
         // Record the time when this letter is displayed for response time calculation
         letterDisplayTime = Date()
         
@@ -1889,9 +1892,10 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             letterSnapshot.alpha = 0
             letterSnapshot.transform = CGAffineTransform(scaleX: 0.3, y: 0.3)
         }) { _ in
-            // Clean up and restore original label
+            // Clean up the snapshot
             letterSnapshot.removeFromSuperview()
-            self.letterLabel.alpha = 1
+            
+            // Keep the original label hidden - it will be shown in generateNewLetter after new letter is set
             
             // Call completion after a brief pause
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
