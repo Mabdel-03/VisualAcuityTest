@@ -410,6 +410,12 @@ class ResultViewController: UIViewController {
         
         print("📊 Generated CSV filename: \(fileName)")
         
+        // TEMPORARY: Using manual share sheet only
+        // Automatic Dropbox API upload is disabled for now
+        print("📊 Presenting share sheet for manual upload")
+        showShareSheet(csvContent: csvContent, fileName: fileName)
+        
+        /* COMMENTED OUT: Automatic Dropbox API Upload
         // Store for fallback
         self.currentCSVContent = csvContent
         self.currentFileName = fileName
@@ -444,6 +450,7 @@ class ResultViewController: UIViewController {
                 }
             }
         }
+        END COMMENTED OUT SECTION */
     }
     
     /* Shows success alert after Dropbox upload and returns to home.
