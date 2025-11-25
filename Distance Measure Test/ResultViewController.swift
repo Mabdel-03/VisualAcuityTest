@@ -83,6 +83,10 @@ class ResultViewController: UIViewController {
     // Flag to prevent duplicate CSV export prompts
     private var hasTriggeredExport = false
     
+    // Store CSV data for share sheet fallback
+    private var currentCSVContent: String?
+    private var currentFileName: String?
+    
     // UI ELEMENTS
     private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -406,6 +410,10 @@ class ResultViewController: UIViewController {
         
         print("📊 Generated CSV filename: \(fileName)")
         
+        // Store for fallback
+        self.currentCSVContent = csvContent
+        self.currentFileName = fileName
+        
         // Show uploading indicator
         let uploadAlert = UIAlertController(
             title: "Uploading",
@@ -425,9 +433,14 @@ class ResultViewController: UIViewController {
                     // Upload succeeded!
                     self.showDropboxSuccessAlert()
                 } else {
-                    // Upload failed, show error
+                    // Upload failed, automatically show share sheet as fallback
                     print("📊 Dropbox upload failed: \(errorMessage ?? "Unknown error")")
-                    self.showDropboxFailedAlert(errorMessage: errorMessage)
+                    print("📊 Automatically presenting share sheet for manual upload")
+                    
+                    // Use stored values for share sheet
+                    if let csvContent = self.currentCSVContent, let fileName = self.currentFileName {
+                        self.showShareSheet(csvContent: csvContent, fileName: fileName)
+                    }
                 }
             }
         }
@@ -444,6 +457,9 @@ class ResultViewController: UIViewController {
         
         alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
             guard let self = self else { return }
+            
+            // Clear progression data so next test starts fresh
+            TestProgressionDataCollector.shared.clearAllProgressionData()
             
             // Reset all global variables
             finalAcuityDictionary.removeAll()
@@ -487,6 +503,91 @@ class ResultViewController: UIViewController {
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    /* Presents iOS share sheet to manually share CSV file.
+       Used as fallback when Dropbox API upload fails.
+    */
+    private func showShareSheet(csvContent: String, fileName: String) {
+        // Create temporary file
+        let tempDirectory = FileManager.default.temporaryDirectory
+        let tempFileURL = tempDirectory.appendingPathComponent(fileName)
+        
+        do {
+            // Write CSV to temporary file
+            try csvContent.write(to: tempFileURL, atomically: true, encoding: .utf8)
+            print("📤 Created temporary file for sharing: \(fileName)")
+            
+            // Present share sheet
+            let activityVC = UIActivityViewController(
+                activityItems: [tempFileURL],
+                applicationActivities: nil
+            )
+            
+            // For iPad: configure popover presentation
+            if let popoverController = activityVC.popoverPresentationController {
+                popoverController.sourceView = self.view
+                popoverController.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
+                popoverController.permittedArrowDirections = []
+            }
+            
+            // Handle completion
+            activityVC.completionWithItemsHandler = { [weak self] activityType, completed, returnedItems, error in
+                // Clean up temp file
+                try? FileManager.default.removeItem(at: tempFileURL)
+                
+                if completed {
+                    print("📤 File shared successfully via \(activityType?.rawValue ?? "unknown")")
+                    
+                    // Show success and navigate home
+                    self?.showManualShareSuccessAlert()
+                } else {
+                    print("📤 Sharing cancelled by user")
+                }
+            }
+            
+            present(activityVC, animated: true)
+            
+        } catch {
+            print("❌ Failed to create temporary file: \(error)")
+            // Show error alert as fallback
+            let alert = UIAlertController(
+                title: "Error",
+                message: "Failed to prepare file for sharing: \(error.localizedDescription)",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        }
+    }
+    
+    /* Shows success alert after manual sharing via share sheet.
+    */
+    private func showManualShareSuccessAlert() {
+        let alert = UIAlertController(
+            title: "Shared Successfully",
+            message: "Your test data has been shared. Make sure to save it to Dropbox.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+            guard let self = self else { return }
+            
+            // Clear progression data
+            TestProgressionDataCollector.shared.clearAllProgressionData()
+            
+            // Reset global variables
+            finalAcuityDictionary.removeAll()
+            eyeNumber = 2
+            finalAcuityScore = -Double.infinity
+            logMARValue = -1.000
+            snellenValue = -1
+            
+            // Navigate back to main screen
+            self.navigationController?.popToRootViewController(animated: true)
+        })
+        
         present(alert, animated: true)
     }
     
