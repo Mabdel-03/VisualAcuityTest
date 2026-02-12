@@ -24,13 +24,13 @@ This repository contains a sophisticated iOS visual acuity testing application d
 - **Distance Optimization**: Interactive calibration with visual feedback
 - **Eye-Specific Tracking**: Separate left and right eye distance measurements
 
-### 🎙️ **Intelligent Speech Recognition**
+### **Intelligent Speech Recognition**
 - **Advanced Phonetic Matching**: Multi-layered speech-to-text with comprehensive phonetic mapping
 - **Conversation Filtering**: Sophisticated algorithms to distinguish letter responses from conversation
 - **Real-time Audio Processing**: Continuous speech recognition with timeout management
 - **Accessibility Integration**: Full audio instruction support throughout the app
 
-### 📱 **Professional iOS Implementation**
+### **Professional iOS Implementation**
 - **Modern Swift Architecture**: Clean, modular codebase with comprehensive documentation
 - **Responsive UI/UX**: Adaptive layouts supporting all iOS device sizes
 - **Persistent Data Storage**: Test history with JSON serialization and UserDefaults
@@ -261,7 +261,7 @@ Each test response automatically captures the following data points:
 | **Trial_Number** | Trial within current acuity level | `1`, `2`, `3`... |
 | **Session_ID** | Unique identifier for test session | `ETDRS_Right_20240911_142345` |
 
-### **🔧 How Data Collection Works**
+### **How Data Collection Works**
 
 #### **Automatic Background Collection**
 - **Session Initialization**: Each test (per eye) creates a unique session with timestamp-based ID
@@ -348,7 +348,7 @@ Timestamp,Eye,Test_Type,Acuity_Level,Letter_Displayed,Distance_CM,Response_Time_
 - **Session Analytics**: Compare performance between left and right eye tests
 - **Temporal Analysis**: Study performance changes over time and across sessions
 
-### **🔒 Privacy & Data Management**
+### **Privacy & Data Management**
 
 - **Local Storage**: All data remains on user's device until explicitly exported
 - **User Control**: Users choose when and how to export their data
