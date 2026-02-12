@@ -12,13 +12,13 @@ This repository contains a sophisticated iOS visual acuity testing application d
 
 ## Key Features
 
-### 🔬 **Medical-Grade Visual Acuity Testing**
+### **Medical-Grade Visual Acuity Testing**
 - **ETDRS Standard Compliance**: Implements precise ETDRS calculations with LogMAR scoring
 - **Dual Test Modes**: ETDRS letters with speech recognition and Landolt C with swipe gestures
 - **Clinical Accuracy**: Real-time letter scaling based on viewing distance and visual angle calculations
 - **Comprehensive Results**: LogMAR and Snellen notation scoring with persistent test history
 
-### 🤖 **Advanced AR & Computer Vision**
+### **Advanced AR & Computer Vision**
 - **ARKit Face Tracking**: Real-time distance monitoring using front-facing camera
 - **Dynamic Distance Correction**: Automatic letter scaling based on user position
 - **Distance Optimization**: Interactive calibration with visual feedback
@@ -154,7 +154,7 @@ VisualAcuityTest/
 - **Emergency Overrides**: Triple-tap gesture to bypass distance checking
 - **Visual Feedback**: Clear indicators for distance, progress, and results
 
-### 📊 **Advanced Test Progression Data Collection**
+### **Advanced Test Progression Data Collection**
 - **Granular Response Tracking**: Records every test response with millisecond precision
 - **Comprehensive Metrics**: Captures timing, distance, accuracy, and user behavior
 - **Research-Grade Export**: CSV generation for detailed analysis and research
@@ -243,7 +243,7 @@ VisualAcuityTest/
 
 The app includes a comprehensive data collection system that automatically records detailed test progression data for research and analysis purposes. This system captures granular information about user performance, response patterns, and testing conditions without interfering with the user experience.
 
-### **📊 Data Collected**
+### **Data Collected**
 
 Each test response automatically captures the following data points:
 
@@ -290,27 +290,27 @@ dataCollector.recordResponse(
 - **Memory Efficient**: Session-based collection with automatic cleanup
 - **Privacy Focused**: All data stored locally on device until explicitly exported
 
-### **📤 Data Export Options**
+### **Data Export Options**
 
 #### **Export Methods Available**
 Access from **Test History** screen with three export options:
 
-1. **📊 Export Left Eye CSV**
+1. ** Export Left Eye CSV**
    - Contains all responses for left eye tests across all sessions
    - Filename: `visual_acuity_left_eye_data.csv`
 
-2. **📊 Export Right Eye CSV** 
+2. ** Export Right Eye CSV** 
    - Contains all responses for right eye tests across all sessions
    - Filename: `visual_acuity_right_eye_data.csv`
 
-3. **📊 Export Combined CSV**
+3. ** Export Combined CSV**
    - Contains all test data from both eyes in chronological order
    - Filename: `visual_acuity_combined_data.csv`
 
 #### **Export Process**
 1. Navigate to **Test History** screen
 2. Export buttons appear automatically when data is available
-3. Button titles show response counts (e.g., "📊 Export Left Eye CSV (47 responses)")
+3. Button titles show response counts (e.g., " Export Left Eye CSV (47 responses)")
 4. Tap desired export button
 5. Use iOS share sheet to:
    - **Email** CSV file to researchers
@@ -328,7 +328,7 @@ Timestamp,Eye,Test_Type,Acuity_Level,Letter_Displayed,Distance_CM,Response_Time_
 2024-09-11 14:25:15.678,Left,Landolt_C,20/100,Right,43.2,980,Right,TRUE,1,Landolt_C_Left_20240911_142515
 ```
 
-### **🔬 Research Applications**
+### ** Research Applications**
 
 #### **Behavioral Analysis**
 - **Response Time Patterns**: Analyze how reaction times change with difficulty
