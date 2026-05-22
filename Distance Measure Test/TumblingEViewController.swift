@@ -257,7 +257,16 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
 
         // Set up the basic UI and gesture recognizers
         view.backgroundColor = .white
+
+        // Remove the default system Back button. An accidental swipe near the
+        // top-left of the screen was registering as a tap on it and popping
+        // the test mid-trial. A confirmed "End Test" affordance is added in
+        // its place (see setupEndTestButton).
+        navigationItem.hidesBackButton = true
+        navigationItem.setHidesBackButton(true, animated: false)
+
         setupUI()
+        setupEndTestButton()
         setupGestureRecognizers()
 
         // Initialize acuity level from the selected value
@@ -295,16 +304,27 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         dataCollector.startNewSession(eye: eyeName, testType: "Landolt_C")
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        // Prevent the system left-edge swipe-back from swallowing the user's
+        // rightward swipe answer during the test.
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+
         // Play audio instructions for the tumbling E test screen
         playAudioInstructions()
     }
-    
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
+
+        // Restore the system pop gesture for other screens.
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+
         // Clean up timers and display link
         audioInstructionTimer?.invalidate()
         audioInstructionTimer = nil
@@ -648,12 +668,41 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      */
     private func setupGestureRecognizers() {
         let directions: [UISwipeGestureRecognizer.Direction] = [.right, .left, .up, .down]
-        
+
         for direction in directions {
             let swipe = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
             swipe.direction = direction
             view.addGestureRecognizer(swipe)
         }
+    }
+
+    /*
+     * Installs an explicit "End Test" button on the navigation bar's trailing
+     * edge so the user still has an intentional way to exit the test after
+     * the default Back button is hidden. Tap requires a confirmation alert.
+     */
+    private func setupEndTestButton() {
+        let endButton = UIBarButtonItem(
+            title: "End Test",
+            style: .plain,
+            target: self,
+            action: #selector(endTestTapped)
+        )
+        endButton.tintColor = .systemRed
+        navigationItem.rightBarButtonItem = endButton
+    }
+
+    @objc private func endTestTapped() {
+        let alert = UIAlertController(
+            title: "End test?",
+            message: "Your progress on this set will be lost.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "End Test", style: .destructive) { [weak self] _ in
+            self?.navigationController?.popViewController(animated: true)
+        })
+        present(alert, animated: true)
     }
 
     // MARK: - Gesture Handling
