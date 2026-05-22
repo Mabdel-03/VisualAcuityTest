@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA000001AA000001AA000001 /* LandoltRewrite.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000002AA000002AA000002 /* LandoltRewrite.swift */; };
 		A1B2C3D42E5F6E780089CD23 /* SubjectNameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D32E5F6E780089CD23 /* SubjectNameManager.swift */; };
 		A1B2C3D62E5F6E890089CD23 /* UIViewController+NamePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D52E5F6E890089CD23 /* UIViewController+NamePrompt.swift */; };
 		B2C3D4E62F6G7H890089DE34 /* DropboxUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E52F6G7H890089DE34 /* DropboxUploadManager.swift */; };
@@ -36,6 +37,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		AA000002AA000002AA000002 /* LandoltRewrite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandoltRewrite.swift; sourceTree = "<group>"; };
 		A1B2C3D32E5F6E780089CD23 /* SubjectNameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectNameManager.swift; sourceTree = "<group>"; };
 		A1B2C3D52E5F6E890089CD23 /* UIViewController+NamePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+NamePrompt.swift"; sourceTree = "<group>"; };
 		B2C3D4E52F6G7H890089DE34 /* DropboxUploadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropboxUploadManager.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 			children = (
 				D1B67B5A2ECB1C3700BFAEF4 /* UIStyle+Text.swift */,
 				C0CDD6292A687790002A58BA /* AppDelegate.swift */,
+				AA000002AA000002AA000002 /* LandoltRewrite.swift */,
 				C94D36EA2A81B87500CAD336 /* Main Menu.swift */,
 				D11297502DF08938006DB97E /* OneEyeInstruc.swift */,
 				C94D36EC2A81B89300CAD336 /* Instructions.swift */,
@@ -202,7 +205,6 @@
 				D12072E92A9F132000B92792 /* art.scnassets in Resources */,
 				C0CDD6362A687792002A58BA /* LaunchScreen.storyboard in Resources */,
 				C0CDD6332A687792002A58BA /* Assets.xcassets in Resources */,
-				C0CDD6312A687790002A58BA /* Main.storyboard in Resources */,
 				D19933C62A955CCF0050CF92 /* info.txt in Resources */,
 				D12072E72A9F12BA00B92792 /* ship.scn in Resources */,
 				D14180E62D3049990070FB19 /* Sloan.otf in Resources */,
@@ -216,6 +218,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA000001AA000001AA000001 /* LandoltRewrite.swift in Sources */,
 				C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */,
 				D11297512DF08938006DB97E /* OneEyeInstruc.swift in Sources */,
 				C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */,
@@ -382,12 +385,11 @@
 				DEVELOPMENT_TEAM = HW8LWQ35S9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
-				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is recorded to transcribe the meeting. Audio recordings are discarded after transcription.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "You can view a text transcription of your meeting in the app.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is used for AR face tracking so the app can measure testing distance.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used only by optional legacy voice-training screens.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Speech recognition is used only by optional legacy voice-training screens.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -416,12 +418,11 @@
 				DEVELOPMENT_TEAM = HW8LWQ35S9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
-				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is recorded to transcribe the meeting. Audio recordings are discarded after transcription.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "You can view a text transcription of your meeting in the app.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is used for AR face tracking so the app can measure testing distance.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used only by optional legacy voice-training screens.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Speech recognition is used only by optional legacy voice-training screens.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

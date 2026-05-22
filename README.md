@@ -1,5 +1,63 @@
 # OHSU COOL Lab Visual Acuity Test App
 
+## Current Landolt-C Rewrite
+
+The current launch path is a Landolt-C-only visual acuity test implemented with programmatic UIKit. The old storyboard controllers are still present for reference, but `AppDelegate` now starts a `LandoltTestCoordinator` that enforces this flow:
+
+1. Main menu
+2. Instructions
+3. Right-eye distance capture
+4. Right-eye starting acuity selection
+5. Right-eye Landolt-C test
+6. Left-eye distance capture
+7. Left-eye starting acuity selection
+8. Left-eye Landolt-C test
+9. Results and export
+
+### Protocol
+
+- The test uses a four-alternative forced-choice Landolt C. The four possible gap orientations are up, right, down, and left.
+- Input is swipe-based. The user swipes in the direction of the C opening.
+- Each eye runs independently from its own starting acuity and captured viewing distance.
+- The staircase starts from the selected acuity, uses 0.1 logMAR steps, follows a 2-correct-down / 1-wrong-up rule, and stops after 6 reversals or 30 trials.
+- Final acuity is scored as the mean logMAR of the final 4 reversals when available, with Snellen denominator derived from the resulting logMAR.
+
+### Distance Policy
+
+- Distance capture is eye-specific. The preferred path uses ARKit face tracking on devices that support `ARFaceTrackingConfiguration`.
+- If AR face tracking is unavailable or permission is denied, the app offers a manual distance entry path so the test can still proceed with explicit metadata marking the capture method.
+- The captured distance defines the target distance for that eye. The valid test band is plus or minus 10 percent of the target.
+- While live AR distance remains inside the valid band, the Landolt C is continuously rescaled from the current smoothed live distance.
+- When live distance leaves the band, the optotype is hidden, responses are disabled, and the user receives visual/audio guidance. Testing resumes after stable in-band readings.
+
+### Optotype Sizing
+
+The Landolt C is vector-rendered by `LandoltCView`; it is not a font glyph. `OptotypeSizer` converts the requested acuity and viewing distance into a physical optotype diameter, then converts centimeters to UIKit points using device PPI and `UIScreen.nativeScale`.
+
+The sizing model uses the standard 5-arcminute full optotype angle:
+
+```swift
+visualAngleArcMinutes = (snellenDenominator / 20) * 5
+outerDiameterCM = viewingDistanceCM * tan(visualAngleRadians)
+points = outerDiameterCM / 2.54 * ppi / nativeScale
+```
+
+### Exported Metadata
+
+Results export is session-scoped and includes CSV and JSON files. Each exported session includes both eyes, final logMAR/Snellen acuity, captured target distance, live trial distance, optotype size in centimeters and points, device model, iOS version, app version, PPI, native scale, pause events, tracking state, distance-sample stability, response time, displayed orientation, response orientation, correctness, staircase step, and reversal markers.
+
+Upload/share settings are centralized behind `UploadConfiguration` and `LandoltExportManager`, so a local server, Dropbox-style endpoint, or share-sheet export can be swapped without changing staircase or test logic. Trusted access keys may remain in this repository, but the test flow should read them through that config layer.
+
+### Supported Devices
+
+AR distance capture requires an iPhone or iPad with front TrueDepth camera support for ARKit face tracking. Devices without face tracking can still run the test through the manual distance fallback, but exports will identify the distance capture method.
+
+### Verification Notes
+
+Core sizing, Landolt geometry, distance-band, and staircase checks are available through `LandoltCoreSelfTests.run()` in debug builds. The primary Xcode scheme is `Distance Measure Test` in `Distance Measure Test.xcodeproj`.
+
+---
+
 ## Overview
 
 This repository contains a sophisticated iOS visual acuity testing application developed at the OHSU COOL Lab. The app provides two standardized visual acuity tests - **ETDRS (Early Treatment Diabetic Retinopathy Study)** with voice recognition and **Landolt C** with gesture-based input - both utilizing advanced AR face tracking for precise distance monitoring and real-time letter scaling.

@@ -11,10 +11,19 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    private var coordinator: LandoltTestCoordinator?
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        #if DEBUG
+        LandoltCoreSelfTests.run()
+        #endif
+
+        let appWindow = UIWindow(frame: UIScreen.main.bounds)
+        let coordinator = LandoltTestCoordinator(window: appWindow)
+        self.window = appWindow
+        self.coordinator = coordinator
+        coordinator.start()
         return true
     }
 
@@ -44,4 +53,3 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
 }
-
