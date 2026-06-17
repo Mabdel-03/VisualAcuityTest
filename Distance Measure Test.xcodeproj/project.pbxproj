@@ -29,6 +29,8 @@
 		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
 		D1B67B5B2ECB1C3700BFAEF4 /* UIStyle+Text.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B67B5A2ECB1C3700BFAEF4 /* UIStyle+Text.swift */; };
 		D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */; };
+		D1E7D0012FE6100000ED7A01 /* ETDRSWhisperLetterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E7D0002FE6100000ED7A01 /* ETDRSWhisperLetterService.swift */; };
+		D1E7D0042FE6100000ED7A01 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = D1E7D0032FE6100000ED7A01 /* WhisperKit */; };
 		DC123ABC2CC9F141003EEEFF /* DataCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC123ABD2CC9F139003EEEFF /* DataCollectionViewController.swift */; };
 		E0E987052CC9F141003EEEFF /* ETDRSViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E987042CC9F139003EEEFF /* ETDRSViewController.swift */; };
 		E0F987052CC9F141003EEEFF /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F987042CC9F139003EEEFF /* SettingsViewController.swift */; };
@@ -59,6 +61,7 @@
 		D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Distance-Measure-Test-Info.plist"; sourceTree = SOURCE_ROOT; };
 		D1B67B5A2ECB1C3700BFAEF4 /* UIStyle+Text.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIStyle+Text.swift"; sourceTree = "<group>"; };
 		D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Select_Acuity.swift; sourceTree = "<group>"; };
+		D1E7D0002FE6100000ED7A01 /* ETDRSWhisperLetterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETDRSWhisperLetterService.swift; sourceTree = "<group>"; };
 		DC123ABD2CC9F139003EEEFF /* DataCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataCollectionViewController.swift; sourceTree = "<group>"; };
 		E0E987042CC9F139003EEEFF /* ETDRSViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETDRSViewController.swift; sourceTree = "<group>"; };
 		E0F987042CC9F139003EEEFF /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
@@ -71,6 +74,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D13F546D2ACA7C2A00673C13 /* DevicePpi in Frameworks */,
+				D1E7D0042FE6100000ED7A01 /* WhisperKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -106,6 +110,7 @@
 				D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */,
 				C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */,
 				E0E987042CC9F139003EEEFF /* ETDRSViewController.swift */,
+				D1E7D0002FE6100000ED7A01 /* ETDRSWhisperLetterService.swift */,
 				E0F987042CC9F139003EEEFF /* SettingsViewController.swift */,
 				DC123ABD2CC9F139003EEEFF /* DataCollectionViewController.swift */,
 				C0C987092CC9F413003EEEFF /* ResultViewController.swift */,
@@ -152,6 +157,7 @@
 			name = "Distance Measure Test";
 			packageProductDependencies = (
 				D13F546C2ACA7C2A00673C13 /* DevicePpi */,
+				D1E7D0032FE6100000ED7A01 /* WhisperKit */,
 			);
 			productName = "Distance Measure Test";
 			productReference = C0CDD6262A687790002A58BA /* Distance Measure Test.app */;
@@ -183,6 +189,7 @@
 			mainGroup = C0CDD61D2A687790002A58BA;
 			packageReferences = (
 				D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */,
+				D1E7D0022FE6100000ED7A01 /* XCRemoteSwiftPackageReference "argmax-oss-swift" */,
 			);
 			productRefGroup = C0CDD6272A687790002A58BA /* Products */;
 			projectDirPath = "";
@@ -225,6 +232,7 @@
 				C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */,
 				C0C987052CC9F141003EEEFF /* TumblingEViewController.swift in Sources */,
 				E0E987052CC9F141003EEEFF /* ETDRSViewController.swift in Sources */,
+				D1E7D0012FE6100000ED7A01 /* ETDRSWhisperLetterService.swift in Sources */,
 				E0F987052CC9F141003EEEFF /* SettingsViewController.swift in Sources */,
 				DC123ABC2CC9F141003EEEFF /* DataCollectionViewController.swift in Sources */,
 				D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */,
@@ -383,8 +391,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is recorded to transcribe the meeting. Audio recordings are discarded after transcription.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "You can view a text transcription of your meeting in the app.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to recognize spoken visual acuity test letters.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -417,8 +424,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is recorded to transcribe the meeting. Audio recordings are discarded after transcription.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "You can view a text transcription of your meeting in the app.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to recognize spoken visual acuity test letters.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -472,6 +478,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		D1E7D0022FE6100000ED7A01 /* XCRemoteSwiftPackageReference "argmax-oss-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/argmax-oss-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.18.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -479,6 +493,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */;
 			productName = DevicePpi;
+		};
+		D1E7D0032FE6100000ED7A01 /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1E7D0022FE6100000ED7A01 /* XCRemoteSwiftPackageReference "argmax-oss-swift" */;
+			productName = WhisperKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

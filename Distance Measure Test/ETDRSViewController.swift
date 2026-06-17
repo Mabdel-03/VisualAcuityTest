@@ -12,13 +12,12 @@ import UIKit
 import DevicePpi
 import ARKit
 import AVFoundation
-import Speech
 
 /* ETDRSViewController class implements a visual acuity test using ETDRS letters.
    The test displays ETDRS letters at various sizes, and the user must speak the
    letter they see. The test maintains a fixed testing distance using AR face tracking.
  */
-class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecognizerDelegate {
+class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     // MARK: - Properties
     
     /// AR scene view for face tracking
@@ -96,17 +95,8 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     
     // MARK: - Speech Recognition Properties
     
-    /// Speech recognizer for voice input
-    private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))!
-    
-    /// Audio engine for speech recognition
-    private let audioEngine = AVAudioEngine()
-    
-    /// Speech recognition request
-    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
-    
-    /// Speech recognition task
-    private var recognitionTask: SFSpeechRecognitionTask?
+    /// WhisperKit service for spoken ETDRS letter input
+    private let whisperLetterService = ETDRSWhisperLetterService.shared
     
     /// Flag to indicate if speech recognition is active
     private var isListening = false
@@ -679,29 +669,18 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
      * Sets up speech recognition for voice input.
      */
     private func setupSpeechRecognition() {
-        speechRecognizer.delegate = self
-        
-        print("🎤 Setting up speech recognition...")
-        print("🎤 Speech recognizer available: \(speechRecognizer.isAvailable)")
-        
-        SFSpeechRecognizer.requestAuthorization { [weak self] authStatus in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                
-                switch authStatus {
-                case .authorized:
-                    print("🎤 Speech recognition authorized ✅")
-                case .denied:
-                    print("🎤 Speech recognition access denied ❌")
-                    // Show alert to user
-                    self.showSpeechPermissionAlert()
-                case .restricted:
-                    print("🎤 Speech recognition restricted ❌")
-                    self.showSpeechPermissionAlert()
-                case .notDetermined:
-                    print("🎤 Speech recognition not determined ⚠️")
-                @unknown default:
-                    print("🎤 Speech recognition unknown authorization status ❓")
+        print("[ETDRSWhisper] Setting up WhisperKit speech recognition...")
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                try await self.whisperLetterService.prepareIfNeeded()
+                print("[ETDRSWhisper] WhisperKit setup completed ✅")
+            } catch {
+                print("[ETDRSWhisper] WhisperKit setup failed: \(error.localizedDescription)")
+                await MainActor.run {
+                    self.showSpeechPermissionAlert(message: error.localizedDescription)
                 }
             }
         }
@@ -710,10 +689,10 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     /*
      * Shows an alert when speech recognition permission is not available.
      */
-    private func showSpeechPermissionAlert() {
+    private func showSpeechPermissionAlert(message: String? = nil) {
         let alert = UIAlertController(
-            title: "Speech Recognition Required",
-            message: "This ETDRS test requires speech recognition to work. Please enable speech recognition in Settings > Privacy & Security > Speech Recognition.",
+            title: "Microphone Required",
+            message: message ?? "This ETDRS test requires microphone access for WhisperKit spoken-letter recognition. Please enable microphone access in Settings.",
             preferredStyle: .alert
         )
         
@@ -737,277 +716,65 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             print("🎤 Already listening, skipping start")
             return 
         }
-        
-        // Check speech recognition authorization first
-        guard speechRecognizer.isAvailable else {
-            print("🎤 Speech recognizer not available")
-            return
-        }
-        
-        // Cancel any previous recognition task
-        recognitionTask?.cancel()
-        recognitionTask = nil
-        
-        // Configure audio session
-        let audioSession = AVAudioSession.sharedInstance()
-        do {
-            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
-            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-            print("🎤 Audio session configured successfully")
-        } catch {
-            print("🎤 Audio session setup failed: \(error)")
-            return
-        }
-        
-        // Create recognition request
-        recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        guard let recognitionRequest = recognitionRequest else {
-            print("🎤 Unable to create recognition request")
-            return
-        }
-        
-        recognitionRequest.shouldReportPartialResults = true
-        recognitionRequest.requiresOnDeviceRecognition = false
-        
-        // Get audio input node
-        let inputNode = audioEngine.inputNode
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-        
-        // Remove any existing taps
-        inputNode.removeTap(onBus: 0)
-        
-        // Install audio tap
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
-            recognitionRequest.append(buffer)
-        }
-        
-        // Start audio engine
-        audioEngine.prepare()
-        do {
-            try audioEngine.start()
-            print("🎤 Audio engine started successfully")
-        } catch {
-            print("🎤 Audio engine start failed: \(error)")
-            return
-        }
-        
-        // Start recognition task
-        recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
-            guard let self = self else { return }
-            
-            if let result = result {
-                let spokenText = result.bestTranscription.formattedString.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
-                print("🎤 Heard: '\(spokenText)' (length: \(spokenText.count))")
-                
-                // CRITICAL: Filter out sentences and unwanted speech
-                if !self.isValidLetterAttempt(spokenText) {
-                    print("🎤 ❌ Ignoring: '\(spokenText)' (Not a valid letter attempt)")
-                    // Immediately reset speech recognition to clear the transcription
-                    self.resetSpeechRecognition()
-                    return
-                }
-                
-                // Process input when we have meaningful speech
-                if !spokenText.isEmpty {
-                    var shouldProcess = false
-                    var reason = ""
-                    
-                    // Check for single letter first (highest priority)
-                    if self.containsSingleLetter(spokenText) {
-                        reason = "Single letter detected"
-                        shouldProcess = true
-                    }
-                    // Check for common phonetic words that we know map to letters
-                    else if spokenText.count <= 7 { // Reasonable length for phonetic words
-                        let commonPhoneticWords = ["ARE", "YOU", "SEE", "DEE", "EFF", "AITCH", "KAY", "PEE", "VEE", "ZEE"]
-                        if commonPhoneticWords.contains(spokenText) {
-                            reason = "Common phonetic word detected"
-                            shouldProcess = true
-                        }
-                        // Also try a quick phonetic match check
-                        else if self.canPhoneticMatch(spokenText) {
-                            reason = "Phonetic match possible"
-                            shouldProcess = true
-                        }
-                    }
-                    // For final results, always try to process
-                    else if result.isFinal {
-                        reason = "Final result"
-                        shouldProcess = true
-                    }
-                    
-                    if shouldProcess {
-                        print("🎤 Processing: '\(spokenText)' (\(reason))")
-                        self.processSpokenInput(spokenText)
-                        // Stop and restart recognition after processing
-                        self.stopListening()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            if !isPaused {
-                                self.startListening()
-                            }
-                        }
-                        return
-                    }
-                }
-            }
-            
-            if let error = error {
-                print("🎤 Speech recognition error: \(error)")
-            }
-            
-            if error != nil || result?.isFinal == true {
-                self.stopListening()
-                // Restart listening after a short delay if not paused
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    if !isPaused {
-                        self.startListening()
-                    }
-                }
-            }
-        }
-        
+
         isListening = true
         microphoneLabel.isHidden = false
-        
-        // Start timeout timer to restart recognition if it gets stuck
         startSpeechTimeoutTimer()
-        
-        print("🎤 Started listening for speech input")
+        print("[ETDRSWhisper] Starting WhisperKit listening for ETDRS letters...")
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                try await self.whisperLetterService.startListening { [weak self] prediction in
+                    Task { @MainActor in
+                        self?.handleWhisperPrediction(prediction)
+                    }
+                }
+                print("[ETDRSWhisper] Started listening for spoken ETDRS letters")
+            } catch {
+                print("[ETDRSWhisper] Failed to start listening: \(error.localizedDescription)")
+                await MainActor.run {
+                    self.isListening = false
+                    self.microphoneLabel.isHidden = true
+                    self.stopSpeechTimeoutTimer()
+                    self.showSpeechPermissionAlert(message: error.localizedDescription)
+                }
+            }
+        }
     }
-    
-    /*
-     * Checks if the spoken text contains a single recognizable letter.
-     */
-    private func containsSingleLetter(_ text: String) -> Bool {
-        let letters = text.filter { $0.isLetter }
-        return letters.count == 1 && etdrsLetters.contains(String(letters))
-    }
-    
-    /*
-     * Checks if the spoken text can be phonetically matched to an ETDRS letter.
-     */
-    private func canPhoneticMatch(_ text: String) -> Bool {
-        // Quick check to see if phonetic matching would succeed
-        return phoneticMatch(for: text) != nil
-    }
-    
-    /*
-     * Validates if the spoken text is a valid letter attempt and not a sentence.
-     * This prevents the app from processing conversation or long sentences.
-     */
-    private func isValidLetterAttempt(_ text: String) -> Bool {
-        let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        // Empty text is invalid
-        if cleanText.isEmpty {
-            return false
+
+    private func handleWhisperPrediction(_ prediction: ETDRSWhisperPrediction) {
+        guard isListening, !isPaused else { return }
+        guard !prediction.rawTranscription.isEmpty else { return }
+
+        print("[ETDRSWhisper] Heard: '\(prediction.rawTranscription)' normalized: \(prediction.normalizedLetter ?? "<none>") latency: \(String(format: "%.2f", prediction.latency))s")
+
+        if prediction.isIgnorableNonAnswer {
+            print("[ETDRSWhisper] Ignoring non-answer: '\(prediction.rawTranscription)'")
+            return
         }
-        
-        // RULE 1: Length filter - reject very long text (likely sentences)
-        if cleanText.count > 15 {
-            print("🎤 🚫 Sentence filter: Text too long (\(cleanText.count) chars)")
-            return false
+
+        if prediction.isFiller {
+            print("[ETDRSWhisper] Ignoring filler: '\(prediction.rawTranscription)'")
+            return
         }
-        
-        // RULE 1.5: Letter count filter - reject if more than 5 letters detected
-        let letterCount = cleanText.filter { $0.isLetter }.count
-        if letterCount > 5 {
-            print("🎤 🚫 Sentence filter: Too many letters (\\(letterCount) letters)")
-            return false
+
+        guard let letter = prediction.normalizedLetter else {
+            print("[ETDRSWhisper] Ignoring unclear transcription: '\(prediction.rawTranscription)'")
+            return
         }
-        
-        // RULE 2: Word count filter - reject multiple words (likely sentences)
-        let words = cleanText.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
-        if words.count > 4 {
-            print("🎤 🚫 Sentence filter: Too many words (\(words.count) words)")
-            return false
-        }
-        
-        // RULE 3: Common sentence starters - reject obvious conversation
-        let sentenceStarters = ["WAIT", "I", "SHOULD", "CAN", "COULD", "WILL", "WOULD", "MAYBE", "PERHAPS", "LET", "LETS", "PLEASE", "EXCUSE", "SORRY", "HI", "HELLO", "YES", "NO", "OKAY", "WELL", "SO", "BUT", "OR", "THE", "A", "AN", "THIS", "THAT", "THESE", "THOSE", "MY", "YOUR", "HIS", "HER", "OUR", "THEIR", "WE", "THEY", "SHE", "HE", "IT", "THERE", "HERE", "NOW", "THEN", "WHEN", "WHERE", "WHY", "HOW", "WHAT", "WHO", "WHICH"]
-        let firstWord = words.first ?? ""
-        if sentenceStarters.contains(firstWord) {
-            print("🎤 🚫 Sentence filter: Conversation starter detected: '\(firstWord)'")
-            return false
-        }
-        
-        // RULE 4: Common sentence patterns - reject obvious conversation
-        let sentencePatterns = [
-            "I SHOULD", "WAIT I", "CAN YOU", "COULD YOU", "WILL YOU", "WOULD YOU",
-            "LET ME", "LETS", "PLEASE", "EXCUSE ME", "I THINK", "I BELIEVE",
-            "MAYBE", "PERHAPS", "PROBABLY", "DEFINITELY", "CERTAINLY",
-            "WAIT I SHOULD", "I SHOULD PROBABLY", "SHOULD PROBABLY", "PROBABLY DO",
-            "DO ONE", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN"
-        ]
-        for pattern in sentencePatterns {
-            if cleanText.hasPrefix(pattern) || cleanText.contains(pattern) {
-                print("🎤 🚫 Sentence filter: Conversation pattern detected: '\(pattern)'")
-                return false
+
+        print("[ETDRSWhisper] Processing recognized ETDRS letter: \(letter) for target: \(currentLetter)")
+        stopListening()
+        handleLetterInput(letter)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self else { return }
+            if !isPaused {
+                self.startListening()
             }
         }
-        
-        // RULE 5: Question patterns - reject questions
-        if cleanText.contains("?") || 
-           cleanText.hasPrefix("WHAT") || 
-           cleanText.hasPrefix("WHERE") || 
-           cleanText.hasPrefix("WHEN") || 
-           cleanText.hasPrefix("WHY") || 
-           cleanText.hasPrefix("WHO") || 
-           cleanText.hasPrefix("HOW") ||
-           cleanText.hasPrefix("DO YOU") ||
-           cleanText.hasPrefix("DID YOU") ||
-           cleanText.hasPrefix("ARE YOU") ||
-           cleanText.hasPrefix("CAN YOU") {
-            print("🎤 🚫 Sentence filter: Question detected")
-            return false
-        }
-        
-        // RULE 5.5: Numbers and counting - reject number sequences
-        let numberWords = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN", "TWENTY"]
-        for numberWord in numberWords {
-            if words.contains(numberWord) && words.count > 1 {
-                print("🎤 🚫 Sentence filter: Number in context detected: '\(numberWord)'")
-                return false
-            }
-        }
-        
-        // RULE 6: Allow single letters (highest priority)
-        if cleanText.count == 1 && cleanText.first?.isLetter == true {
-            print("🎤 ✅ Valid: Single letter '\(cleanText)'")
-            return true
-        }
-        
-        // RULE 7: Allow known phonetic words for ETDRS letters
-        let validPhoneticWords = [
-            // Direct phonetic pronunciations
-            "ARE", "YOU", "SEE", "SEA", "DEE", "EFF", "AITCH", "KAY", "PEE", "VEE", "ZEE",
-            // Alternative pronunciations
-            "EACH", "AND", "OK", "OH", "HE", "FEE", "ED", "DZ", "VV", "CC", "DD", "FF", 
-            "HH", "KK", "NN", "PP", "RR", "UU", "ZZ",
-            // Short combinations that might be phonetic attempts
-            "AR", "ARR", "EN", "AFF", "ATCH", "AYCH", "SI", "SII", "DI", "DIA"
-        ]
-        
-        if validPhoneticWords.contains(cleanText) {
-            print("🎤 ✅ Valid: Known phonetic word '\(cleanText)'")
-            return true
-        }
-        
-        // RULE 8: Allow very short text that might contain letters
-        if cleanText.count <= 3 {
-            // Check if it contains any ETDRS letters
-            let containsETDRSLetter = etdrsLetters.contains { letter in
-                cleanText.contains(letter)
-            }
-            if containsETDRSLetter {
-                print("🎤 ✅ Valid: Short text with ETDRS letter '\(cleanText)'")
-                return true
-            }
-        }
-        
-        // RULE 9: Reject everything else (likely conversation)
-        print("🎤 🚫 Sentence filter: Rejected as conversation: '\(cleanText)'")
-        return false
     }
     
     /*
@@ -1019,266 +786,17 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             return 
         }
         
-        print("🎤 Stopping speech recognition...")
-        
-        // Stop audio engine first
-        if audioEngine.isRunning {
-            audioEngine.stop()
-        }
-        
-        // Remove tap safely
-        if audioEngine.inputNode.numberOfInputs > 0 {
-            audioEngine.inputNode.removeTap(onBus: 0)
-        }
-        
-        // End recognition
-        recognitionRequest?.endAudio()
-        recognitionTask?.cancel()
-        
-        recognitionRequest = nil
-        recognitionTask = nil
+        print("[ETDRSWhisper] Stopping WhisperKit listening...")
+        whisperLetterService.stopListening()
         isListening = false
         microphoneLabel.isHidden = true
         
         // Stop the timeout timer
         stopSpeechTimeoutTimer()
         
-        print("🎤 Stopped listening for speech input")
+        print("[ETDRSWhisper] Stopped listening for speech input")
     }
     
-    /*
-     * Processes the spoken input from the user.
-     */
-    private func processSpokenInput(_ spokenText: String) {
-        print("🎤 processSpokenInput called with: '\(spokenText)'")
-        
-        // Try phonetic matching first (this handles "ARE" → "R" cases)
-        var recognizedLetter = phoneticMatch(for: spokenText)
-        if recognizedLetter != nil {
-            print("🎤 Found phonetic match: \(recognizedLetter!) from '\(spokenText)'")
-        } else {
-            // Extract single letters from the spoken text as fallback
-            let letters = spokenText.filter { $0.isLetter }
-            print("🎤 Filtered letters: '\(letters)'")
-            
-            // Look for ETDRS letters in the spoken text
-            for letter in etdrsLetters {
-                if letters.contains(letter) {
-                    recognizedLetter = letter
-                    print("🎤 Found direct letter match: \(letter)")
-                    break
-                }
-            }
-        }
-        
-        if let letter = recognizedLetter {
-            print("🎤 ✅ Recognized letter: \(letter) for current letter: \(currentLetter)")
-            handleLetterInput(letter)
-        } else {
-            print("🎤 ❌ Could not recognize a valid ETDRS letter from: '\(spokenText)'")
-            print("🎤 💡 Try saying the letter name clearly: \(currentLetter)")
-        }
-    }
-    
-    /*
-     * Attempts to match spoken text to ETDRS letters using comprehensive phonetic matching.
-     * Uses a multi-layered approach to handle all speech recognition variations.
-     */
-    private func phoneticMatch(for spokenText: String) -> String? {
-        let text = spokenText.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        print("🎤 Phonetic matching for: '\(text)'")
-        
-        // === LAYER 1: EXACT PHONETIC MAPPINGS ===
-        // Most common and reliable phonetic transcriptions
-        let exactPhoneticMap: [String: String] = [
-            // C - commonly transcribed as "see", "sea"
-            "see": "C", "sea": "C", "cee": "C", "si": "C", "c": "C",
-            
-            // D - commonly transcribed as "dee"
-            "dee": "D", "di": "D", "d": "D", "de": "D", "dear": "D",
-            
-            // F - commonly transcribed as "ef", "eff"
-            "ef": "F", "eff": "F", "f": "F", "aff": "F",
-            
-            // H - commonly transcribed as "aitch", "atch"
-            "aitch": "H", "atch": "H", "aych": "H", "h": "H",
-            "haitch": "H", "eitch": "H",
-            
-            // K - commonly transcribed as "kay", "key"
-            "kay": "K", "key": "K", "k": "K", "kei": "K",
-            
-            // N - commonly transcribed as "en", "enn" 
-            "en": "N", "enn": "N", "n": "N", "ne": "N",
-            
-            // P - commonly transcribed as "pee", "pi"
-            "pee": "P", "pi": "P", "p": "P", "pe": "P",
-            
-            // R - commonly transcribed as "are", "ar" 
-            "are": "R", "ar": "R", "arr": "R", "or": "R", "r": "R",
-            
-            // U - commonly transcribed as "you", "yu"
-            "you": "U", "yu": "U", "u": "U", "yoo": "U",
-            
-            // V - commonly transcribed as "vee", "vi"
-            "vee": "V", "vi": "V", "v": "V", "ve": "V", "we": "V",
-            
-            // Z - commonly transcribed as "zee", "zed"
-            "zee": "Z", "zed": "Z", "zi": "Z", "z": "Z"
-        ]
-        
-        // === LAYER 2: ALTERNATIVE PHONETIC MAPPINGS ===
-        // Less common but still valid transcriptions
-        let alternativePhoneticMap: [String: String] = [
-            // C alternatives
-            "sie": "C", "sii": "C", "ce": "C", "sea sea": "C",
-            
-            // D alternatives  
-            "dea": "D", "dia": "D", "dii": "D", "the": "D", "tea": "D",
-            
-            // F alternatives
-            "eph": "F", "aef": "F", "afe": "F", "fe": "F", "if": "F",
-            
-            // H alternatives
-            "ache": "H", "hatch": "H", "itch": "H", "each": "H",
-            "age": "H", "hey": "H", "hay": "H", "eight": "H", "ate": "H",
-            
-            // K alternatives
-            "ca": "K", "cay": "K", "kae": "K", "kai": "K", "que": "K",
-            "okay": "K", "ok": "K", "kway": "K",
-            
-            // N alternatives
-            "an": "N", "ene": "N", "inn": "N", "and": "N", "ain": "N",
-            
-            // P alternatives
-            "pea": "P", "pia": "P", "pie": "P", "pii": "P",
-            
-            // R alternatives
-            "aar": "R", "aire": "R", "er": "R", "ore": "R", "arre": "R",
-            "our": "R", "hour": "R", "air": "R", "heir": "R", "ah": "R",
-            
-            // U alternatives  
-            "oo": "U", "ooo": "U", "uu": "U", "ou": "U", "yew": "U",
-            "ewe": "U", "hugh": "U", "hue": "U", "ew": "U", "ooh": "U",
-            "who": "U", "woo": "U", "wu": "U", "ue": "U",
-            
-            // V alternatives
-            "vea": "V", "via": "V", "vie": "V", "vii": "V", "bee": "V",
-            
-            // Z alternatives
-            "zea": "Z", "zia": "Z", "ze": "Z", "zeta": "Z", "said": "Z"
-        ]
-        
-        // === LAYER 3: REPEATED LETTER PATTERNS ===
-        // Handle cases like "RRR", "CCC", etc.
-        let repeatedPatternMap: [String: String] = [
-            "cc": "C", "ccc": "C", "cccc": "C",
-            "dd": "D", "ddd": "D", "dddd": "D", 
-            "ff": "F", "fff": "F", "ffff": "F",
-            "hh": "H", "hhh": "H", "hhhh": "H",
-            "kk": "K", "kkk": "K", "kkkk": "K",
-            "nn": "N", "nnn": "N", "nnnn": "N",
-            "pp": "P", "ppp": "P", "pppp": "P",
-            "rr": "R", "rrr": "R", "rrrr": "R",
-            "uu": "U", "uuu": "U", "uuuu": "U",
-            "vv": "V", "vvv": "V", "vvvv": "V",
-            "zz": "Z", "zzz": "Z", "zzzz": "Z"
-        ]
-        
-        // === MATCHING ALGORITHM ===
-        
-        // STEP 1: Check exact phonetic matches (highest priority)
-        if let letter = exactPhoneticMap[text] {
-            print("🎤 ✅ Layer 1 - Exact phonetic match: '\(text)' → '\(letter)'")
-            return letter
-        }
-        
-        // STEP 2: Check alternative phonetic matches
-        if let letter = alternativePhoneticMap[text] {
-            print("🎤 ✅ Layer 2 - Alternative phonetic match: '\(text)' → '\(letter)'")
-            return letter
-        }
-        
-        // STEP 3: Check repeated letter patterns
-        if let letter = repeatedPatternMap[text] {
-            print("🎤 ✅ Layer 3 - Repeated pattern match: '\(text)' → '\(letter)'")
-            return letter
-        }
-        
-        // STEP 4: Check if text contains any exact phonetic patterns
-        let allMaps = [exactPhoneticMap, alternativePhoneticMap, repeatedPatternMap]
-        for (mapIndex, map) in allMaps.enumerated() {
-            // Sort by length (longer patterns first) to avoid partial matches
-            let sortedPhonetics = map.keys.sorted { $0.count > $1.count }
-            
-            for phonetic in sortedPhonetics {
-                if text.contains(phonetic) {
-                    let letter = map[phonetic]!
-                    print("🎤 ✅ Layer \(mapIndex + 1) - Contains pattern: '\(text)' contains '\(phonetic)' → '\(letter)'")
-                    return letter
-                }
-            }
-        }
-        
-        // STEP 5: Single letter direct match
-        if text.count == 1 && text.first!.isLetter {
-            let letter = text.uppercased()
-            if etdrsLetters.contains(letter) {
-                print("🎤 ✅ Direct single letter match: '\(text)' → '\(letter)'")
-                return letter
-            }
-        }
-        
-        // STEP 6: Check for repeated single letters (like "RRR" → "R")
-        if text.count > 1 {
-            let uniqueLetters = Set(text.filter { $0.isLetter })
-            if uniqueLetters.count == 1, let singleLetter = uniqueLetters.first {
-                let letter = String(singleLetter).uppercased()
-                if etdrsLetters.contains(letter) {
-                    print("🎤 ✅ Repeated letter match: '\(text)' → '\(letter)'")
-                    return letter
-                }
-            }
-        }
-        
-        // STEP 7: Fuzzy matching for edge cases
-        return fuzzyPhoneticMatch(for: text)
-    }
-    
-    /*
-     * Advanced fuzzy matching for edge cases and unusual transcriptions.
-     */
-    private func fuzzyPhoneticMatch(for text: String) -> String? {
-        // Handle edge cases where letters might be transcribed as words
-        let edgeCaseMap: [String: String] = [
-            // Common word confusions
-            "why": "Y", "wine": "Y", "y": "Y",
-            "ex": "X", "x": "X", "axe": "X",
-            "oh": "O", "zero": "O", "o": "O",
-            "be": "B", "bee": "B", "b": "B",
-            "tea": "T", "tee": "T", "t": "T",
-            "em": "M", "m": "M",
-            "el": "L", "l": "L", "elle": "L",
-            "jay": "J", "j": "J",
-            "eye": "I", "i": "I", "aye": "I",
-            "gee": "G", "g": "G",
-            "a": "A", "ay": "A", "hey": "A",
-            "queue": "Q", "q": "Q", "cue": "Q",
-            "yes": "S", "s": "S", "ess": "S",
-            "double you": "W", "w": "W",
-        ]
-        
-        if let letter = edgeCaseMap[text] {
-            // Only return if it's an ETDRS letter
-            if etdrsLetters.contains(letter) {
-                print("🎤 ✅ Fuzzy match: '\(text)' → '\(letter)'")
-                return letter
-            }
-        }
-        
-        print("🎤 ❌ No phonetic match found for: '\(text)'")
-        return nil
-    }
-
     // MARK: - Letter Input Handling
     /*
      * Handles a letter input from speech recognition and determines if it matches the current letter.
@@ -1791,12 +1309,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         SharedAudioManager.shared.playText(instructionText, source: "ETDRS Vision Test")
     }
     
-    // MARK: - SFSpeechRecognizerDelegate
-    
-    func speechRecognizer(_ speechRecognizer: SFSpeechRecognizer, availabilityDidChange available: Bool) {
-        print("🎤 Speech recognizer availability changed: \(available)")
-    }
-    
     // MARK: - Speech Timeout Management
     
     /*
@@ -1826,24 +1338,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     private func stopSpeechTimeoutTimer() {
         speechTimeoutTimer?.invalidate()
         speechTimeoutTimer = nil
-    }
-    
-    /*
-     * Immediately resets speech recognition to clear unwanted transcription.
-     * Used when sentences or invalid input is detected.
-     */
-    private func resetSpeechRecognition() {
-        print("🎤 🔄 Resetting speech recognition due to invalid input")
-        
-        // Stop current recognition
-        stopListening()
-        
-        // Restart immediately to clear the transcription buffer
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            if !isPaused {
-                self.startListening()
-            }
-        }
     }
     
     // MARK: - Animation Methods
@@ -1904,5 +1398,3 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         }
     }
 }
-
-
