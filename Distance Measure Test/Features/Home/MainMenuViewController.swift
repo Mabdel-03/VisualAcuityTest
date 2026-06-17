@@ -15,34 +15,47 @@ import AVFoundation
 @MainActor
 class SharedAudioManager: NSObject, @unchecked Sendable {
     static let shared = SharedAudioManager()
+    static let speechDidStartNotification = Notification.Name("SharedAudioManagerSpeechDidStart")
+    static let speechDidFinishNotification = Notification.Name("SharedAudioManagerSpeechDidFinish")
     private let speechSynthesizer = AVSpeechSynthesizer()
     
     private override init() {
         super.init()
         speechSynthesizer.delegate = self
-        setupAudioSystem()
     }
     
-    private func setupAudioSystem() {
-        // Check if speech synthesis is available
-        let voices = AVSpeechSynthesisVoice.speechVoices()
-        print("🔊 Shared Audio Manager - Available voices: \(voices.count)")
-        
-        if let englishVoice = AVSpeechSynthesisVoice(language: "en-US") {
-            print("🔊 Shared Audio Manager - ✅ English voice available: \(englishVoice.name)")
-        } else {
-            print("🔊 Shared Audio Manager - ❌ No English voice available")
-        }
-        
-        // Configure audio session
+    private func configureAudioSession(
+        category: AVAudioSession.Category,
+        mode: AVAudioSession.Mode,
+        options: AVAudioSession.CategoryOptions,
+        logContext: String
+    ) {
         do {
             let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playback, mode: .default, options: [])
-            try audioSession.setActive(true)
-            print("🔊 Shared Audio Manager - Audio session configured successfully")
+            try audioSession.setCategory(category, mode: mode, options: options)
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            print("🔊 Shared Audio Manager - \(logContext) audio session configured successfully")
         } catch {
-            print("🔊 Shared Audio Manager - ❌ Audio session setup failed: \(error)")
+            print("🔊 Shared Audio Manager - ❌ \(logContext) audio session setup failed: \(error)")
         }
+    }
+
+    private func setupPlaybackAudioSystem() {
+        configureAudioSession(
+            category: .playback,
+            mode: .default,
+            options: [],
+            logContext: "Playback"
+        )
+    }
+
+    func prepareForMicrophoneCapture() {
+        configureAudioSession(
+            category: .playAndRecord,
+            mode: .measurement,
+            options: [.defaultToSpeaker, .allowBluetoothA2DP],
+            logContext: "Microphone capture"
+        )
     }
     
     func isAudioEnabled() -> Bool {
@@ -67,6 +80,10 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
         UserDefaults.standard.set(enabled, forKey: "etdrs_test_enabled")
         print("🔧 Shared Audio Manager - Test type set to: \(enabled ? "ETDRS" : "Landolt C")")
     }
+
+    var isSpeaking: Bool {
+        speechSynthesizer.isSpeaking || speechSynthesizer.isPaused
+    }
     
     func playText(_ text: String, source: String = "Unknown") {
         print("🔊 [\(source)] playText called")
@@ -76,6 +93,8 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
             print("🔊 [\(source)] Audio disabled, not playing text")
             return
         }
+
+        setupPlaybackAudioSystem()
         
         // ALWAYS stop any current speech before starting new speech
         stopSpeech()
@@ -119,17 +138,20 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
 /* AVSpeechSynthesizerDelegate is a protocol that allows the SharedAudioManager to 
     manage the audio instructions on the visual acuity app.
 */
-extension SharedAudioManager: AVSpeechSynthesizerDelegate {
+extension SharedAudioManager: @preconcurrency AVSpeechSynthesizerDelegate {
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
         print("🔊 Shared Audio Manager - ✅ Speech synthesis STARTED")
+        NotificationCenter.default.post(name: SharedAudioManager.speechDidStartNotification, object: self)
     }
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         print("🔊 Shared Audio Manager - ✅ Speech synthesis FINISHED")
+        NotificationCenter.default.post(name: SharedAudioManager.speechDidFinishNotification, object: self)
     }
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         print("🔊 Shared Audio Manager - ❌ Speech synthesis CANCELLED")
+        NotificationCenter.default.post(name: SharedAudioManager.speechDidFinishNotification, object: self)
     }
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, willSpeakRangeOfSpeechString range: NSRange, utterance: AVSpeechUtterance) {
@@ -149,6 +171,44 @@ let CORNER_RADIUS: CGFloat = 2.0
 class MainMenu: UIViewController {
     @IBOutlet weak var menuLabel: UITextField!
     @IBOutlet weak var appDescriptionLabel: UILabel!
+
+    private lazy var whisperLoadingOverlay: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.white.withAlphaComponent(0.94)
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+
+    private lazy var whisperLoadingFlowerView: DaisyFlowerView = {
+        let flower = DaisyFlowerView(
+            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            centerColor: .white
+        )
+        flower.translatesAutoresizingMaskIntoConstraints = false
+        return flower
+    }()
+
+    private lazy var whisperLoadingLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Preparing speech model..."
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textColor = .darkGray
+        label.textAlignment = .center
+        label.numberOfLines = 1
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private var isAnimatingWhisperFlower = false
+    private var hasStartedWhisperPreload = false
+
+    private lazy var whisperLoadingProgressView: UIProgressView = {
+        let progressView = UIProgressView(progressViewStyle: .default)
+        progressView.progressTintColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+        progressView.trackTintColor = UIColor.systemGray5
+        progressView.translatesAutoresizingMaskIntoConstraints = false
+        return progressView
+    }()
     
     
 
@@ -158,23 +218,27 @@ class MainMenu: UIViewController {
         initializeAudioSettings()
         initializeTestTypeSettings()
     }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        startWhisperPreloadAfterFirstFrame()
         playAudioInstructions()
     }
     
     /* Initializes the audio settings for the user.
     */
     private func initializeAudioSettings() {
-        SharedAudioManager.shared.initializeDefaultSettings()
+        UserDefaults.standard.register(defaults: ["audio_enabled": true])
     }
     
     /* Initializes the test type settings for the user.
     */
     private func initializeTestTypeSettings() {
-        // Always set to Landolt C test in this version
-        SharedAudioManager.shared.setETDRSTestEnabled(false)
+        UserDefaults.standard.register(defaults: ["etdrs_test_enabled": false])
     }
     
     /* Checks if the audio is enabled for the user.
@@ -205,7 +269,8 @@ class MainMenu: UIViewController {
     /* Plays audio instructions to the user.
     */
     private func playAudioInstructions() {
-        let instructionText = "Visual acuity test - Landolt C mode. Tap Start Test to begin."
+        let testName = isETDRSTestEnabled() ? "ETDRS mode" : "Landolt C mode"
+        let instructionText = "Visual acuity test - \(testName). Tap Start Test to begin."
         SharedAudioManager.shared.playText(instructionText, source: "Main Menu")
     }
     
@@ -216,6 +281,112 @@ class MainMenu: UIViewController {
         menuLabel?.drawHeader()
         appDescriptionLabel?.drawSmallText()
         addDecorativeDaisies()
+    }
+
+    private func setupWhisperLoadingUI() {
+        view.addSubview(whisperLoadingOverlay)
+        whisperLoadingOverlay.addSubview(whisperLoadingFlowerView)
+        whisperLoadingOverlay.addSubview(whisperLoadingLabel)
+        whisperLoadingOverlay.addSubview(whisperLoadingProgressView)
+
+        NSLayoutConstraint.activate([
+            whisperLoadingOverlay.topAnchor.constraint(equalTo: view.topAnchor),
+            whisperLoadingOverlay.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            whisperLoadingOverlay.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            whisperLoadingOverlay.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            whisperLoadingFlowerView.centerXAnchor.constraint(equalTo: whisperLoadingOverlay.centerXAnchor),
+            whisperLoadingFlowerView.centerYAnchor.constraint(equalTo: whisperLoadingOverlay.centerYAnchor, constant: -45),
+            whisperLoadingFlowerView.widthAnchor.constraint(equalToConstant: 84),
+            whisperLoadingFlowerView.heightAnchor.constraint(equalToConstant: 84),
+
+            whisperLoadingLabel.topAnchor.constraint(equalTo: whisperLoadingFlowerView.bottomAnchor, constant: 18),
+            whisperLoadingLabel.leadingAnchor.constraint(equalTo: whisperLoadingOverlay.leadingAnchor, constant: 40),
+            whisperLoadingLabel.trailingAnchor.constraint(equalTo: whisperLoadingOverlay.trailingAnchor, constant: -40),
+
+            whisperLoadingProgressView.topAnchor.constraint(equalTo: whisperLoadingLabel.bottomAnchor, constant: 6),
+            whisperLoadingProgressView.leadingAnchor.constraint(equalTo: whisperLoadingOverlay.leadingAnchor, constant: 60),
+            whisperLoadingProgressView.trailingAnchor.constraint(equalTo: whisperLoadingOverlay.trailingAnchor, constant: -60)
+        ])
+    }
+
+    private func observeWhisperLoadingProgress() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(whisperLoadingProgressChanged(_:)),
+            name: ETDRSWhisperLetterService.loadingProgressDidChangeNotification,
+            object: nil
+        )
+    }
+
+    private func startWhisperPreloadAfterFirstFrame() {
+        guard !hasStartedWhisperPreload else { return }
+        hasStartedWhisperPreload = true
+
+        DispatchQueue.main.async {
+            self.observeWhisperLoadingProgress()
+
+            Task {
+                do {
+                    print("[ETDRSWhisper] Preloading WhisperKit model after main menu render...")
+                    try await ETDRSWhisperLetterService.shared.prepareIfNeeded()
+                    print("[ETDRSWhisper] WhisperKit model preloaded after main menu render.")
+                } catch {
+                    print("[ETDRSWhisper] Main menu preload failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    @objc private func whisperLoadingProgressChanged(_ notification: Notification) {
+        let progress = notification.userInfo?[ETDRSWhisperLetterService.loadingProgressKey] as? Double ?? 0.0
+        let status = notification.userInfo?[ETDRSWhisperLetterService.loadingStatusKey] as? String ?? "Preparing speech model..."
+
+        DispatchQueue.main.async { [weak self] in
+            self?.updateWhisperLoadingUI(progress: progress, status: status)
+        }
+    }
+
+    private func updateWhisperLoadingUI(progress: Double, status: String) {
+        whisperLoadingLabel.text = status
+        whisperLoadingProgressView.setProgress(Float(progress), animated: true)
+
+        let isReady = progress >= 1.0
+        if isReady {
+            stopWhisperFlowerAnimation()
+        } else {
+            startWhisperFlowerAnimation()
+        }
+
+        UIView.animate(withDuration: 0.25) {
+            self.whisperLoadingOverlay.alpha = isReady ? 0.0 : 1.0
+        } completion: { _ in
+            self.whisperLoadingOverlay.isHidden = isReady
+        }
+    }
+
+    private func startWhisperFlowerAnimation() {
+        guard !isAnimatingWhisperFlower else { return }
+        isAnimatingWhisperFlower = true
+        whisperLoadingOverlay.isHidden = false
+
+        UIView.animate(
+            withDuration: 0.85,
+            delay: 0,
+            options: [.autoreverse, .repeat, .allowUserInteraction],
+            animations: {
+                self.whisperLoadingFlowerView.transform = CGAffineTransform(scaleX: 1.16, y: 1.16)
+                self.whisperLoadingFlowerView.alpha = 0.72
+            }
+        )
+    }
+
+    private func stopWhisperFlowerAnimation() {
+        guard isAnimatingWhisperFlower else { return }
+        isAnimatingWhisperFlower = false
+        whisperLoadingFlowerView.layer.removeAllAnimations()
+        whisperLoadingFlowerView.transform = .identity
+        whisperLoadingFlowerView.alpha = 1.0
     }
     
     /* Adds decorative daisy flowers to the background for visual cohesion.

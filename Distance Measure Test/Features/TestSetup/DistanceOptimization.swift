@@ -59,12 +59,14 @@ class DistanceTracker {
 
 class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     @IBOutlet var sceneView: ARSCNView!
+    @IBOutlet weak var captureDistanceButton: UIButton!
     var faceNode: SCNNode!
     var leftEye: SCNNode!
     var rightEye: SCNNode!
     var distanceStable = false
     var stableReadingCount = 0
     var lastCapturedDistance: Double = 0.0
+    private var captureAvailabilityWorkItem: DispatchWorkItem?
     
     // Header label
     private lazy var headerLabel: UILabel = {
@@ -72,6 +74,17 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         label.text = "Get Best Distance"
         label.drawHeader()
         label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private lazy var holdSteadyLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Hold camera steady"
+        label.font = UIFont.systemFont(ofSize: 22, weight: .semibold)
+        label.textColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+        label.textAlignment = .center
+        label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -85,13 +98,22 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         // Add header label
         view.addSubview(headerLabel)
         view.bringSubviewToFront(headerLabel)
+
+        view.addSubview(holdSteadyLabel)
+        view.bringSubviewToFront(holdSteadyLabel)
         
         // Set up header constraints
         NSLayoutConstraint.activate([
             headerLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             headerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            headerLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            headerLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+
+            holdSteadyLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
+            holdSteadyLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32),
+            holdSteadyLabel.bottomAnchor.constraint(equalTo: captureDistanceButton.topAnchor, constant: -18)
         ])
+
+        prepareCaptureButtonAfterSteadyDelay()
         
         // Set the view's delegate
         sceneView.delegate = self
@@ -139,8 +161,30 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
+        captureAvailabilityWorkItem?.cancel()
+        captureAvailabilityWorkItem = nil
+
         // Pause the view's session
         sceneView.session.pause()
+    }
+
+    private func prepareCaptureButtonAfterSteadyDelay() {
+        captureAvailabilityWorkItem?.cancel()
+
+        holdSteadyLabel.isHidden = false
+        captureDistanceButton.isEnabled = false
+        captureDistanceButton.alpha = 0.45
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.holdSteadyLabel.isHidden = true
+            self.captureDistanceButton.isEnabled = true
+            UIView.animate(withDuration: 0.2) {
+                self.captureDistanceButton.alpha = 1.0
+            }
+        }
+        captureAvailabilityWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: workItem)
     }
 
     /* Captures the distance and immediately transitions to the next scene when the 
@@ -171,11 +215,10 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         let leftEyeDistance = SCNVector3Distance(leftEyePos, cameraPosition) * 100  // Convert to cm
         let rightEyeDistance = SCNVector3Distance(rightEyePos, cameraPosition) * 100  // Convert to cm
         let averageDistance: Float
-        if (eyeNumber == 1){
+        if VisualAcuitySession.currentEyeNumber == 1 {
             print("Left eye tracking enabled")
             averageDistance = leftEyeDistance
-        }
-        else {
+        } else {
             print("Right eye tracking enabled")
             averageDistance = rightEyeDistance
         }

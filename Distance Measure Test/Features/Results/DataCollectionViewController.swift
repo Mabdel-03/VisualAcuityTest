@@ -119,11 +119,14 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     
     // Microphone status label
     private lazy var microphoneLabel: UILabel = {
-        let label = UILabel()
-        label.text = "🎤 Listening..."
-        label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
-        label.textColor = .systemBlue
+        let label = PaddedStatusLabel()
+        label.text = "Listening for response"
+        label.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        label.textColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+        label.backgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 0.10)
         label.textAlignment = .center
+        label.layer.cornerRadius = 14
+        label.layer.masksToBounds = true
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
         return label
@@ -214,6 +217,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
             // Microphone label
             microphoneLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             microphoneLabel.topAnchor.constraint(equalTo: letterLabel.bottomAnchor, constant: 30),
+            microphoneLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30),
             
             // Transcription label
             transcriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -472,33 +476,31 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     }
     
     private func extractDirectLetter(from text: String) -> String? {
-        let letters = text.filter { $0.isLetter }
-        for letter in etdrsLetters {
-            if letters.contains(letter) {
-                return letter
-            }
-        }
-        return nil
+        // Preserve the heard letter without remapping. Return the last single alphabetic character found.
+        let uppercase = text.uppercased()
+        let lettersOnly = uppercase.filter { $0.isLetter }
+        guard let last = lettersOnly.last else { return nil }
+        return String(last)
     }
     
     // MARK: - Phonetic Matching (copied from ETDRSViewController)
     
     private func phoneticMatch(for spokenText: String) -> String? {
-        let text = spokenText.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = spokenText.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Exact phonetic mappings
         let exactPhoneticMap: [String: String] = [
-            "see": "C", "sea": "C", "cee": "C", "si": "C", "c": "C",
-            "dee": "D", "di": "D", "d": "D", "de": "D",
-            "ef": "F", "eff": "F", "f": "F", "aff": "F",
-            "aitch": "H", "atch": "H", "aych": "H", "h": "H",
-            "kay": "K", "key": "K", "k": "K", "kei": "K",
-            "en": "N", "enn": "N", "n": "N", "ne": "N",
-            "pee": "P", "pi": "P", "p": "P", "pe": "P",
-            "are": "R", "ar": "R", "arr": "R", "or": "R", "r": "R",
-            "you": "U", "yu": "U", "u": "U", "yoo": "U",
-            "vee": "V", "vi": "V", "v": "V", "ve": "V", "we": "V",
-            "zee": "Z", "zed": "Z", "zi": "Z", "z": "Z"
+            "SEE": "C", "SEA": "C", "CEE": "C", "SI": "C", "C": "C",
+            "DEE": "D", "DI": "D", "D": "D", "DE": "D",
+            "EF": "F", "EFF": "F", "F": "F", "AFF": "F",
+            "AITCH": "H", "ATCH": "H", "AYCH": "H", "H": "H",
+            "KAY": "K", "KEY": "K", "K": "K", "KEI": "K",
+            "EN": "N", "ENN": "N", "N": "N", "NE": "N", "AND": "N", "NAND": "N",
+            "PEE": "P", "PI": "P", "P": "P", "PE": "P", "PEACE": "P",
+            "ARE": "R", "AR": "R", "ARR": "R", "OR": "R", "R": "R",
+            "YOU": "U", "YU": "U", "U": "U", "YOO": "U",
+            "VEE": "V", "VI": "V", "V": "V", "VE": "V", "WE": "V",
+            "ZEE": "Z", "ZED": "Z", "ZI": "Z", "Z": "Z"
         ]
         
         // Check exact matches first
@@ -513,12 +515,9 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
             }
         }
         
-        // Single letter direct match
-        if text.count == 1 && text.first!.isLetter {
-            let letter = text.uppercased()
-            if etdrsLetters.contains(letter) {
-                return letter
-            }
+        // Single letter direct match — preserve as heard, even if not ETDRS
+        if text.count == 1, let ch = text.first, ch.isLetter {
+            return String(ch).uppercased()
         }
         
         return nil
@@ -845,7 +844,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         let scaling_correction_factor = 1.0 / 2.54  // Conversion from inches to cm
         
         let scale_factor = fixedDistance * tan(visual_angle) * scaling_correction_factor
-        let labelHeight = scale_factor * ppi
+        let labelHeight = scale_factor * VisualAcuitySession.devicePPI
         
         // Set the letter size
         letterLabel.frame.size = CGSize(width: (labelHeight * 5), height: labelHeight)

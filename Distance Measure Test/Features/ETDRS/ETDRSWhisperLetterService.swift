@@ -27,13 +27,19 @@ enum ETDRSWhisperLetterServiceError: LocalizedError {
 final class ETDRSWhisperLetterService {
     static let shared = ETDRSWhisperLetterService()
 
+    static let loadingProgressDidChangeNotification = Notification.Name("ETDRSWhisperLoadingProgressDidChange")
+    static let loadingProgressKey = "progress"
+    static let loadingStatusKey = "status"
+
     private let expectedLanguage = "en"
-    private let minimumRealtimeBufferSeconds: Float = 0.35
-    private let forceRealtimeTranscriptionAfterSeconds: Float = 1.2
+    private let bundledModelsFolderName = "WhisperModels"
+    private let minimumRealtimeBufferSeconds: Float = 0.50
     private let realtimeTranscriptionWindowSeconds: Float = 2.4
-    private let silenceThreshold: Float = 0.08
+    private let silenceThreshold: Float = 0.10
+    private let minimumFinalBufferSeconds: Float = 0.15
     private let modelName = WhisperKit.recommendedModels().default
-    private let validLetters: Set<String> = ["C", "D", "F", "H", "K", "N", "P", "R", "U", "V", "Z"]
+    private let allowsDownloadedModelFallback = true
+    private let recognizedLetters: Set<String> = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZ".map(String.init))
     private let fillerPhrases: Set<String> = [
         "UH", "UHH", "UHHH", "UM", "UMM", "UMMM",
         "ER", "ERR", "ERM", "AH", "AHH", "AHHH",
@@ -46,14 +52,42 @@ final class ETDRSWhisperLetterService {
         "SILENT", "SILENT AUDIO", "SILENTAUDIO", "PAUSE",
         "NOISE", "MUSIC", "BACKGROUND NOISE", "BACKGROUND", "STATIC"
     ]
+    private let letterPronunciationMap: [String: String] = [
+        "A": "A", "AY": "A", "HEY": "A",
+        "B": "B", "BEE": "B", "BE": "B",
+        "C": "C", "CEE": "C", "SEA": "C", "SEE": "C",
+        "D": "D", "DEE": "D", "DI": "D",
+        "E": "E", "EE": "E",
+        "F": "F", "EF": "F", "EFF": "F",
+        "G": "G", "GEE": "G",
+        "H": "H", "AITCH": "H", "EACH": "H", "HATCH": "H", "ATCH": "H",
+        "I": "I", "EYE": "I", "AI": "I",
+        "J": "J", "JAY": "J",
+        "K": "K", "KAY": "K", "KEY": "K", "OKAY": "K",
+        "L": "L", "EL": "L", "ELL": "L",
+        "M": "M", "EM": "M",
+        "N": "N", "EN": "N", "ENN": "N", "AN": "N", "AND": "N", "NAND": "N",
+        "O": "O", "OH": "O",
+        "P": "P", "PEA": "P", "PEE": "P", "PI": "P", "PEACE": "P",
+        "Q": "Q", "CUE": "Q", "QUEUE": "Q",
+        "R": "R", "ARE": "R", "AR": "R", "ARR": "R", "OUR": "R",
+        "S": "S", "ESS": "S",
+        "T": "T", "TEE": "T", "TEA": "T",
+        "U": "U", "YOU": "U", "YEW": "U", "YOO": "U",
+        "V": "V", "VEE": "V", "VI": "V", "VIE": "V",
+        "W": "W", "DOUBLE U": "W", "DOUBLE YOU": "W", "DOUBLEYOU": "W",
+        "X": "X", "EX": "X",
+        "Y": "Y", "WHY": "Y",
+        "Z": "Z", "ZEE": "Z", "ZED": "Z", "ZI": "Z"
+    ]
     private let misidentificationMap: [String: String] = [
         "CEE": "C", "SEA": "C", "SEE": "C",
         "DEE": "D", "DI": "D",
-        "EF": "F", "EFF": "F",
+        "EF": "F", "EFF": "F", "EARTH": "F",
         "AITCH": "H", "EACH": "H", "HATCH": "H", "ATCH": "H",
         "KAY": "K", "KEY": "K", "OKAY": "K",
-        "EN": "N", "ENN": "N", "AN": "N",
-        "PEA": "P", "PEE": "P", "PI": "P",
+        "EN": "N", "ENN": "N", "AN": "N", "AND": "N", "NAND": "N",
+        "PEA": "P", "PEE": "P", "PI": "P", "PEACE": "P",
         "ARE": "R", "AR": "R", "ARR": "R", "OUR": "R",
         "YOU": "U", "YEW": "U", "YOO": "U",
         "VEE": "V", "VI": "V", "VIE": "V",
@@ -67,6 +101,8 @@ final class ETDRSWhisperLetterService {
     private var isRunningInference = false
     private var lastObservedSampleCount = 0
     private var lastStatusMessage = ""
+    private(set) var loadingProgress: Double = 0.0
+    private(set) var loadingStatus = "Preparing speech model..."
 
     var isListening: Bool {
         transcriptionLoop != nil
@@ -78,7 +114,7 @@ final class ETDRSWhisperLetterService {
 
     func prepareIfNeeded() async throws {
         if whisperKit != nil {
-            publishStatus("Speech engine ready.")
+            publishStatus("Speech engine ready.", progress: 1.0)
             return
         }
 
@@ -88,29 +124,7 @@ final class ETDRSWhisperLetterService {
         }
 
         let task = Task<WhisperKit, Error> {
-            self.publishStatus("Checking WhisperKit model files...")
-            let modelFolder = try await WhisperKit.download(variant: self.modelName, progressCallback: { progress in
-                let percentage = Int((progress.fractionCompleted * 100).rounded())
-                self.publishStatus("Downloading WhisperKit model... \(percentage)%")
-            })
-
-            self.publishStatus("Initializing WhisperKit...")
-            let config = WhisperKitConfig(
-                model: self.modelName,
-                modelFolder: modelFolder.path,
-                verbose: false,
-                prewarm: false,
-                load: false,
-                download: false
-            )
-
-            let whisperKit = try await WhisperKit(config)
-            self.publishStatus("Prewarming WhisperKit model...")
-            try await whisperKit.prewarmModels()
-            self.publishStatus("Loading WhisperKit model...")
-            try await whisperKit.loadModels()
-            self.publishStatus("WhisperKit ready.")
-            return whisperKit
+            try await self.prepareWhisperKit()
         }
 
         prepareTask = task
@@ -119,9 +133,111 @@ final class ETDRSWhisperLetterService {
             whisperKit = try await task.value
         } catch {
             prepareTask = nil
-            publishStatus("WhisperKit failed to load: \(error.localizedDescription)")
+            publishStatus("WhisperKit failed to load: \(error.localizedDescription)", progress: loadingProgress)
             throw error
         }
+    }
+
+    private func prepareWhisperKit() async throws -> WhisperKit {
+        publishStatus("Looking for bundled speech model...", progress: 0.05)
+
+        if let bundledModelFolder = bundledModelFolderURL() {
+            publishStatus("Using bundled WhisperKit model...", progress: 0.15)
+            return try await initializeWhisperKit(
+                model: nil,
+                modelFolder: bundledModelFolder
+            )
+        }
+
+        guard allowsDownloadedModelFallback else {
+            throw NSError(
+                domain: "ETDRSWhisperLetterService",
+                code: 1,
+                userInfo: [
+                    NSLocalizedDescriptionKey: "No bundled Whisper model was found. Add a model folder under \(bundledModelsFolderName) in the app bundle."
+                ]
+            )
+        }
+
+        publishStatus("Bundled model not found. Downloading WhisperKit model...", progress: 0.08)
+        let modelFolder = try await WhisperKit.download(variant: modelName, progressCallback: { progress in
+            let percentage = Int((progress.fractionCompleted * 100).rounded())
+            let mappedProgress = 0.10 + (progress.fractionCompleted * 0.50)
+            self.publishStatus("Downloading WhisperKit model... \(percentage)%", progress: mappedProgress)
+        })
+
+        return try await initializeWhisperKit(
+            model: modelName,
+            modelFolder: modelFolder
+        )
+    }
+
+    private func initializeWhisperKit(model: String?, modelFolder: URL) async throws -> WhisperKit {
+        publishStatus("Initializing WhisperKit...", progress: 0.65)
+        let config = WhisperKitConfig(
+            model: model,
+            modelFolder: modelFolder.path,
+            verbose: false,
+            prewarm: false,
+            load: false,
+            download: false
+        )
+
+        let whisperKit = try await WhisperKit(config)
+        publishStatus("Prewarming WhisperKit model...", progress: 0.80)
+        try await whisperKit.prewarmModels()
+        publishStatus("Loading WhisperKit model...", progress: 0.95)
+        try await whisperKit.loadModels()
+        publishStatus("WhisperKit ready.", progress: 1.0)
+        return whisperKit
+    }
+
+    private func bundledModelFolderURL() -> URL? {
+        guard let bundledModelsRoot = Bundle.main.resourceURL?.appendingPathComponent(
+            bundledModelsFolderName,
+            isDirectory: true
+        ) else {
+            return nil
+        }
+
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: bundledModelsRoot.path, isDirectory: &isDirectory), isDirectory.boolValue else {
+            return nil
+        }
+
+        let exactCandidates = [
+            bundledModelsRoot.appendingPathComponent("openai_whisper-\(modelName)", isDirectory: true),
+            bundledModelsRoot.appendingPathComponent(modelName, isDirectory: true)
+        ]
+
+        for candidate in exactCandidates {
+            if FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDirectory), isDirectory.boolValue {
+                return candidate
+            }
+        }
+
+        let childDirectories = (try? FileManager.default.contentsOfDirectory(
+            at: bundledModelsRoot,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        ))?
+            .filter { url in
+                let values = try? url.resourceValues(forKeys: [.isDirectoryKey])
+                return values?.isDirectory == true
+            } ?? []
+
+        if childDirectories.count == 1 {
+            return childDirectories.first
+        }
+
+        let normalizedModelName = normalizedModelFolderToken(modelName)
+        return childDirectories.first(where: { normalizedModelFolderToken($0.lastPathComponent).contains(normalizedModelName) })
+    }
+
+    private func normalizedModelFolderToken(_ value: String) -> String {
+        value
+            .lowercased()
+            .replacingOccurrences(of: "[^a-z0-9]+", with: "", options: .regularExpression)
     }
 
     func startListening(onPrediction: @escaping (ETDRSWhisperPrediction) -> Void) async throws {
@@ -166,6 +282,16 @@ final class ETDRSWhisperLetterService {
         lastObservedSampleCount = 0
     }
 
+    func finalizeCurrentBufferIfNeeded() async -> ETDRSWhisperPrediction? {
+        guard let whisperKit else { return nil }
+
+        let pendingSampleCount = whisperKit.audioProcessor.audioSamples.count - lastObservedSampleCount
+        let pendingSeconds = Float(max(pendingSampleCount, 0)) / Float(WhisperKit.sampleRate)
+        guard pendingSeconds >= minimumFinalBufferSeconds else { return nil }
+
+        return await processCurrentBufferIfNeeded(isFinal: true)
+    }
+
     private func processCurrentBufferIfNeeded(isFinal: Bool) async -> ETDRSWhisperPrediction? {
         guard !isRunningInference, let whisperKit else { return nil }
 
@@ -185,7 +311,7 @@ final class ETDRSWhisperLetterService {
         let recentBufferSeconds = Float(buffer.count) / Float(WhisperKit.sampleRate)
 
         if !isFinal, newBufferSeconds < minimumRealtimeBufferSeconds {
-            publishStatus(String(format: "Capturing audio... %.2fs recent audio buffered", recentBufferSeconds))
+            publishStatus("Listening for your spoken letter...")
             return nil
         }
 
@@ -197,11 +323,8 @@ final class ETDRSWhisperLetterService {
             )
 
             if !voiceDetected {
-                let canForceFirstPass = lastObservedSampleCount == 0 && recentBufferSeconds >= forceRealtimeTranscriptionAfterSeconds
-                if !canForceFirstPass {
-                    publishStatus(String(format: "Audio captured (%.2fs), waiting for clearer speech...", recentBufferSeconds))
-                    return nil
-                }
+                publishStatus("Listening for your spoken letter...")
+                return nil
             }
         }
 
@@ -248,7 +371,7 @@ final class ETDRSWhisperLetterService {
             firstTokenLogProbThreshold: nil,
             noSpeechThreshold: nil,
             concurrentWorkerCount: 1,
-            chunkingStrategy: nil
+            chunkingStrategy: ChunkingStrategy.none
         )
 
         let start = CFAbsoluteTimeGetCurrent()
@@ -256,7 +379,7 @@ final class ETDRSWhisperLetterService {
             guard let self else { return nil }
 
             let liveText = progress.text.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !liveText.isEmpty, !isFinal else { return nil }
+            guard !liveText.isEmpty, !isFinal, !self.looksLikePromptEcho(liveText) else { return nil }
             print("[ETDRSWhisper] Partial transcription: \(liveText)")
 
             let prediction = self.makePrediction(
@@ -290,7 +413,8 @@ final class ETDRSWhisperLetterService {
         let cleaned = cleanedTranscriptToken(from: transcription)
         guard !cleaned.isEmpty, !fillerPhrases.contains(cleaned) else { return nil }
 
-        if let mapped = misidentificationMap[cleaned], validLetters.contains(mapped) {
+        if let mapped = letterPronunciationMap[cleaned] ?? misidentificationMap[cleaned],
+           recognizedLetters.contains(mapped) {
             return mapped
         }
 
@@ -299,18 +423,18 @@ final class ETDRSWhisperLetterService {
             return nil
         }
 
-        if let mappedToken = tokens.compactMap({ misidentificationMap[$0] }).last,
-           validLetters.contains(mappedToken) {
+        if let mappedToken = tokens.compactMap({ letterPronunciationMap[$0] ?? misidentificationMap[$0] }).last,
+           recognizedLetters.contains(mappedToken) {
             return mappedToken
         }
 
         if let singleLetterToken = tokens.last(where: { $0.count == 1 }),
-           validLetters.contains(singleLetterToken) {
+           recognizedLetters.contains(singleLetterToken) {
             return singleLetterToken
         }
 
         let compactLetters = cleaned.replacingOccurrences(of: " ", with: "")
-        if compactLetters.count == 1, validLetters.contains(compactLetters) {
+        if compactLetters.count == 1, recognizedLetters.contains(compactLetters) {
             return compactLetters
         }
 
@@ -346,9 +470,33 @@ final class ETDRSWhisperLetterService {
         return spaced.split(separator: " ").joined(separator: " ")
     }
 
-    private func publishStatus(_ message: String) {
-        guard message != lastStatusMessage else { return }
+    private func looksLikePromptEcho(_ text: String) -> Bool {
+        let cleaned = text.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleaned.contains("the speaker will say exactly one english alphabet letter")
+            || cleaned.contains("return only that single uppercase letter")
+    }
+
+    private func publishStatus(_ message: String, progress: Double? = nil) {
+        if let progress {
+            loadingProgress = min(max(progress, 0.0), 1.0)
+        }
+
+        loadingStatus = message
+        guard message != lastStatusMessage || progress != nil else { return }
         lastStatusMessage = message
         print("[ETDRSWhisper] \(message)")
+
+        let userInfo: [String: Any] = [
+            Self.loadingProgressKey: loadingProgress,
+            Self.loadingStatusKey: loadingStatus
+        ]
+
+        Task { @MainActor in
+            NotificationCenter.default.post(
+                name: Self.loadingProgressDidChangeNotification,
+                object: self,
+                userInfo: userInfo
+            )
+        }
     }
 }

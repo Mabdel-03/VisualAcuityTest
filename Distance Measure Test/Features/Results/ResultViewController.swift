@@ -1,11 +1,6 @@
 import UIKit
 import AVFoundation
 
-var finalAcuityDictionary: [Int: String] = [:] // Dictionary to store final acuity values
-var eyeNumber: Int = 2 // Start with right eye first (1 for left eye, 2 for right eye)
-var logMARValue: Double = -1.000
-var snellenValue: Double = -1
-
 /* TestDataManager class is designed to manage the persistent storage of the test results.
     It is a singleton class that is used to save and retrieve the test results from the user's
     device.
@@ -173,6 +168,12 @@ class ResultViewController: UIViewController {
         button.isHidden = true
         return button
     }()
+
+    private func resetExportState() {
+        hasTriggeredExport = false
+        saveButton.isEnabled = true
+        saveButton.alpha = 1.0
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -272,7 +273,7 @@ class ResultViewController: UIViewController {
     */
     func displayResults() {
         // Left eye results
-        if let leftEyeResult = finalAcuityDictionary[1], !isDefaultValue(leftEyeResult) {
+        if let leftEyeResult = VisualAcuitySession.finalAcuityResults[1], !isDefaultValue(leftEyeResult) {
             leftEyeResultsLabel.text = leftEyeResult.replacingOccurrences(of: "LogMAR: ", with: "LogMAR Score: ")
                                                   .replacingOccurrences(of: "Snellen: ", with: "Snellen Score: ")
         } else {
@@ -280,7 +281,7 @@ class ResultViewController: UIViewController {
         }
         
         // Right eye results
-        if let rightEyeResult = finalAcuityDictionary[2], !isDefaultValue(rightEyeResult) {
+        if let rightEyeResult = VisualAcuitySession.finalAcuityResults[2], !isDefaultValue(rightEyeResult) {
             rightEyeResultsLabel.text = rightEyeResult.replacingOccurrences(of: "LogMAR: ", with: "LogMAR Score: ")
                                                     .replacingOccurrences(of: "Snellen: ", with: "Snellen Score: ")
         } else {
@@ -309,12 +310,8 @@ class ResultViewController: UIViewController {
     /* Returns to home screen without saving.
     */
     @objc func homeButtonTapped() {
-        // Reset all global variables to their initial state
-        finalAcuityDictionary.removeAll()
-        eyeNumber = 2
+        VisualAcuitySession.resetResults()
         finalAcuityScore = -Double.infinity
-        logMARValue = -1.000
-        snellenValue = -1
         
         // Navigate back to the main screen
         navigationController?.popToRootViewController(animated: true)
@@ -323,12 +320,8 @@ class ResultViewController: UIViewController {
     /* Retests by going back to test setup.
     */
     @objc func retestButtonTapped() {
-        // Reset all global variables to their initial state
-        finalAcuityDictionary.removeAll()
-        eyeNumber = 2
+        VisualAcuitySession.resetResults()
         finalAcuityScore = -Double.infinity
-        logMARValue = -1.000
-        snellenValue = -1
         
         // Navigate back to the previous screen (test setup)
         navigationController?.popViewController(animated: true)
@@ -337,6 +330,11 @@ class ResultViewController: UIViewController {
     /* Saves the results and initiates CSV export.
     */
     @objc func saveButtonTapped() {
+        guard !hasTriggeredExport else { return }
+
+        saveButton.isEnabled = false
+        saveButton.alpha = 0.7
+
         // Create a timestamp for this test
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -344,10 +342,10 @@ class ResultViewController: UIViewController {
         
         // Create a dictionary for this test's results
         var testResults: [String: String] = [:]
-        if let leftEyeResult = finalAcuityDictionary[1] {
+        if let leftEyeResult = VisualAcuitySession.finalAcuityResults[1] {
             testResults["Left Eye"] = leftEyeResult
         }
-        if let rightEyeResult = finalAcuityDictionary[2] {
+        if let rightEyeResult = VisualAcuitySession.finalAcuityResults[2] {
             testResults["Right Eye"] = rightEyeResult
         }
         
@@ -359,10 +357,8 @@ class ResultViewController: UIViewController {
         print("All tests count: \(TestDataManager.shared.getTestCount())")
         
         // Now initiate CSV export with name prompt
-        if !hasTriggeredExport {
-            hasTriggeredExport = true
-            initiateCSVExport()
-        }
+        hasTriggeredExport = true
+        initiateCSVExport()
     }
     
     // MARK: - CSV Export Methods
@@ -374,8 +370,10 @@ class ResultViewController: UIViewController {
         
         // Prompt for subject name first
         promptForSubjectName(allowSkip: true) { [weak self] success in
-            guard let self = self, success else {
+            guard let self = self else { return }
+            guard success else {
                 print("📊 CSV export cancelled - no subject name provided")
+                self.resetExportState()
                 return
             }
             
@@ -387,33 +385,40 @@ class ResultViewController: UIViewController {
     /* Generates CSV and uploads to Dropbox, with email as fallback.
     */
     private func generateAndEmailCSV() {
-        let progressionDataCollector = TestProgressionDataCollector.shared
-        let nameManager = SubjectNameManager.shared
-        
-        // Generate CSV content
-        let csvContent = progressionDataCollector.generateCombinedCSV()
-        
-        // Check if we have actual data
-        if csvContent.contains("No test data available") {
-            print("📊 No test data available for export")
-            showNoDataAlert()
-            return
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let progressionDataCollector = TestProgressionDataCollector.shared
+            let nameManager = SubjectNameManager.shared
+            
+            // Generate CSV content off the main thread so export doesn't stall the results UI.
+            let csvContent = progressionDataCollector.generateCombinedCSV()
+            
+            // Generate filename with subject name - format: DateTime_FirstName_LastName.csv
+            let fileName = nameManager.generateCSVFilename() ?? {
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "yyyyMMdd-HHmmss"
+                let timestamp = dateFormatter.string(from: Date())
+                return "\(timestamp)_test_data.csv"
+            }()
+            
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                
+                // Check if we have actual data
+                if csvContent.contains("No test data available") {
+                    print("📊 No test data available for export")
+                    self.showNoDataAlert()
+                    self.resetExportState()
+                    return
+                }
+                
+                print("📊 Generated CSV filename: \(fileName)")
+                
+                // TEMPORARY: Using manual share sheet only
+                // Automatic Dropbox API upload is disabled for now
+                print("📊 Presenting share sheet for manual upload")
+                self.showShareSheet(csvContent: csvContent, fileName: fileName)
+            }
         }
-        
-        // Generate filename with subject name - format: DateTime_FirstName_LastName.csv
-        let fileName = nameManager.generateCSVFilename() ?? {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyyMMdd-HHmmss"
-            let timestamp = dateFormatter.string(from: Date())
-            return "\(timestamp)_test_data.csv"
-        }()
-        
-        print("📊 Generated CSV filename: \(fileName)")
-        
-        // TEMPORARY: Using manual share sheet only
-        // Automatic Dropbox API upload is disabled for now
-        print("📊 Presenting share sheet for manual upload")
-        showShareSheet(csvContent: csvContent, fileName: fileName)
         
         /* COMMENTED OUT: Automatic Dropbox API Upload
         // Store for fallback
@@ -469,11 +474,8 @@ class ResultViewController: UIViewController {
             TestProgressionDataCollector.shared.clearAllProgressionData()
             
             // Reset all global variables
-            finalAcuityDictionary.removeAll()
-            eyeNumber = 2
+            VisualAcuitySession.resetResults()
             finalAcuityScore = -Double.infinity
-            logMARValue = -1.000
-            snellenValue = -1
             
             // Navigate back to the main screen
             self.navigationController?.popToRootViewController(animated: true)
@@ -543,14 +545,21 @@ class ResultViewController: UIViewController {
             activityVC.completionWithItemsHandler = { [weak self] activityType, completed, returnedItems, error in
                 // Clean up temp file
                 try? FileManager.default.removeItem(at: tempFileURL)
-                
-                if completed {
-                    print("📤 File shared successfully via \(activityType?.rawValue ?? "unknown")")
-                    
-                    // Show success and navigate home
-                    self?.showManualShareSuccessAlert()
-                } else {
-                    print("📤 Sharing cancelled by user")
+
+                DispatchQueue.main.async {
+                    guard let self else { return }
+
+                    if completed {
+                        print("📤 File shared successfully via \(activityType?.rawValue ?? "unknown")")
+                        TestProgressionDataCollector.shared.clearAllProgressionData()
+                        VisualAcuitySession.resetResults()
+                        finalAcuityScore = -Double.infinity
+                        self.resetExportState()
+                        self.navigationController?.popToRootViewController(animated: true)
+                    } else {
+                        print("📤 Sharing cancelled by user")
+                        self.resetExportState()
+                    }
                 }
             }
             
@@ -558,6 +567,7 @@ class ResultViewController: UIViewController {
             
         } catch {
             print("❌ Failed to create temporary file: \(error)")
+            resetExportState()
             // Show error alert as fallback
             let alert = UIAlertController(
                 title: "Error",
@@ -567,35 +577,6 @@ class ResultViewController: UIViewController {
             alert.addAction(UIAlertAction(title: "OK", style: .default))
             present(alert, animated: true)
         }
-    }
-    
-    /* Shows success alert after manual sharing via share sheet.
-    */
-    private func showManualShareSuccessAlert() {
-        let alert = UIAlertController(
-            title: "Shared Successfully",
-            message: "Your test data has been shared. Make sure to save it to Dropbox.",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
-            guard let self = self else { return }
-            
-            // Clear progression data
-            TestProgressionDataCollector.shared.clearAllProgressionData()
-            
-            // Reset global variables
-            finalAcuityDictionary.removeAll()
-            eyeNumber = 2
-            finalAcuityScore = -Double.infinity
-            logMARValue = -1.000
-            snellenValue = -1
-            
-            // Navigate back to main screen
-            self.navigationController?.popToRootViewController(animated: true)
-        })
-        
-        present(alert, animated: true)
     }
     
     /* Adds decorative daisy flowers to the background for visual cohesion.

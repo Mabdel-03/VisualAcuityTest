@@ -6,10 +6,62 @@
 //
 
 import UIKit
+import DevicePpi
 
-private enum TextPalette {
+final class PaddedStatusLabel: UILabel {
+    var textInsets = UIEdgeInsets(top: 7, left: 14, bottom: 7, right: 14) {
+        didSet {
+            invalidateIntrinsicContentSize()
+        }
+    }
+
+    override var intrinsicContentSize: CGSize {
+        let size = super.intrinsicContentSize
+        return CGSize(
+            width: size.width + textInsets.left + textInsets.right,
+            height: size.height + textInsets.top + textInsets.bottom
+        )
+    }
+
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: rect.inset(by: textInsets))
+    }
+}
+
+enum TextPalette {
     static let magenta = UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0)
     static let teal = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+    static let ink = UIColor(red: 0.15, green: 0.20, blue: 0.23, alpha: 1.0)
+    static let mist = UIColor(red: 0.93, green: 0.96, blue: 0.95, alpha: 1.0)
+    static let blush = UIColor(red: 0.98, green: 0.93, blue: 0.95, alpha: 1.0)
+}
+
+enum VisualAcuitySession {
+    static var finalAcuityResults: [Int: String] = [:]
+    static var currentEyeNumber: Int = 2
+    static var selectedAcuity: Int?
+    static var logMARValue: Double = -1.000
+    static var snellenValue: Double = -1
+
+    static let devicePPI: Double = {
+        switch Ppi.get() {
+        case .success(let ppi):
+            return ppi
+        case .unknown(let bestGuessPpi, _):
+            return bestGuessPpi
+        }
+    }()
+
+    static func eyeName(for eyeNumber: Int) -> String {
+        eyeNumber == 2 ? "Right" : "Left"
+    }
+
+    static func resetResults() {
+        finalAcuityResults.removeAll()
+        currentEyeNumber = 2
+        logMARValue = -1.000
+        snellenValue = -1
+    }
 }
 
 private protocol TextStylable: AnyObject {
@@ -57,6 +109,42 @@ public extension UILabel {
         font = UIFont.systemFont(ofSize: 18, weight: .regular)
         textColor = .darkGray
     }
+
+    func applyEyeTestTitle(eyeName: String, testName: String) {
+        let title = NSMutableAttributedString()
+        let lineBreak = NSAttributedString(string: "\n")
+
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        paragraph.lineSpacing = 2
+
+        title.append(
+            NSAttributedString(
+                string: "\(eyeName) Eye Test",
+                attributes: [
+                    .font: UIFont.systemFont(ofSize: 33, weight: .bold),
+                    .foregroundColor: TextPalette.ink,
+                    .paragraphStyle: paragraph
+                ]
+            )
+        )
+        title.append(lineBreak)
+        title.append(
+            NSAttributedString(
+                string: testName.uppercased(),
+                attributes: [
+                    .font: UIFont.systemFont(ofSize: 17, weight: .black),
+                    .foregroundColor: TextPalette.magenta,
+                    .kern: 1.8,
+                    .paragraphStyle: paragraph
+                ]
+            )
+        )
+
+        attributedText = title
+        numberOfLines = 0
+        textAlignment = .center
+    }
 }
 
 public extension UITextField {
@@ -88,6 +176,19 @@ public extension UIButton {
         titleLabel?.font = UIFont.systemFont(ofSize: 35, weight: .regular)
         layer.cornerRadius = 8
         layer.masksToBounds = true
+    }
+}
+
+public extension UIViewController {
+    func makeEndTestBarButton(action: Selector) -> UIBarButtonItem {
+        let endButton = UIBarButtonItem(
+            title: "End Test",
+            style: .plain,
+            target: self,
+            action: action
+        )
+        endButton.tintColor = .systemRed
+        return endButton
     }
 }
 
@@ -227,4 +328,3 @@ public extension UIViewController {
         NSLayoutConstraint.activate(constraints)
     }
 }
-

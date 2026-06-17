@@ -19,6 +19,10 @@ import AVFoundation
  */
 class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     // MARK: - Properties
+
+    private var isPaused = false
+    private var lowerBound: Double = 0.0
+    private var upperBound: Double = 0.0
     
     /// AR scene view for face tracking
     var sceneView: ARSCNView!
@@ -88,7 +92,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     ]
     
     /// Standard ETDRS letters
-    let etdrsLetters = ["C", "D", "F", "H", "K", "N", "P", "R", "U", "V", "Z"]
+    let etdrsLetters = ["C", "D", "F", "H", "K", "N", "P", "R", "X", "J", "Z"]
     
     /// Current letter being displayed
     private var currentLetter: String = ""
@@ -100,6 +104,11 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     
     /// Flag to indicate if speech recognition is active
     private var isListening = false
+    private var shouldResumeListeningAfterSpeech = false
+    private var resumeListeningWorkItem: DispatchWorkItem?
+    private var pendingRecognizedLetter: String?
+    private var pendingRecognizedLetterCount = 0
+    private var pendingRecognizedLetterTimestamp: Date?
     
     // MARK: - UI Elements
     
@@ -133,65 +142,34 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         return label
     }()
     
-    // Label warning the user about incorrect distance
-    private lazy var warningLabel: UILabel = {
-        let label = UILabel()
-        label.text = "⚠️ Adjust Distance"
-        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        label.textColor = .red
+    private lazy var distanceGuidanceView = DistanceGuidanceView()
+    
+    // Label showing microphone status
+    private lazy var microphoneLabel: UILabel = {
+        let label = PaddedStatusLabel()
+        label.text = "VOICE INPUT ACTIVE"
+        label.font = UIFont.systemFont(ofSize: 13, weight: .black)
+        label.textColor = TextPalette.teal
+        label.backgroundColor = TextPalette.mist
         label.textAlignment = .center
+        label.layer.cornerRadius = 14
+        label.layer.cornerCurve = .continuous
+        label.layer.borderWidth = 1
+        label.layer.borderColor = TextPalette.teal.withAlphaComponent(0.20).cgColor
+        label.textInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
         return label
     }()
 
-    // Label indicating distance is acceptable
-    private lazy var checkmarkLabel: UILabel = {
+    private lazy var transcriptionLabel: UILabel = {
         let label = UILabel()
-        label.text = "✅ Distance OK"
-        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        label.textColor = .green
+        label.text = "Waiting for a spoken letter"
+        label.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        return label
-    }()
-    
-    // Label with arrow indicating user should move closer
-    private lazy var moveCloserArrowLabel: UILabel = {
-        let label = UILabel()
-        label.text = "⬇️ Move Closer ⬇️"
-        label.font = UIFont.systemFont(ofSize: 28, weight: .bold)
-        label.textColor = .orange
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        label.numberOfLines = 0
-        return label
-    }()
-    
-    // Label with arrow indicating user should move farther
-    private lazy var moveFartherArrowLabel: UILabel = {
-        let label = UILabel()
-        label.text = "⬆️ Move Farther ⬆️"
-        label.font = UIFont.systemFont(ofSize: 28, weight: .bold)
-        label.textColor = .orange
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        label.numberOfLines = 0
-        return label
-    }()
-    
-    // Label showing microphone status
-    private lazy var microphoneLabel: UILabel = {
-        let label = UILabel()
-        label.text = "🎤 Listening..."
-        label.font = UIFont.systemFont(ofSize: 20, weight: .medium)
-        label.textColor = .systemBlue
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
+        label.numberOfLines = 2
         return label
     }()
     
@@ -234,6 +212,12 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     
     /// Data collector for test progression tracking
     private let dataCollector = TestProgressionDataCollector.shared
+
+    private func resetPendingRecognition() {
+        pendingRecognizedLetter = nil
+        pendingRecognizedLetterCount = 0
+        pendingRecognizedLetterTimestamp = nil
+    }
     
     // MARK: - Lifecycle Methods
     
@@ -248,9 +232,15 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
 
         print("🔍 ETDRSViewController - viewDidLoad started")
 
+        // Replace the default Back button with an explicit confirmed exit action
+        // so the test cannot be abandoned accidentally mid-trial.
+        navigationItem.hidesBackButton = true
+        navigationItem.setHidesBackButton(true, animated: false)
+
         // Set up the basic UI
         view.backgroundColor = .white
         setupUI()
+        setupEndTestButton()
         print("🔍 ETDRSViewController - UI setup completed")
 
         // Initialize acuity level from the selected value
@@ -287,17 +277,35 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         print("🔍 ETDRSViewController - first letter generated: \(currentLetter)")
         
         // Size the test letter for the current acuity level (after letter is generated)
-        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter)
+        _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter)
         print("🔍 ETDRSViewController - initial letter size set for acuity: \(acuityList[currentAcuityIndex])")
         
         // Update eye test label based on current eye number
         updateEyeTestLabel()
         
         // Initialize data collection session
-        let eyeName = eyeNumber == 2 ? "Right" : "Left"
+        let eyeName = VisualAcuitySession.eyeName(for: VisualAcuitySession.currentEyeNumber)
         dataCollector.startNewSession(eye: eyeName, testType: "ETDRS")
-        
         print("🔍 ETDRSViewController - viewDidLoad completed successfully")
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        // Prevent the edge-swipe back gesture from interrupting the ETDRS test.
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSharedAudioDidStart),
+            name: SharedAudioManager.speechDidStartNotification,
+            object: SharedAudioManager.shared
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSharedAudioDidFinish),
+            name: SharedAudioManager.speechDidFinishNotification,
+            object: SharedAudioManager.shared
+        )
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -309,13 +317,16 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         playAudioInstructions()
         print("🔍 ETDRSViewController - audio instructions played")
         
-        // Start speech recognition
-        startListening()
+        // Start speech recognition after any spoken instruction finishes.
+        requestListeningAfterSpeechIfNeeded()
         print("🔍 ETDRSViewController - viewDidAppear completed")
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+
+        // Restore the standard edge-swipe behavior for non-test screens.
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         
         // Clean up timers and display link
         audioInstructionTimer?.invalidate()
@@ -326,13 +337,43 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         // Stop speech recognition and timeout timer
         stopListening()
         stopSpeechTimeoutTimer()
+        shouldResumeListeningAfterSpeech = false
+        resumeListeningWorkItem?.cancel()
+        resumeListeningWorkItem = nil
+        NotificationCenter.default.removeObserver(self)
+
+        // Pause AR when leaving this eye test so the next screen can safely
+        // take over camera resources without the previous session lingering.
+        sceneView?.session.pause()
+    }
+
+    /*
+     * Installs an explicit "End Test" button on the navigation bar's trailing
+     * edge so the user can intentionally leave the test after confirming.
+     */
+    private func setupEndTestButton() {
+        navigationItem.rightBarButtonItem = makeEndTestBarButton(action: #selector(endTestTapped))
+    }
+
+    @objc private func endTestTapped() {
+        let alert = UIAlertController(
+            title: "End test?",
+            message: "Your progress on this set will be lost.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "End Test", style: .destructive) { [weak self] _ in
+            self?.navigationController?.popViewController(animated: true)
+        })
+        present(alert, animated: true)
     }
 
     /*
     * Updates the eye test label based on the current eye number.
     */
     private func updateEyeTestLabel() {
-        eyeTestLabel.text = eyeNumber == 2 ? "Right Eye Test - ETDRS" : "Left Eye Test - ETDRS"
+        let eyeName = VisualAcuitySession.eyeName(for: VisualAcuitySession.currentEyeNumber)
+        eyeTestLabel.applyEyeTestTitle(eyeName: eyeName, testName: "ETDRS")
     }
 
     /*
@@ -341,9 +382,9 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
      */
     private func initializeAcuityLevel() {
         // Debug: Print selected acuity at start
-        print("Initial selectedAcuity value: \(String(describing: selectedAcuity))")
+        print("Initial selectedAcuity value: \(String(describing: VisualAcuitySession.selectedAcuity))")
         
-        if let selectedAcuity = selectedAcuity {
+        if let selectedAcuity = VisualAcuitySession.selectedAcuity {
             // Find the index of the selected acuity in our acuity list
             currentAcuityIndex = getIndex(numList: acuityList, value: selectedAcuity)
             print("The index of \(selectedAcuity) is \(currentAcuityIndex).")
@@ -498,7 +539,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     private func startDistanceMonitoring() {
         // Add a debug option to skip distance checking for testing
         #if DEBUG
-        let debugBypassDistanceCheck = false // Set to true to bypass distance checking
+        let debugBypassDistanceCheck = ProcessInfo.processInfo.environment["ETDRS_BYPASS_DISTANCE_CHECK"] == "1"
         
         // Extra debugging for distance
         let debugExtraLogging = true // Set to true for more verbose distance logs
@@ -506,8 +547,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         if debugBypassDistanceCheck {
             print("🔧 DEBUG MODE: Distance checking disabled")
             isPaused = false
-            warningLabel.isHidden = true
-            checkmarkLabel.isHidden = true
+            distanceGuidanceView.hideAll()
             return
         }
         
@@ -529,7 +569,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
      * Used to attach eye nodes to detected face anchors.
      */
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
+        guard anchor is ARFaceAnchor else { return }
         
         // Add eye nodes to the face node
         node.addChildNode(leftEye)
@@ -579,7 +619,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
                 let rightEyeDistance = self.SCNVector3Distance(rightEyePos, cameraPosition)
                 
                 // Use only the relevant eye's distance based on which eye is being tested
-                let rawDistance = (eyeNumber == 1) ? leftEyeDistance : rightEyeDistance
+                let rawDistance = (VisualAcuitySession.currentEyeNumber == 1) ? leftEyeDistance : rightEyeDistance
                 let rawAverageDistance = rawDistance * 100  // Convert to cm
                 
                 // Validate and update distance tracker
@@ -615,11 +655,11 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         view.addSubview(letterLabel)
         view.addSubview(eyeTestLabel)
         view.addSubview(instructionLabel)
-        view.addSubview(warningLabel)
-        view.addSubview(checkmarkLabel)
-        view.addSubview(moveCloserArrowLabel)
-        view.addSubview(moveFartherArrowLabel)
+        view.addSubview(distanceGuidanceView)
         view.addSubview(microphoneLabel)
+        view.addSubview(transcriptionLabel)
+
+        distanceGuidanceView.translatesAutoresizingMaskIntoConstraints = false
         
         // Set up constraints
         NSLayoutConstraint.activate([
@@ -628,12 +668,11 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             eyeTestLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             eyeTestLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
-            // Warning and checkmark label constraints
-            warningLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            warningLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 50),
-            
-            checkmarkLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            checkmarkLabel.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 10),
+            // Distance guidance view constraints
+            distanceGuidanceView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            distanceGuidanceView.topAnchor.constraint(equalTo: eyeTestLabel.bottomAnchor, constant: 30),
+            distanceGuidanceView.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
+            distanceGuidanceView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
             
             // Letter label constraints
             letterLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -642,23 +681,17 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             // Microphone label constraints
             microphoneLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             microphoneLabel.topAnchor.constraint(equalTo: letterLabel.bottomAnchor, constant: 30),
+
+            // Transcription label constraints
+            transcriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            transcriptionLabel.topAnchor.constraint(equalTo: microphoneLabel.bottomAnchor, constant: 10),
+            transcriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            transcriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
             
             // Instruction label constraints
             instructionLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
             instructionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            instructionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            // Move closer arrow label constraints
-            moveCloserArrowLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            moveCloserArrowLabel.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 10),
-            moveCloserArrowLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            moveCloserArrowLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            // Move farther arrow label constraints
-            moveFartherArrowLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            moveFartherArrowLabel.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 10),
-            moveFartherArrowLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            moveFartherArrowLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            instructionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
         print("ETDRSViewController - constraints activated")
     }
@@ -712,13 +745,24 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
      * Starts listening for speech input.
      */
     private func startListening() {
+        guard view.window != nil else { return }
+        guard !isPaused else { return }
+        guard !SharedAudioManager.shared.isSpeaking else {
+            shouldResumeListeningAfterSpeech = true
+            microphoneLabel.isHidden = true
+            transcriptionLabel.text = "Waiting for spoken instructions to finish"
+            return
+        }
         guard !isListening else { 
             print("🎤 Already listening, skipping start")
             return 
         }
 
+        shouldResumeListeningAfterSpeech = false
         isListening = true
+        resetPendingRecognition()
         microphoneLabel.isHidden = false
+        transcriptionLabel.text = "Listening for one spoken letter"
         startSpeechTimeoutTimer()
         print("[ETDRSWhisper] Starting WhisperKit listening for ETDRS letters...")
 
@@ -738,6 +782,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
                     self.isListening = false
                     self.microphoneLabel.isHidden = true
                     self.stopSpeechTimeoutTimer()
+                    self.transcriptionLabel.text = "Microphone unavailable"
                     self.showSpeechPermissionAlert(message: error.localizedDescription)
                 }
             }
@@ -749,22 +794,51 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         guard !prediction.rawTranscription.isEmpty else { return }
 
         print("[ETDRSWhisper] Heard: '\(prediction.rawTranscription)' normalized: \(prediction.normalizedLetter ?? "<none>") latency: \(String(format: "%.2f", prediction.latency))s")
+        transcriptionLabel.text = "Heard: \"\(prediction.rawTranscription)\""
 
         if prediction.isIgnorableNonAnswer {
             print("[ETDRSWhisper] Ignoring non-answer: '\(prediction.rawTranscription)'")
+            transcriptionLabel.text = "Listening for one spoken letter"
             return
         }
 
         if prediction.isFiller {
             print("[ETDRSWhisper] Ignoring filler: '\(prediction.rawTranscription)'")
+            transcriptionLabel.text = "Listening for one spoken letter"
             return
         }
 
         guard let letter = prediction.normalizedLetter else {
             print("[ETDRSWhisper] Ignoring unclear transcription: '\(prediction.rawTranscription)'")
+            if prediction.isFinal {
+                transcriptionLabel.text = "Could not confirm a letter"
+            }
             return
         }
 
+        if !prediction.isFinal {
+            let now = Date()
+            if pendingRecognizedLetter == letter,
+               let timestamp = pendingRecognizedLetterTimestamp,
+               now.timeIntervalSince(timestamp) <= 1.2 {
+                pendingRecognizedLetterCount += 1
+            } else {
+                pendingRecognizedLetter = letter
+                pendingRecognizedLetterCount = 1
+            }
+            pendingRecognizedLetterTimestamp = now
+
+            let needsConfirmation = pendingRecognizedLetterCount < 2
+            transcriptionLabel.text = needsConfirmation
+                ? "Picked up: \(letter) · say it again"
+                : "Picked up: \(letter)"
+
+            guard pendingRecognizedLetterCount >= 2 else { return }
+        }
+
+        resetPendingRecognition()
+        let isCorrect = letter == currentLetter
+        transcriptionLabel.text = "Picked up: \(letter) · \(isCorrect ? "correct" : "incorrect")"
         print("[ETDRSWhisper] Processing recognized ETDRS letter: \(letter) for target: \(currentLetter)")
         stopListening()
         handleLetterInput(letter)
@@ -789,12 +863,50 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         print("[ETDRSWhisper] Stopping WhisperKit listening...")
         whisperLetterService.stopListening()
         isListening = false
+        resetPendingRecognition()
         microphoneLabel.isHidden = true
         
         // Stop the timeout timer
         stopSpeechTimeoutTimer()
         
         print("[ETDRSWhisper] Stopped listening for speech input")
+    }
+
+    private func requestListeningAfterSpeechIfNeeded() {
+        resumeListeningWorkItem?.cancel()
+        shouldResumeListeningAfterSpeech = true
+        startListening()
+    }
+
+    @objc private func handleSharedAudioDidStart() {
+        guard view.window != nil else { return }
+        resumeListeningWorkItem?.cancel()
+        resumeListeningWorkItem = nil
+
+        if isListening {
+            stopListening()
+            shouldResumeListeningAfterSpeech = !isPaused
+        } else if !isPaused {
+            shouldResumeListeningAfterSpeech = true
+        }
+
+        if shouldResumeListeningAfterSpeech {
+            transcriptionLabel.text = "Waiting for spoken instructions to finish"
+        }
+    }
+
+    @objc private func handleSharedAudioDidFinish() {
+        guard view.window != nil else { return }
+        guard shouldResumeListeningAfterSpeech, !isPaused else { return }
+        
+        resumeListeningWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            guard self.shouldResumeListeningAfterSpeech, !self.isPaused else { return }
+            self.startListening()
+        }
+        resumeListeningWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: workItem)
     }
     
     // MARK: - Letter Input Handling
@@ -829,7 +941,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         }
         
         // Record the response data
-        let eyeName = eyeNumber == 2 ? "Right" : "Left"
+        let eyeName = VisualAcuitySession.eyeName(for: VisualAcuitySession.currentEyeNumber)
         let acuityString = "20/\(acuityList[currentAcuityIndex])"
         
         dataCollector.recordResponse(
@@ -894,7 +1006,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
                         print("Going back to larger acuity...")
                         currentAcuityIndex -= 1
                         resetLetterScaling() // Reset scaling for new acuity level
-                        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
+                        _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
                     }
                 }
             } else { // User gets at least 6 letters correct, advance to next level
@@ -905,7 +1017,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
                     print("Advancing to smaller acuity...")
                     currentAcuityIndex += 1
                     resetLetterScaling() // Reset scaling for new acuity level
-                    set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
+                    _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
                 }
             }
             // Reset trial counter and correct answers count
@@ -920,10 +1032,12 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     private func generateNewLetter() {
         // Select a random ETDRS letter
         currentLetter = etdrsLetters.randomElement() ?? "C"
+        resetPendingRecognition()
         letterLabel.text = currentLetter
         
         // Make the letter visible now that the new letter is set
         letterLabel.alpha = 1
+        transcriptionLabel.text = "Listening for one spoken letter"
         
         // Record the time when this letter is displayed for response time calculation
         letterDisplayTime = Date()
@@ -964,8 +1078,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         // Determine user's position relative to acceptable range
         let tooClose = liveDistance < lowerBound
         let tooFar = liveDistance > upperBound
-        let inRange = !tooClose && !tooFar
-        
         if isPaused {
             // When already paused, require a more definitive return to range
             if liveDistance > (lowerBound + outOfRangeTolerance) && liveDistance < (upperBound - outOfRangeTolerance) {
@@ -1009,14 +1121,10 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
      */
     private func updateDirectionalIndicators(tooClose: Bool, tooFar: Bool, distance: Double) {
         if tooClose {
-            // User is too close - show "move farther" arrow
-            moveCloserArrowLabel.isHidden = true
-            moveFartherArrowLabel.isHidden = false
+            distanceGuidanceView.showMoveFarther()
             playAudioInstructionIfNeeded("Move farther.")
         } else if tooFar {
-            // User is too far - show "move closer" arrow
-            moveFartherArrowLabel.isHidden = true
-            moveCloserArrowLabel.isHidden = false
+            distanceGuidanceView.showMoveCloser()
             playAudioInstructionIfNeeded("Move closer.")
         }
     }
@@ -1040,25 +1148,19 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     /* Shows the distance warning indicator.
      */
     private func showDistanceWarning() {
-        warningLabel.isHidden = false
+        distanceGuidanceView.showWarning()
     }
     
     /* Shows the distance OK indicator temporarily.
      */
     private func showDistanceOK() {
-        checkmarkLabel.isHidden = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.checkmarkLabel.isHidden = true
-        }
+        distanceGuidanceView.showOK()
     }
     
     /* Hides all distance-related indicators.
      */
     private func hideAllDistanceIndicators() {
-        warningLabel.isHidden = true
-        checkmarkLabel.isHidden = true
-        moveCloserArrowLabel.isHidden = true
-        moveFartherArrowLabel.isHidden = true
+        distanceGuidanceView.hideAll()
     }
     
     /* Updates the letter size based on current distance if the change is significant enough.
@@ -1144,7 +1246,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             
             // For testing purposes, DON'T override with target distance to see if extreme values are detected
             #if DEBUG
-            let debugStrictDistanceTesting = true // Set to true to test extreme distance values
+            let debugStrictDistanceTesting = ProcessInfo.processInfo.environment["ETDRS_STRICT_DISTANCE_TESTING"] == "1"
             if debugStrictDistanceTesting {
                 if shouldLog {
                     print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
@@ -1166,7 +1268,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             }
             
             #if DEBUG
-            let debugStrictDistanceTesting = true // Set to true to test extreme distance values
+            let debugStrictDistanceTesting = ProcessInfo.processInfo.environment["ETDRS_STRICT_DISTANCE_TESTING"] == "1"
             if debugStrictDistanceTesting {
                 if shouldLog {
                     print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
@@ -1218,7 +1320,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             oneLetter.text = nonNilLetterText
             
             // Adjust size based on scale factor with standard 5:1 width to height ratio
-            let labelHeight = scale_factor * ppi
+            let labelHeight = scale_factor * VisualAcuitySession.devicePPI
             oneLetter.frame.size = CGSize(width: (labelHeight * 5), height: labelHeight)
             
             // Adjusted font size - reducing by factor of 2 to match physical acuity cards
@@ -1280,15 +1382,19 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         // Navigate to the results screen
         
         finalAcuityScore = acuityScore
-        logMARValue = finalAcuityScore
-        snellenValue = 20 * pow(10, logMARValue)
+        VisualAcuitySession.logMARValue = finalAcuityScore
+        VisualAcuitySession.snellenValue = 20 * pow(10, VisualAcuitySession.logMARValue)
         
-        if eyeNumber == 2 {
+        if VisualAcuitySession.currentEyeNumber == 2 {
             // Store the right eye's results (tested first)
-            finalAcuityDictionary[2] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+            VisualAcuitySession.finalAcuityResults[2] = String(
+                format: "LogMAR: %.4f, Snellen: 20/%.0f",
+                VisualAcuitySession.logMARValue,
+                VisualAcuitySession.snellenValue
+            )
             
             // Set eye number for left eye test (tested second)
-            eyeNumber = 1
+            VisualAcuitySession.currentEyeNumber = 1
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             if let leftInstrucVC = storyboard.instantiateViewController(withIdentifier: "OneEyeInstruc") as? OneEyeInstruc {
                 navigationController?.pushViewController(leftInstrucVC, animated: true)
@@ -1297,7 +1403,11 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             
         } else {
             // Store the left eye's results (tested second)
-            finalAcuityDictionary[1] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+            VisualAcuitySession.finalAcuityResults[1] = String(
+                format: "LogMAR: %.4f, Snellen: 20/%.0f",
+                VisualAcuitySession.logMARValue,
+                VisualAcuitySession.snellenValue
+            )
             
             performSegue(withIdentifier: "ShowResults", sender: self)
             print("🔍 ETDRS: Navigating to results after left eye completion")
@@ -1322,10 +1432,27 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             print("🎤 ⏰ Speech recognition timeout - restarting...")
             
             if self.isListening {
-                self.stopListening()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    if !isPaused {
-                        self.startListening()
+                Task { [weak self] in
+                    guard let self else { return }
+                    let finalPrediction = await self.whisperLetterService.finalizeCurrentBufferIfNeeded()
+
+                    await MainActor.run {
+                        if let finalPrediction,
+                           finalPrediction.normalizedLetter != nil,
+                           !finalPrediction.isIgnorableNonAnswer,
+                           !finalPrediction.isFiller,
+                           !self.isPaused {
+                            self.handleWhisperPrediction(finalPrediction)
+                            return
+                        }
+
+                        self.transcriptionLabel.text = "Still listening... try the letter again"
+                        self.stopListening()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            if !self.isPaused {
+                                self.startListening()
+                            }
+                        }
                     }
                 }
             }
