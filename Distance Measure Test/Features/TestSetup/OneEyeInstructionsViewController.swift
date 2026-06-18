@@ -32,6 +32,7 @@ class OneEyeInstruc: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         playAudioInstructions()
+        animateDecorativeDaisies()
     }
     
     /* Sets up the UI for the one eye instructions scene.
@@ -45,10 +46,14 @@ class OneEyeInstruc: UIViewController {
         // Center the text field and set color
         oneEyeInstructions.textAlignment = .center
         oneEyeInstructions.drawHeader()
+        oneEyeInstructions.adjustsFontSizeToFitWidth = true
+        oneEyeInstructions.minimumFontSize = 24
         
         // Center the test type label and apply header2 style
         testTypeLabel?.textAlignment = .center
-        testTypeLabel?.drawHeader2()
+        testTypeLabel?.numberOfLines = 1
+        testTypeLabel?.adjustsFontSizeToFitWidth = true
+        testTypeLabel?.minimumScaleFactor = 0.8
         
         // Add decorative daisies
         addDecorativeDaisies()
@@ -60,7 +65,7 @@ class OneEyeInstruc: UIViewController {
         // Decorative daisy 1 - top left (teal)
         addDecorativeDaisy(
             size: 100,
-            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            petalColor: AppThemeColors.teal,
             centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
             alpha: 0.12,
             leadingOffset: 20,
@@ -70,7 +75,7 @@ class OneEyeInstruc: UIViewController {
         // Decorative daisy 2 - bottom right (magenta)
         addDecorativeDaisy(
             size: 95,
-            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            petalColor: AppThemeColors.magentaAccent,
             centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
             alpha: 0.09,
             trailingOffset: 25,
@@ -81,8 +86,8 @@ class OneEyeInstruc: UIViewController {
     /* Plays audio instructions to the user.
     */
     private func playAudioInstructions() {
-        let eyeName = eyeNumber == 2 ? "right" : "left"
-        let coverEye = eyeNumber == 2 ? "left" : "right"
+        let eyeName = VisualAcuitySession.currentEyeNumber == 2 ? "right" : "left"
+        let coverEye = VisualAcuitySession.currentEyeNumber == 2 ? "left" : "right"
         
         let instructionText = "Cover your \(coverEye) eye, test with \(eyeName) eye."
         
@@ -92,44 +97,49 @@ class OneEyeInstruc: UIViewController {
     /* Updates the text on the one eye instructions scene.
     */
     private func updateText() {
-        let testType = "Landolt C Test"  // Fixed to Landolt C in this version
+        let testType = isETDRSTest ? "ETDRS" : "Landolt C"
         
-        if eyeNumber == 2 {
-            oneEyeInstructions.text = "Right Eye"
+        if VisualAcuitySession.currentEyeNumber == 2 {
+            oneEyeInstructions.text = "Right Eye Test"
             instructionText.text = "Cover left eye. Tap \"Begin\" when ready to start the test."
         } else {
-            oneEyeInstructions.text = "Left Eye"
+            oneEyeInstructions.text = "Left Eye Test"
             instructionText.text = "Cover right eye. Tap \"Begin\" when ready to start the test."
         }
         
-        testTypeLabel?.text = testType
+        testTypeLabel?.applyTestTypeTitle(testType, color: AppThemeColors.teal)
     }
     
-    /* Begins the Landolt C test (fixed test type in this version).
+    /* Begins the selected visual acuity test.
     */
     @IBAction func beginTestButtonPressed(_ sender: Any) {
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        
-        // Always navigate to Landolt C test in this version
-        if let tumblingVC = storyboard.instantiateViewController(withIdentifier: "TumblingEViewController") as? TumblingEViewController {
-            navigationController?.pushViewController(tumblingVC, animated: true)
-            print("🔄 Starting Landolt C test for eye \(eyeNumber)")
+        if isETDRSTest {
+            let loadingVC = ETDRSWhisperLoadingViewController(launchPurpose: .beforeETDRSTest)
+            navigationController?.pushViewController(loadingVC, animated: true)
+            print("🔤 Starting ETDRS loading screen for eye \(VisualAcuitySession.currentEyeNumber)")
         } else {
-            print("🔄 ❌ Failed to instantiate TumblingEViewController from storyboard")
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
+            // Navigate to Landolt C test
+            if let tumblingVC = storyboard.instantiateViewController(withIdentifier: "TumblingEViewController") as? TumblingEViewController {
+                navigationController?.pushViewController(tumblingVC, animated: true)
+                print("🔄 ✅ Successfully navigating to Landolt C test")
+            } else {
+                print("🔄 ❌ Failed to instantiate TumblingEViewController from storyboard")
+            }
         }
     }
     
     /* Skips the one eye test and goes to the results scene.
     */
     @IBAction func skipButtonPressed(_ sender: Any) {
-        if eyeNumber == 2 {
+        if VisualAcuitySession.currentEyeNumber == 2 {
             // Right eye test (tested first) - skip to left eye test
-            finalAcuityDictionary[2] = "LogMAR: -1.000, Snellen: 20/-1"
-            eyeNumber = 1
+            VisualAcuitySession.finalAcuityResults[2] = "LogMAR: -1.000, Snellen: 20/-1"
+            VisualAcuitySession.currentEyeNumber = 1
             updateText()
         } else {
             // Left eye test (tested second) - go to results
-            finalAcuityDictionary[1] = "LogMAR: -1.000, Snellen: 20/-1"
+            VisualAcuitySession.finalAcuityResults[1] = "LogMAR: -1.000, Snellen: 20/-1"
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             if let resultVC = storyboard.instantiateViewController(withIdentifier: "ResultViewController") as? ResultViewController {
                 navigationController?.pushViewController(resultVC, animated: true)

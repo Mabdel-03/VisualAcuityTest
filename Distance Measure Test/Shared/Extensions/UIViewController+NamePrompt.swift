@@ -25,12 +25,16 @@ extension UIViewController {
                 preferredStyle: .alert
             )
             
-            confirmAlert.addAction(UIAlertAction(title: "Use Previous", style: .default) { _ in
-                completion(true)
+            confirmAlert.addAction(UIAlertAction(title: "Use Previous", style: .default) { [weak confirmAlert] _ in
+                confirmAlert?.dismiss(animated: true) {
+                    completion(true)
+                }
             })
             
-            confirmAlert.addAction(UIAlertAction(title: "Enter New Name", style: .default) { _ in
-                self.showNameEntryAlert(completion: completion)
+            confirmAlert.addAction(UIAlertAction(title: "Enter New Name", style: .default) { [weak self, weak confirmAlert] _ in
+                confirmAlert?.dismiss(animated: true) {
+                    self?.showNameEntryAlert(completion: completion)
+                }
             })
             
             confirmAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
@@ -81,22 +85,28 @@ extension UIViewController {
             
             // Validate names
             if !nameManager.validateName(firstName) {
-                self.showValidationError(message: "First name must contain at least one letter.") {
-                    self.showNameEntryAlert(completion: completion)
+                alert?.dismiss(animated: true) {
+                    self.showValidationError(message: "First name must contain at least one letter.") {
+                        self.showNameEntryAlert(completion: completion)
+                    }
                 }
                 return
             }
             
             if !nameManager.validateName(lastName) {
-                self.showValidationError(message: "Last name must contain at least one letter.") {
-                    self.showNameEntryAlert(completion: completion)
+                alert?.dismiss(animated: true) {
+                    self.showValidationError(message: "Last name must contain at least one letter.") {
+                        self.showNameEntryAlert(completion: completion)
+                    }
                 }
                 return
             }
             
             // Save the names
             nameManager.saveSubjectName(firstName: firstName, lastName: lastName)
-            completion(true)
+            alert?.dismiss(animated: true) {
+                completion(true)
+            }
         }
         
         // Add Cancel action
@@ -118,8 +128,10 @@ extension UIViewController {
             preferredStyle: .alert
         )
         
-        errorAlert.addAction(UIAlertAction(title: "Try Again", style: .default) { _ in
-            retry()
+        errorAlert.addAction(UIAlertAction(title: "Try Again", style: .default) { [weak errorAlert] _ in
+            errorAlert?.dismiss(animated: true) {
+                retry()
+            }
         })
         
         errorAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -127,7 +139,6 @@ extension UIViewController {
         present(errorAlert, animated: true)
     }
 }
-
 
 
 

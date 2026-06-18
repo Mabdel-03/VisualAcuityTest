@@ -12,14 +12,17 @@ import UIKit
 import DevicePpi
 import ARKit
 import AVFoundation
-import Speech
 
 /* ETDRSViewController class implements a visual acuity test using ETDRS letters.
    The test displays ETDRS letters at various sizes, and the user must speak the
    letter they see. The test maintains a fixed testing distance using AR face tracking.
  */
-class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecognizerDelegate {
+class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     // MARK: - Properties
+
+    private var isPaused = false
+    private var lowerBound: Double = 0.0
+    private var upperBound: Double = 0.0
     
     /// AR scene view for face tracking
     var sceneView: ARSCNView!
@@ -89,27 +92,25 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     ]
     
     /// Standard ETDRS letters
-    let etdrsLetters = ["C", "D", "F", "H", "K", "N", "P", "R", "U", "V", "Z"]
+    let etdrsLetters = ["C", "D", "F", "H", "K", "N", "P", "R", "X", "J", "Z"]
     
     /// Current letter being displayed
     private var currentLetter: String = ""
     
     // MARK: - Speech Recognition Properties
     
-    /// Speech recognizer for voice input
-    private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))!
-    
-    /// Audio engine for speech recognition
-    private let audioEngine = AVAudioEngine()
-    
-    /// Speech recognition request
-    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
-    
-    /// Speech recognition task
-    private var recognitionTask: SFSpeechRecognitionTask?
+    /// WhisperKit service for spoken ETDRS letter input
+    private let whisperLetterService = ETDRSWhisperLetterService.shared
     
     /// Flag to indicate if speech recognition is active
     private var isListening = false
+    private var shouldResumeListeningAfterSpeech = false
+    private var resumeListeningWorkItem: DispatchWorkItem?
+    private var listeningStatusWorkItem: DispatchWorkItem?
+    private var pendingRecognizedLetter: String?
+    private var pendingRecognizedLetterCount = 0
+    private var pendingRecognizedLetterTimestamp: Date?
+    private let showWhisperDebugLabel = true
     
     // MARK: - UI Elements
     
@@ -143,65 +144,44 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         return label
     }()
     
-    // Label warning the user about incorrect distance
-    private lazy var warningLabel: UILabel = {
-        let label = UILabel()
-        label.text = "⚠️ Adjust Distance"
-        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        label.textColor = .red
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        return label
-    }()
-
-    // Label indicating distance is acceptable
-    private lazy var checkmarkLabel: UILabel = {
-        let label = UILabel()
-        label.text = "✅ Distance OK"
-        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        label.textColor = .green
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        return label
-    }()
-    
-    // Label with arrow indicating user should move closer
-    private lazy var moveCloserArrowLabel: UILabel = {
-        let label = UILabel()
-        label.text = "⬇️ Move Closer ⬇️"
-        label.font = UIFont.systemFont(ofSize: 28, weight: .bold)
-        label.textColor = .orange
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        label.numberOfLines = 0
-        return label
-    }()
-    
-    // Label with arrow indicating user should move farther
-    private lazy var moveFartherArrowLabel: UILabel = {
-        let label = UILabel()
-        label.text = "⬆️ Move Farther ⬆️"
-        label.font = UIFont.systemFont(ofSize: 28, weight: .bold)
-        label.textColor = .orange
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        label.numberOfLines = 0
-        return label
-    }()
+    private lazy var distanceGuidanceView = DistanceGuidanceView()
     
     // Label showing microphone status
     private lazy var microphoneLabel: UILabel = {
+        let label = PaddedStatusLabel()
+        label.text = "VOICE INPUT ACTIVE"
+        label.font = UIFont.systemFont(ofSize: 14, weight: .black)
+        label.textColor = TextPalette.teal
+        label.applyStatusPillStyle(
+            backgroundColor: TextPalette.mist,
+            borderColor: TextPalette.teal.withAlphaComponent(0.20),
+            textInsets: UIEdgeInsets(top: 9, left: 16, bottom: 9, right: 16),
+            cornerRadius: 14,
+            textColor: TextPalette.teal
+        )
+        return label
+    }()
+
+    private lazy var transcriptionLabel: UILabel = {
         let label = UILabel()
-        label.text = "🎤 Listening..."
-        label.font = UIFont.systemFont(ofSize: 20, weight: .medium)
-        label.textColor = .systemBlue
+        label.text = "Waiting for a spoken letter"
+        label.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
+        label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
+        label.numberOfLines = 2
+        return label
+    }()
+
+    private lazy var whisperDebugLabel: UILabel = {
+        let label = UILabel()
+        label.text = ""
+        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        label.textColor = AppThemeColors.systemGrey
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.numberOfLines = 2
+        label.isHidden = !showWhisperDebugLabel
         return label
     }()
     
@@ -244,6 +224,12 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     
     /// Data collector for test progression tracking
     private let dataCollector = TestProgressionDataCollector.shared
+
+    private func resetPendingRecognition() {
+        pendingRecognizedLetter = nil
+        pendingRecognizedLetterCount = 0
+        pendingRecognizedLetterTimestamp = nil
+    }
     
     // MARK: - Lifecycle Methods
     
@@ -258,9 +244,15 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
 
         print("🔍 ETDRSViewController - viewDidLoad started")
 
+        // Replace the default Back button with an explicit confirmed exit action
+        // so the test cannot be abandoned accidentally mid-trial.
+        navigationItem.hidesBackButton = true
+        navigationItem.setHidesBackButton(true, animated: false)
+
         // Set up the basic UI
         view.backgroundColor = .white
         setupUI()
+        setupEndTestButton()
         print("🔍 ETDRSViewController - UI setup completed")
 
         // Initialize acuity level from the selected value
@@ -287,27 +279,41 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         lastScaleFactor = 1.0
         lastScalingDistance = 0.0
         
-        // Add triple-tap gesture to bypass distance checking if needed
-        setupEmergencyOverride()
-        
-        
         // Finish layout and generate the first letter
         view.layoutIfNeeded()
         generateNewLetter()
         print("🔍 ETDRSViewController - first letter generated: \(currentLetter)")
         
         // Size the test letter for the current acuity level (after letter is generated)
-        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter)
+        _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter)
         print("🔍 ETDRSViewController - initial letter size set for acuity: \(acuityList[currentAcuityIndex])")
         
         // Update eye test label based on current eye number
         updateEyeTestLabel()
         
         // Initialize data collection session
-        let eyeName = eyeNumber == 2 ? "Right" : "Left"
+        let eyeName = VisualAcuitySession.eyeName(for: VisualAcuitySession.currentEyeNumber)
         dataCollector.startNewSession(eye: eyeName, testType: "ETDRS")
-        
         print("🔍 ETDRSViewController - viewDidLoad completed successfully")
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        // Prevent the edge-swipe back gesture from interrupting the ETDRS test.
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSharedAudioDidStart),
+            name: SharedAudioManager.speechDidStartNotification,
+            object: SharedAudioManager.shared
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSharedAudioDidFinish),
+            name: SharedAudioManager.speechDidFinishNotification,
+            object: SharedAudioManager.shared
+        )
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -319,13 +325,16 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         playAudioInstructions()
         print("🔍 ETDRSViewController - audio instructions played")
         
-        // Start speech recognition
-        startListening()
+        // Start speech recognition after any spoken instruction finishes.
+        requestListeningAfterSpeechIfNeeded()
         print("🔍 ETDRSViewController - viewDidAppear completed")
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+
+        // Restore the standard edge-swipe behavior for non-test screens.
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = true
         
         // Clean up timers and display link
         audioInstructionTimer?.invalidate()
@@ -336,13 +345,45 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         // Stop speech recognition and timeout timer
         stopListening()
         stopSpeechTimeoutTimer()
+        shouldResumeListeningAfterSpeech = false
+        resumeListeningWorkItem?.cancel()
+        resumeListeningWorkItem = nil
+        listeningStatusWorkItem?.cancel()
+        listeningStatusWorkItem = nil
+        NotificationCenter.default.removeObserver(self)
+
+        // Pause AR when leaving this eye test so the next screen can safely
+        // take over camera resources without the previous session lingering.
+        sceneView?.session.pause()
+    }
+
+    /*
+     * Installs an explicit "End Test" button on the navigation bar's trailing
+     * edge so the user can intentionally leave the test after confirming.
+     */
+    private func setupEndTestButton() {
+        navigationItem.rightBarButtonItem = makeEndTestBarButton(action: #selector(endTestTapped))
+    }
+
+    @objc private func endTestTapped() {
+        let alert = UIAlertController(
+            title: "End test?",
+            message: "Your progress on this set will be lost.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "End Test", style: .destructive) { [weak self] _ in
+            self?.navigationController?.popViewController(animated: true)
+        })
+        present(alert, animated: true)
     }
 
     /*
     * Updates the eye test label based on the current eye number.
     */
     private func updateEyeTestLabel() {
-        eyeTestLabel.text = eyeNumber == 2 ? "Right Eye Test - ETDRS" : "Left Eye Test - ETDRS"
+        let eyeName = VisualAcuitySession.eyeName(for: VisualAcuitySession.currentEyeNumber)
+        eyeTestLabel.applyEyeTestTitle(eyeName: eyeName, testName: "ETDRS")
     }
 
     /*
@@ -351,9 +392,9 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
      */
     private func initializeAcuityLevel() {
         // Debug: Print selected acuity at start
-        print("Initial selectedAcuity value: \(String(describing: selectedAcuity))")
+        print("Initial selectedAcuity value: \(String(describing: VisualAcuitySession.selectedAcuity))")
         
-        if let selectedAcuity = selectedAcuity {
+        if let selectedAcuity = VisualAcuitySession.selectedAcuity {
             // Find the index of the selected acuity in our acuity list
             currentAcuityIndex = getIndex(numList: acuityList, value: selectedAcuity)
             print("The index of \(selectedAcuity) is \(currentAcuityIndex).")
@@ -405,64 +446,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     }
     
     /*
-     * Sets up an emergency override gesture (triple tap) to bypass
-     * distance checking if the user encounters persistent distance issues.
-     */
-    private func setupEmergencyOverride() {
-        // Setup override gesture - triple tap to bypass distance checking
-        let tripleTap = UITapGestureRecognizer(target: self, action: #selector(handleTripleTap))
-        tripleTap.numberOfTapsRequired = 3
-        view.addGestureRecognizer(tripleTap)
-    }
-
-    /*
-     * Handles the triple-tap gesture to bypass distance checking.
-     * This is an emergency override for when distance detection is problematic.
-     */
-    @objc private func handleTripleTap() {
-        isPaused = false
-        hideAllDistanceIndicators()
-        showDistanceOK()
-        
-        // Show a temporary message
-        let overrideLabel = UILabel()
-        overrideLabel.text = "⚠️ Distance Check Bypassed"
-        overrideLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        overrideLabel.textColor = .orange
-        overrideLabel.textAlignment = .center
-        overrideLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(overrideLabel)
-        
-        NSLayoutConstraint.activate([
-            overrideLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            overrideLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80)
-        ])
-        
-        // Also reset current distance to target to avoid further problems
-        DistanceTracker.shared.currentDistanceCM = averageDistanceCM
-        
-        // Reset scaling factors to trigger immediate rescaling with new approach
-        letterLabel.transform = CGAffineTransform.identity
-        lastScaleFactor = 1.0
-        lastScalingDistance = 0.0
-        
-        // Clear any pending audio instructions
-        lastAudioInstruction = ""
-        audioInstructionTimer?.invalidate()
-        
-        print("🔧 Distance check bypassed via triple tap")
-        
-        // Resume the test
-        resumeTest()
-        
-        // Remove the message after 3 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            overrideLabel.removeFromSuperview()
-        }
-    }
-
-    /*
      * Sets up AR face tracking for distance monitoring.
      * Initializes the AR scene and creates tracking nodes for the eyes.
      */
@@ -508,7 +491,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     private func startDistanceMonitoring() {
         // Add a debug option to skip distance checking for testing
         #if DEBUG
-        let debugBypassDistanceCheck = false // Set to true to bypass distance checking
+        let debugBypassDistanceCheck = ProcessInfo.processInfo.environment["ETDRS_BYPASS_DISTANCE_CHECK"] == "1"
         
         // Extra debugging for distance
         let debugExtraLogging = true // Set to true for more verbose distance logs
@@ -516,8 +499,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         if debugBypassDistanceCheck {
             print("🔧 DEBUG MODE: Distance checking disabled")
             isPaused = false
-            warningLabel.isHidden = true
-            checkmarkLabel.isHidden = true
+            distanceGuidanceView.hideAll()
             return
         }
         
@@ -539,7 +521,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
      * Used to attach eye nodes to detected face anchors.
      */
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
+        guard anchor is ARFaceAnchor else { return }
         
         // Add eye nodes to the face node
         node.addChildNode(leftEye)
@@ -589,7 +571,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
                 let rightEyeDistance = self.SCNVector3Distance(rightEyePos, cameraPosition)
                 
                 // Use only the relevant eye's distance based on which eye is being tested
-                let rawDistance = (eyeNumber == 1) ? leftEyeDistance : rightEyeDistance
+                let rawDistance = (VisualAcuitySession.currentEyeNumber == 1) ? leftEyeDistance : rightEyeDistance
                 let rawAverageDistance = rawDistance * 100  // Convert to cm
                 
                 // Validate and update distance tracker
@@ -625,11 +607,13 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         view.addSubview(letterLabel)
         view.addSubview(eyeTestLabel)
         view.addSubview(instructionLabel)
-        view.addSubview(warningLabel)
-        view.addSubview(checkmarkLabel)
-        view.addSubview(moveCloserArrowLabel)
-        view.addSubview(moveFartherArrowLabel)
+        view.addSubview(distanceGuidanceView)
         view.addSubview(microphoneLabel)
+        view.addSubview(transcriptionLabel)
+        view.addSubview(whisperDebugLabel)
+        whisperDebugLabel.isHidden = !showWhisperDebugLabel
+
+        distanceGuidanceView.translatesAutoresizingMaskIntoConstraints = false
         
         // Set up constraints
         NSLayoutConstraint.activate([
@@ -638,12 +622,11 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             eyeTestLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             eyeTestLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
-            // Warning and checkmark label constraints
-            warningLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            warningLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 50),
-            
-            checkmarkLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            checkmarkLabel.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 10),
+            // Distance guidance view constraints
+            distanceGuidanceView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            distanceGuidanceView.topAnchor.constraint(equalTo: eyeTestLabel.bottomAnchor, constant: 30),
+            distanceGuidanceView.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
+            distanceGuidanceView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
             
             // Letter label constraints
             letterLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -652,23 +635,21 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             // Microphone label constraints
             microphoneLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             microphoneLabel.topAnchor.constraint(equalTo: letterLabel.bottomAnchor, constant: 30),
+
+            // Transcription label constraints
+            transcriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            transcriptionLabel.topAnchor.constraint(equalTo: microphoneLabel.bottomAnchor, constant: 10),
+            transcriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            transcriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+
+            whisperDebugLabel.topAnchor.constraint(equalTo: transcriptionLabel.bottomAnchor, constant: 8),
+            whisperDebugLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            whisperDebugLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
             
             // Instruction label constraints
             instructionLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
             instructionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            instructionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            // Move closer arrow label constraints
-            moveCloserArrowLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            moveCloserArrowLabel.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 10),
-            moveCloserArrowLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            moveCloserArrowLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            // Move farther arrow label constraints
-            moveFartherArrowLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            moveFartherArrowLabel.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 10),
-            moveFartherArrowLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            moveFartherArrowLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+            instructionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
         print("ETDRSViewController - constraints activated")
     }
@@ -679,29 +660,18 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
      * Sets up speech recognition for voice input.
      */
     private func setupSpeechRecognition() {
-        speechRecognizer.delegate = self
-        
-        print("🎤 Setting up speech recognition...")
-        print("🎤 Speech recognizer available: \(speechRecognizer.isAvailable)")
-        
-        SFSpeechRecognizer.requestAuthorization { [weak self] authStatus in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                
-                switch authStatus {
-                case .authorized:
-                    print("🎤 Speech recognition authorized ✅")
-                case .denied:
-                    print("🎤 Speech recognition access denied ❌")
-                    // Show alert to user
-                    self.showSpeechPermissionAlert()
-                case .restricted:
-                    print("🎤 Speech recognition restricted ❌")
-                    self.showSpeechPermissionAlert()
-                case .notDetermined:
-                    print("🎤 Speech recognition not determined ⚠️")
-                @unknown default:
-                    print("🎤 Speech recognition unknown authorization status ❓")
+        print("[ETDRSWhisper] Setting up WhisperKit speech recognition...")
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                try await self.whisperLetterService.prepareIfNeeded()
+                print("[ETDRSWhisper] WhisperKit setup completed ✅")
+            } catch {
+                print("[ETDRSWhisper] WhisperKit setup failed: \(error.localizedDescription)")
+                await MainActor.run {
+                    self.showSpeechPermissionAlert(message: error.localizedDescription)
                 }
             }
         }
@@ -710,10 +680,10 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     /*
      * Shows an alert when speech recognition permission is not available.
      */
-    private func showSpeechPermissionAlert() {
+    private func showSpeechPermissionAlert(message: String? = nil) {
         let alert = UIAlertController(
-            title: "Speech Recognition Required",
-            message: "This ETDRS test requires speech recognition to work. Please enable speech recognition in Settings > Privacy & Security > Speech Recognition.",
+            title: "Microphone Required",
+            message: message ?? "This ETDRS test requires microphone access for WhisperKit spoken-letter recognition. Please enable microphone access in Settings.",
             preferredStyle: .alert
         )
         
@@ -733,281 +703,103 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
      * Starts listening for speech input.
      */
     private func startListening() {
+        guard view.window != nil else { return }
+        guard !isPaused else { return }
+        guard !SharedAudioManager.shared.isSpeaking else {
+            shouldResumeListeningAfterSpeech = true
+            microphoneLabel.isHidden = true
+            transcriptionLabel.isHidden = true
+            transcriptionLabel.text = "Waiting for spoken instructions to finish"
+            return
+        }
         guard !isListening else { 
             print("🎤 Already listening, skipping start")
             return 
         }
-        
-        // Check speech recognition authorization first
-        guard speechRecognizer.isAvailable else {
-            print("🎤 Speech recognizer not available")
-            return
-        }
-        
-        // Cancel any previous recognition task
-        recognitionTask?.cancel()
-        recognitionTask = nil
-        
-        // Configure audio session
-        let audioSession = AVAudioSession.sharedInstance()
-        do {
-            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetooth])
-            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-            print("🎤 Audio session configured successfully")
-        } catch {
-            print("🎤 Audio session setup failed: \(error)")
-            return
-        }
-        
-        // Create recognition request
-        recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        guard let recognitionRequest = recognitionRequest else {
-            print("🎤 Unable to create recognition request")
-            return
-        }
-        
-        recognitionRequest.shouldReportPartialResults = true
-        recognitionRequest.requiresOnDeviceRecognition = false
-        
-        // Get audio input node
-        let inputNode = audioEngine.inputNode
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-        
-        // Remove any existing taps
-        inputNode.removeTap(onBus: 0)
-        
-        // Install audio tap
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
-            recognitionRequest.append(buffer)
-        }
-        
-        // Start audio engine
-        audioEngine.prepare()
-        do {
-            try audioEngine.start()
-            print("🎤 Audio engine started successfully")
-        } catch {
-            print("🎤 Audio engine start failed: \(error)")
-            return
-        }
-        
-        // Start recognition task
-        recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
-            guard let self = self else { return }
-            
-            if let result = result {
-                let spokenText = result.bestTranscription.formattedString.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
-                print("🎤 Heard: '\(spokenText)' (length: \(spokenText.count))")
-                
-                // CRITICAL: Filter out sentences and unwanted speech
-                if !self.isValidLetterAttempt(spokenText) {
-                    print("🎤 ❌ Ignoring: '\(spokenText)' (Not a valid letter attempt)")
-                    // Immediately reset speech recognition to clear the transcription
-                    self.resetSpeechRecognition()
-                    return
-                }
-                
-                // Process input when we have meaningful speech
-                if !spokenText.isEmpty {
-                    var shouldProcess = false
-                    var reason = ""
-                    
-                    // Check for single letter first (highest priority)
-                    if self.containsSingleLetter(spokenText) {
-                        reason = "Single letter detected"
-                        shouldProcess = true
-                    }
-                    // Check for common phonetic words that we know map to letters
-                    else if spokenText.count <= 7 { // Reasonable length for phonetic words
-                        let commonPhoneticWords = ["ARE", "YOU", "SEE", "DEE", "EFF", "AITCH", "KAY", "PEE", "VEE", "ZEE"]
-                        if commonPhoneticWords.contains(spokenText) {
-                            reason = "Common phonetic word detected"
-                            shouldProcess = true
-                        }
-                        // Also try a quick phonetic match check
-                        else if self.canPhoneticMatch(spokenText) {
-                            reason = "Phonetic match possible"
-                            shouldProcess = true
-                        }
-                    }
-                    // For final results, always try to process
-                    else if result.isFinal {
-                        reason = "Final result"
-                        shouldProcess = true
-                    }
-                    
-                    if shouldProcess {
-                        print("🎤 Processing: '\(spokenText)' (\(reason))")
-                        self.processSpokenInput(spokenText)
-                        // Stop and restart recognition after processing
-                        self.stopListening()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            if !isPaused {
-                                self.startListening()
-                            }
-                        }
-                        return
-                    }
-                }
-            }
-            
-            if let error = error {
-                print("🎤 Speech recognition error: \(error)")
-            }
-            
-            if error != nil || result?.isFinal == true {
-                self.stopListening()
-                // Restart listening after a short delay if not paused
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    if !isPaused {
-                        self.startListening()
-                    }
-                }
-            }
-        }
-        
+
+        shouldResumeListeningAfterSpeech = false
         isListening = true
-        microphoneLabel.isHidden = false
-        
-        // Start timeout timer to restart recognition if it gets stuck
+        resetPendingRecognition()
+        transcriptionLabel.text = "Listening for one spoken letter"
+        if showWhisperDebugLabel {
+            whisperDebugLabel.text = "Raw: —    →    Mapped: —"
+        }
         startSpeechTimeoutTimer()
-        
-        print("🎤 Started listening for speech input")
+        print("[ETDRSWhisper] Starting WhisperKit listening for ETDRS letters...")
+        revealListeningStatusAfterLetterDelay()
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                try await self.whisperLetterService.startListening { [weak self] prediction in
+                    Task { @MainActor in
+                        self?.handleWhisperPrediction(prediction)
+                    }
+                }
+                print("[ETDRSWhisper] Started listening for spoken ETDRS letters")
+            } catch {
+                print("[ETDRSWhisper] Failed to start listening: \(error.localizedDescription)")
+                await MainActor.run {
+                    self.isListening = false
+                    self.microphoneLabel.isHidden = true
+                    self.transcriptionLabel.isHidden = true
+                    self.stopSpeechTimeoutTimer()
+                    self.transcriptionLabel.text = "Microphone unavailable"
+                    self.showSpeechPermissionAlert(message: error.localizedDescription)
+                }
+            }
+        }
     }
-    
-    /*
-     * Checks if the spoken text contains a single recognizable letter.
-     */
-    private func containsSingleLetter(_ text: String) -> Bool {
-        let letters = text.filter { $0.isLetter }
-        return letters.count == 1 && etdrsLetters.contains(String(letters))
-    }
-    
-    /*
-     * Checks if the spoken text can be phonetically matched to an ETDRS letter.
-     */
-    private func canPhoneticMatch(_ text: String) -> Bool {
-        // Quick check to see if phonetic matching would succeed
-        return phoneticMatch(for: text) != nil
-    }
-    
-    /*
-     * Validates if the spoken text is a valid letter attempt and not a sentence.
-     * This prevents the app from processing conversation or long sentences.
-     */
-    private func isValidLetterAttempt(_ text: String) -> Bool {
-        let cleanText = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        // Empty text is invalid
-        if cleanText.isEmpty {
-            return false
+
+    private func handleWhisperPrediction(_ prediction: ETDRSWhisperPrediction) {
+        guard isListening, !isPaused else { return }
+        guard !prediction.rawTranscription.isEmpty else { return }
+
+        print("[ETDRSWhisper] Heard: '\(prediction.rawTranscription)' normalized: \(prediction.normalizedLetter ?? "<none>") latency: \(String(format: "%.2f", prediction.latency))s")
+        transcriptionLabel.text = "Heard: \"\(prediction.rawTranscription)\""
+        if showWhisperDebugLabel {
+            let mappedText = prediction.normalizedLetter ?? "—"
+            let matchesCurrent = mappedText == currentLetter ? "yes" : "no"
+            whisperDebugLabel.text = "Raw: \(prediction.rawTranscription)    →    Mapped: \(mappedText)    | Match: \(matchesCurrent)"
         }
-        
-        // RULE 1: Length filter - reject very long text (likely sentences)
-        if cleanText.count > 15 {
-            print("🎤 🚫 Sentence filter: Text too long (\(cleanText.count) chars)")
-            return false
+
+        if prediction.isIgnorableNonAnswer {
+            print("[ETDRSWhisper] Ignoring non-answer: '\(prediction.rawTranscription)'")
+            transcriptionLabel.text = "Listening for one spoken letter"
+            return
         }
-        
-        // RULE 1.5: Letter count filter - reject if more than 5 letters detected
-        let letterCount = cleanText.filter { $0.isLetter }.count
-        if letterCount > 5 {
-            print("🎤 🚫 Sentence filter: Too many letters (\\(letterCount) letters)")
-            return false
+
+        if prediction.isFiller {
+            print("[ETDRSWhisper] Ignoring filler: '\(prediction.rawTranscription)'")
+            transcriptionLabel.text = "Listening for one spoken letter"
+            return
         }
-        
-        // RULE 2: Word count filter - reject multiple words (likely sentences)
-        let words = cleanText.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
-        if words.count > 4 {
-            print("🎤 🚫 Sentence filter: Too many words (\(words.count) words)")
-            return false
-        }
-        
-        // RULE 3: Common sentence starters - reject obvious conversation
-        let sentenceStarters = ["WAIT", "I", "SHOULD", "CAN", "COULD", "WILL", "WOULD", "MAYBE", "PERHAPS", "LET", "LETS", "PLEASE", "EXCUSE", "SORRY", "HI", "HELLO", "YES", "NO", "OKAY", "WELL", "SO", "BUT", "OR", "THE", "A", "AN", "THIS", "THAT", "THESE", "THOSE", "MY", "YOUR", "HIS", "HER", "OUR", "THEIR", "WE", "THEY", "SHE", "HE", "IT", "THERE", "HERE", "NOW", "THEN", "WHEN", "WHERE", "WHY", "HOW", "WHAT", "WHO", "WHICH"]
-        let firstWord = words.first ?? ""
-        if sentenceStarters.contains(firstWord) {
-            print("🎤 🚫 Sentence filter: Conversation starter detected: '\(firstWord)'")
-            return false
-        }
-        
-        // RULE 4: Common sentence patterns - reject obvious conversation
-        let sentencePatterns = [
-            "I SHOULD", "WAIT I", "CAN YOU", "COULD YOU", "WILL YOU", "WOULD YOU",
-            "LET ME", "LETS", "PLEASE", "EXCUSE ME", "I THINK", "I BELIEVE",
-            "MAYBE", "PERHAPS", "PROBABLY", "DEFINITELY", "CERTAINLY",
-            "WAIT I SHOULD", "I SHOULD PROBABLY", "SHOULD PROBABLY", "PROBABLY DO",
-            "DO ONE", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN"
-        ]
-        for pattern in sentencePatterns {
-            if cleanText.hasPrefix(pattern) || cleanText.contains(pattern) {
-                print("🎤 🚫 Sentence filter: Conversation pattern detected: '\(pattern)'")
-                return false
+
+        guard let letter = prediction.normalizedLetter else {
+            print("[ETDRSWhisper] Ignoring unclear transcription: '\(prediction.rawTranscription)'")
+            if prediction.isFinal {
+                transcriptionLabel.text = "Could not confirm a letter"
             }
-        }
-        
-        // RULE 5: Question patterns - reject questions
-        if cleanText.contains("?") || 
-           cleanText.hasPrefix("WHAT") || 
-           cleanText.hasPrefix("WHERE") || 
-           cleanText.hasPrefix("WHEN") || 
-           cleanText.hasPrefix("WHY") || 
-           cleanText.hasPrefix("WHO") || 
-           cleanText.hasPrefix("HOW") ||
-           cleanText.hasPrefix("DO YOU") ||
-           cleanText.hasPrefix("DID YOU") ||
-           cleanText.hasPrefix("ARE YOU") ||
-           cleanText.hasPrefix("CAN YOU") {
-            print("🎤 🚫 Sentence filter: Question detected")
-            return false
-        }
-        
-        // RULE 5.5: Numbers and counting - reject number sequences
-        let numberWords = ["ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN", "TWENTY"]
-        for numberWord in numberWords {
-            if words.contains(numberWord) && words.count > 1 {
-                print("🎤 🚫 Sentence filter: Number in context detected: '\(numberWord)'")
-                return false
+            if showWhisperDebugLabel {
+                whisperDebugLabel.text = "Raw: \(prediction.rawTranscription)    →    Mapped: —    | Match: no"
             }
+            return
         }
-        
-        // RULE 6: Allow single letters (highest priority)
-        if cleanText.count == 1 && cleanText.first?.isLetter == true {
-            print("🎤 ✅ Valid: Single letter '\(cleanText)'")
-            return true
+
+        if !prediction.isFinal {
+            pendingRecognizedLetter = letter
+            pendingRecognizedLetterCount = 1
+            pendingRecognizedLetterTimestamp = Date()
+            transcriptionLabel.text = "Picked up: \(letter)"
         }
-        
-        // RULE 7: Allow known phonetic words for ETDRS letters
-        let validPhoneticWords = [
-            // Direct phonetic pronunciations
-            "ARE", "YOU", "SEE", "SEA", "DEE", "EFF", "AITCH", "KAY", "PEE", "VEE", "ZEE",
-            // Alternative pronunciations
-            "EACH", "AND", "OK", "OH", "HE", "FEE", "ED", "DZ", "VV", "CC", "DD", "FF", 
-            "HH", "KK", "NN", "PP", "RR", "UU", "ZZ",
-            // Short combinations that might be phonetic attempts
-            "AR", "ARR", "EN", "AFF", "ATCH", "AYCH", "SI", "SII", "DI", "DIA"
-        ]
-        
-        if validPhoneticWords.contains(cleanText) {
-            print("🎤 ✅ Valid: Known phonetic word '\(cleanText)'")
-            return true
-        }
-        
-        // RULE 8: Allow very short text that might contain letters
-        if cleanText.count <= 3 {
-            // Check if it contains any ETDRS letters
-            let containsETDRSLetter = etdrsLetters.contains { letter in
-                cleanText.contains(letter)
-            }
-            if containsETDRSLetter {
-                print("🎤 ✅ Valid: Short text with ETDRS letter '\(cleanText)'")
-                return true
-            }
-        }
-        
-        // RULE 9: Reject everything else (likely conversation)
-        print("🎤 🚫 Sentence filter: Rejected as conversation: '\(cleanText)'")
-        return false
+
+        resetPendingRecognition()
+        let isCorrect = letter == currentLetter
+        transcriptionLabel.text = "Picked up: \(letter) · \(isCorrect ? "correct" : "incorrect")"
+        print("[ETDRSWhisper] Processing recognized ETDRS letter: \(letter) for target: \(currentLetter)")
+        stopListening()
+        handleLetterInput(letter)
     }
     
     /*
@@ -1019,266 +811,83 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             return 
         }
         
-        print("🎤 Stopping speech recognition...")
-        
-        // Stop audio engine first
-        if audioEngine.isRunning {
-            audioEngine.stop()
-        }
-        
-        // Remove tap safely
-        if audioEngine.inputNode.numberOfInputs > 0 {
-            audioEngine.inputNode.removeTap(onBus: 0)
-        }
-        
-        // End recognition
-        recognitionRequest?.endAudio()
-        recognitionTask?.cancel()
-        
-        recognitionRequest = nil
-        recognitionTask = nil
+        print("[ETDRSWhisper] Stopping WhisperKit listening...")
+        whisperLetterService.stopListening()
         isListening = false
+        resetPendingRecognition()
         microphoneLabel.isHidden = true
+        transcriptionLabel.isHidden = true
+        listeningStatusWorkItem?.cancel()
+        listeningStatusWorkItem = nil
         
         // Stop the timeout timer
         stopSpeechTimeoutTimer()
         
-        print("🎤 Stopped listening for speech input")
-    }
-    
-    /*
-     * Processes the spoken input from the user.
-     */
-    private func processSpokenInput(_ spokenText: String) {
-        print("🎤 processSpokenInput called with: '\(spokenText)'")
-        
-        // Try phonetic matching first (this handles "ARE" → "R" cases)
-        var recognizedLetter = phoneticMatch(for: spokenText)
-        if recognizedLetter != nil {
-            print("🎤 Found phonetic match: \(recognizedLetter!) from '\(spokenText)'")
-        } else {
-            // Extract single letters from the spoken text as fallback
-            let letters = spokenText.filter { $0.isLetter }
-            print("🎤 Filtered letters: '\(letters)'")
-            
-            // Look for ETDRS letters in the spoken text
-            for letter in etdrsLetters {
-                if letters.contains(letter) {
-                    recognizedLetter = letter
-                    print("🎤 Found direct letter match: \(letter)")
-                    break
-                }
-            }
-        }
-        
-        if let letter = recognizedLetter {
-            print("🎤 ✅ Recognized letter: \(letter) for current letter: \(currentLetter)")
-            handleLetterInput(letter)
-        } else {
-            print("🎤 ❌ Could not recognize a valid ETDRS letter from: '\(spokenText)'")
-            print("🎤 💡 Try saying the letter name clearly: \(currentLetter)")
-        }
-    }
-    
-    /*
-     * Attempts to match spoken text to ETDRS letters using comprehensive phonetic matching.
-     * Uses a multi-layered approach to handle all speech recognition variations.
-     */
-    private func phoneticMatch(for spokenText: String) -> String? {
-        let text = spokenText.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        print("🎤 Phonetic matching for: '\(text)'")
-        
-        // === LAYER 1: EXACT PHONETIC MAPPINGS ===
-        // Most common and reliable phonetic transcriptions
-        let exactPhoneticMap: [String: String] = [
-            // C - commonly transcribed as "see", "sea"
-            "see": "C", "sea": "C", "cee": "C", "si": "C", "c": "C",
-            
-            // D - commonly transcribed as "dee"
-            "dee": "D", "di": "D", "d": "D", "de": "D", "dear": "D",
-            
-            // F - commonly transcribed as "ef", "eff"
-            "ef": "F", "eff": "F", "f": "F", "aff": "F",
-            
-            // H - commonly transcribed as "aitch", "atch"
-            "aitch": "H", "atch": "H", "aych": "H", "h": "H",
-            "haitch": "H", "eitch": "H",
-            
-            // K - commonly transcribed as "kay", "key"
-            "kay": "K", "key": "K", "k": "K", "kei": "K",
-            
-            // N - commonly transcribed as "en", "enn" 
-            "en": "N", "enn": "N", "n": "N", "ne": "N",
-            
-            // P - commonly transcribed as "pee", "pi"
-            "pee": "P", "pi": "P", "p": "P", "pe": "P",
-            
-            // R - commonly transcribed as "are", "ar" 
-            "are": "R", "ar": "R", "arr": "R", "or": "R", "r": "R",
-            
-            // U - commonly transcribed as "you", "yu"
-            "you": "U", "yu": "U", "u": "U", "yoo": "U",
-            
-            // V - commonly transcribed as "vee", "vi"
-            "vee": "V", "vi": "V", "v": "V", "ve": "V", "we": "V",
-            
-            // Z - commonly transcribed as "zee", "zed"
-            "zee": "Z", "zed": "Z", "zi": "Z", "z": "Z"
-        ]
-        
-        // === LAYER 2: ALTERNATIVE PHONETIC MAPPINGS ===
-        // Less common but still valid transcriptions
-        let alternativePhoneticMap: [String: String] = [
-            // C alternatives
-            "sie": "C", "sii": "C", "ce": "C", "sea sea": "C",
-            
-            // D alternatives  
-            "dea": "D", "dia": "D", "dii": "D", "the": "D", "tea": "D",
-            
-            // F alternatives
-            "eph": "F", "aef": "F", "afe": "F", "fe": "F", "if": "F",
-            
-            // H alternatives
-            "ache": "H", "hatch": "H", "itch": "H", "each": "H",
-            "age": "H", "hey": "H", "hay": "H", "eight": "H", "ate": "H",
-            
-            // K alternatives
-            "ca": "K", "cay": "K", "kae": "K", "kai": "K", "que": "K",
-            "okay": "K", "ok": "K", "kway": "K",
-            
-            // N alternatives
-            "an": "N", "ene": "N", "inn": "N", "and": "N", "ain": "N",
-            
-            // P alternatives
-            "pea": "P", "pia": "P", "pie": "P", "pii": "P",
-            
-            // R alternatives
-            "aar": "R", "aire": "R", "er": "R", "ore": "R", "arre": "R",
-            "our": "R", "hour": "R", "air": "R", "heir": "R", "ah": "R",
-            
-            // U alternatives  
-            "oo": "U", "ooo": "U", "uu": "U", "ou": "U", "yew": "U",
-            "ewe": "U", "hugh": "U", "hue": "U", "ew": "U", "ooh": "U",
-            "who": "U", "woo": "U", "wu": "U", "ue": "U",
-            
-            // V alternatives
-            "vea": "V", "via": "V", "vie": "V", "vii": "V", "bee": "V",
-            
-            // Z alternatives
-            "zea": "Z", "zia": "Z", "ze": "Z", "zeta": "Z", "said": "Z"
-        ]
-        
-        // === LAYER 3: REPEATED LETTER PATTERNS ===
-        // Handle cases like "RRR", "CCC", etc.
-        let repeatedPatternMap: [String: String] = [
-            "cc": "C", "ccc": "C", "cccc": "C",
-            "dd": "D", "ddd": "D", "dddd": "D", 
-            "ff": "F", "fff": "F", "ffff": "F",
-            "hh": "H", "hhh": "H", "hhhh": "H",
-            "kk": "K", "kkk": "K", "kkkk": "K",
-            "nn": "N", "nnn": "N", "nnnn": "N",
-            "pp": "P", "ppp": "P", "pppp": "P",
-            "rr": "R", "rrr": "R", "rrrr": "R",
-            "uu": "U", "uuu": "U", "uuuu": "U",
-            "vv": "V", "vvv": "V", "vvvv": "V",
-            "zz": "Z", "zzz": "Z", "zzzz": "Z"
-        ]
-        
-        // === MATCHING ALGORITHM ===
-        
-        // STEP 1: Check exact phonetic matches (highest priority)
-        if let letter = exactPhoneticMap[text] {
-            print("🎤 ✅ Layer 1 - Exact phonetic match: '\(text)' → '\(letter)'")
-            return letter
-        }
-        
-        // STEP 2: Check alternative phonetic matches
-        if let letter = alternativePhoneticMap[text] {
-            print("🎤 ✅ Layer 2 - Alternative phonetic match: '\(text)' → '\(letter)'")
-            return letter
-        }
-        
-        // STEP 3: Check repeated letter patterns
-        if let letter = repeatedPatternMap[text] {
-            print("🎤 ✅ Layer 3 - Repeated pattern match: '\(text)' → '\(letter)'")
-            return letter
-        }
-        
-        // STEP 4: Check if text contains any exact phonetic patterns
-        let allMaps = [exactPhoneticMap, alternativePhoneticMap, repeatedPatternMap]
-        for (mapIndex, map) in allMaps.enumerated() {
-            // Sort by length (longer patterns first) to avoid partial matches
-            let sortedPhonetics = map.keys.sorted { $0.count > $1.count }
-            
-            for phonetic in sortedPhonetics {
-                if text.contains(phonetic) {
-                    let letter = map[phonetic]!
-                    print("🎤 ✅ Layer \(mapIndex + 1) - Contains pattern: '\(text)' contains '\(phonetic)' → '\(letter)'")
-                    return letter
-                }
-            }
-        }
-        
-        // STEP 5: Single letter direct match
-        if text.count == 1 && text.first!.isLetter {
-            let letter = text.uppercased()
-            if etdrsLetters.contains(letter) {
-                print("🎤 ✅ Direct single letter match: '\(text)' → '\(letter)'")
-                return letter
-            }
-        }
-        
-        // STEP 6: Check for repeated single letters (like "RRR" → "R")
-        if text.count > 1 {
-            let uniqueLetters = Set(text.filter { $0.isLetter })
-            if uniqueLetters.count == 1, let singleLetter = uniqueLetters.first {
-                let letter = String(singleLetter).uppercased()
-                if etdrsLetters.contains(letter) {
-                    print("🎤 ✅ Repeated letter match: '\(text)' → '\(letter)'")
-                    return letter
-                }
-            }
-        }
-        
-        // STEP 7: Fuzzy matching for edge cases
-        return fuzzyPhoneticMatch(for: text)
-    }
-    
-    /*
-     * Advanced fuzzy matching for edge cases and unusual transcriptions.
-     */
-    private func fuzzyPhoneticMatch(for text: String) -> String? {
-        // Handle edge cases where letters might be transcribed as words
-        let edgeCaseMap: [String: String] = [
-            // Common word confusions
-            "why": "Y", "wine": "Y", "y": "Y",
-            "ex": "X", "x": "X", "axe": "X",
-            "oh": "O", "zero": "O", "o": "O",
-            "be": "B", "bee": "B", "b": "B",
-            "tea": "T", "tee": "T", "t": "T",
-            "em": "M", "m": "M",
-            "el": "L", "l": "L", "elle": "L",
-            "jay": "J", "j": "J",
-            "eye": "I", "i": "I", "aye": "I",
-            "gee": "G", "g": "G",
-            "a": "A", "ay": "A", "hey": "A",
-            "queue": "Q", "q": "Q", "cue": "Q",
-            "yes": "S", "s": "S", "ess": "S",
-            "double you": "W", "w": "W",
-        ]
-        
-        if let letter = edgeCaseMap[text] {
-            // Only return if it's an ETDRS letter
-            if etdrsLetters.contains(letter) {
-                print("🎤 ✅ Fuzzy match: '\(text)' → '\(letter)'")
-                return letter
-            }
-        }
-        
-        print("🎤 ❌ No phonetic match found for: '\(text)'")
-        return nil
+        print("[ETDRSWhisper] Stopped listening for speech input")
     }
 
+    private func requestListeningAfterSpeechIfNeeded() {
+        resumeListeningWorkItem?.cancel()
+        shouldResumeListeningAfterSpeech = true
+        startListening()
+    }
+
+    private func revealListeningStatusAfterLetterDelay() {
+        listeningStatusWorkItem?.cancel()
+
+        microphoneLabel.isHidden = true
+        transcriptionLabel.isHidden = true
+        transcriptionLabel.alpha = 0
+        if showWhisperDebugLabel {
+            whisperDebugLabel.alpha = 1
+            whisperDebugLabel.isHidden = false
+        }
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self, self.isListening, !self.isPaused else { return }
+            self.microphoneLabel.isHidden = false
+            self.transcriptionLabel.isHidden = false
+            UIView.animate(withDuration: 0.18, delay: 0, options: [.curveEaseOut, .allowUserInteraction], animations: {
+                self.transcriptionLabel.alpha = 1
+            })
+        }
+        listeningStatusWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: workItem)
+    }
+
+    @objc private func handleSharedAudioDidStart() {
+        guard view.window != nil else { return }
+        resumeListeningWorkItem?.cancel()
+        resumeListeningWorkItem = nil
+        listeningStatusWorkItem?.cancel()
+        listeningStatusWorkItem = nil
+
+        if isListening {
+            stopListening()
+            shouldResumeListeningAfterSpeech = !isPaused
+        } else if !isPaused {
+            shouldResumeListeningAfterSpeech = true
+        }
+
+        if shouldResumeListeningAfterSpeech {
+            transcriptionLabel.text = "Waiting for spoken instructions to finish"
+        }
+    }
+
+    @objc private func handleSharedAudioDidFinish() {
+        guard view.window != nil else { return }
+        guard shouldResumeListeningAfterSpeech, !isPaused else { return }
+        
+        resumeListeningWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            guard self.shouldResumeListeningAfterSpeech, !self.isPaused else { return }
+            self.startListening()
+        }
+        resumeListeningWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: workItem)
+    }
+    
     // MARK: - Letter Input Handling
     /*
      * Handles a letter input from speech recognition and determines if it matches the current letter.
@@ -1311,7 +920,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         }
         
         // Record the response data
-        let eyeName = eyeNumber == 2 ? "Right" : "Left"
+        let eyeName = VisualAcuitySession.eyeName(for: VisualAcuitySession.currentEyeNumber)
         let acuityString = "20/\(acuityList[currentAcuityIndex])"
         
         dataCollector.recordResponse(
@@ -1376,7 +985,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
                         print("Going back to larger acuity...")
                         currentAcuityIndex -= 1
                         resetLetterScaling() // Reset scaling for new acuity level
-                        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
+                        _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
                     }
                 }
             } else { // User gets at least 6 letters correct, advance to next level
@@ -1387,7 +996,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
                     print("Advancing to smaller acuity...")
                     currentAcuityIndex += 1
                     resetLetterScaling() // Reset scaling for new acuity level
-                    set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
+                    _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
                 }
             }
             // Reset trial counter and correct answers count
@@ -1395,6 +1004,10 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             correctAnswersInSet = 0
         }
         generateNewLetter() // Generate the next letter with updated size or same size
+        DispatchQueue.main.async { [weak self] in
+            guard let self, !self.isPaused else { return }
+            self.startListening()
+        }
     }
     
     /* Generates a new ETDRS letter randomly.
@@ -1402,10 +1015,12 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     private func generateNewLetter() {
         // Select a random ETDRS letter
         currentLetter = etdrsLetters.randomElement() ?? "C"
+        resetPendingRecognition()
         letterLabel.text = currentLetter
         
         // Make the letter visible now that the new letter is set
         letterLabel.alpha = 1
+        transcriptionLabel.text = "Listening for one spoken letter"
         
         // Record the time when this letter is displayed for response time calculation
         letterDisplayTime = Date()
@@ -1446,8 +1061,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         // Determine user's position relative to acceptable range
         let tooClose = liveDistance < lowerBound
         let tooFar = liveDistance > upperBound
-        let inRange = !tooClose && !tooFar
-        
         if isPaused {
             // When already paused, require a more definitive return to range
             if liveDistance > (lowerBound + outOfRangeTolerance) && liveDistance < (upperBound - outOfRangeTolerance) {
@@ -1491,14 +1104,10 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
      */
     private func updateDirectionalIndicators(tooClose: Bool, tooFar: Bool, distance: Double) {
         if tooClose {
-            // User is too close - show "move farther" arrow
-            moveCloserArrowLabel.isHidden = true
-            moveFartherArrowLabel.isHidden = false
+            distanceGuidanceView.showMoveFarther()
             playAudioInstructionIfNeeded("Move farther.")
         } else if tooFar {
-            // User is too far - show "move closer" arrow
-            moveFartherArrowLabel.isHidden = true
-            moveCloserArrowLabel.isHidden = false
+            distanceGuidanceView.showMoveCloser()
             playAudioInstructionIfNeeded("Move closer.")
         }
     }
@@ -1522,25 +1131,19 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     /* Shows the distance warning indicator.
      */
     private func showDistanceWarning() {
-        warningLabel.isHidden = false
+        distanceGuidanceView.showWarning()
     }
     
     /* Shows the distance OK indicator temporarily.
      */
     private func showDistanceOK() {
-        checkmarkLabel.isHidden = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.checkmarkLabel.isHidden = true
-        }
+        distanceGuidanceView.showOK()
     }
     
     /* Hides all distance-related indicators.
      */
     private func hideAllDistanceIndicators() {
-        warningLabel.isHidden = true
-        checkmarkLabel.isHidden = true
-        moveCloserArrowLabel.isHidden = true
-        moveFartherArrowLabel.isHidden = true
+        distanceGuidanceView.hideAll()
     }
     
     /* Updates the letter size based on current distance if the change is significant enough.
@@ -1626,7 +1229,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             
             // For testing purposes, DON'T override with target distance to see if extreme values are detected
             #if DEBUG
-            let debugStrictDistanceTesting = true // Set to true to test extreme distance values
+            let debugStrictDistanceTesting = ProcessInfo.processInfo.environment["ETDRS_STRICT_DISTANCE_TESTING"] == "1"
             if debugStrictDistanceTesting {
                 if shouldLog {
                     print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
@@ -1648,7 +1251,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             }
             
             #if DEBUG
-            let debugStrictDistanceTesting = true // Set to true to test extreme distance values
+            let debugStrictDistanceTesting = ProcessInfo.processInfo.environment["ETDRS_STRICT_DISTANCE_TESTING"] == "1"
             if debugStrictDistanceTesting {
                 if shouldLog {
                     print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
@@ -1700,7 +1303,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             oneLetter.text = nonNilLetterText
             
             // Adjust size based on scale factor with standard 5:1 width to height ratio
-            let labelHeight = scale_factor * ppi
+            let labelHeight = scale_factor * VisualAcuitySession.devicePPI
             oneLetter.frame.size = CGSize(width: (labelHeight * 5), height: labelHeight)
             
             // Adjusted font size - reducing by factor of 2 to match physical acuity cards
@@ -1762,15 +1365,19 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         // Navigate to the results screen
         
         finalAcuityScore = acuityScore
-        logMARValue = finalAcuityScore
-        snellenValue = 20 * pow(10, logMARValue)
+        VisualAcuitySession.logMARValue = finalAcuityScore
+        VisualAcuitySession.snellenValue = 20 * pow(10, VisualAcuitySession.logMARValue)
         
-        if eyeNumber == 2 {
+        if VisualAcuitySession.currentEyeNumber == 2 {
             // Store the right eye's results (tested first)
-            finalAcuityDictionary[2] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+            VisualAcuitySession.finalAcuityResults[2] = String(
+                format: "LogMAR: %.4f, Snellen: 20/%.0f",
+                VisualAcuitySession.logMARValue,
+                VisualAcuitySession.snellenValue
+            )
             
             // Set eye number for left eye test (tested second)
-            eyeNumber = 1
+            VisualAcuitySession.currentEyeNumber = 1
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             if let leftInstrucVC = storyboard.instantiateViewController(withIdentifier: "OneEyeInstruc") as? OneEyeInstruc {
                 navigationController?.pushViewController(leftInstrucVC, animated: true)
@@ -1779,7 +1386,11 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             
         } else {
             // Store the left eye's results (tested second)
-            finalAcuityDictionary[1] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+            VisualAcuitySession.finalAcuityResults[1] = String(
+                format: "LogMAR: %.4f, Snellen: 20/%.0f",
+                VisualAcuitySession.logMARValue,
+                VisualAcuitySession.snellenValue
+            )
             
             performSegue(withIdentifier: "ShowResults", sender: self)
             print("🔍 ETDRS: Navigating to results after left eye completion")
@@ -1789,12 +1400,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     private func playAudioInstructions() {
         let instructionText = "Say the letter you see."
         SharedAudioManager.shared.playText(instructionText, source: "ETDRS Vision Test")
-    }
-    
-    // MARK: - SFSpeechRecognizerDelegate
-    
-    func speechRecognizer(_ speechRecognizer: SFSpeechRecognizer, availabilityDidChange available: Bool) {
-        print("🎤 Speech recognizer availability changed: \(available)")
     }
     
     // MARK: - Speech Timeout Management
@@ -1810,10 +1415,27 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
             print("🎤 ⏰ Speech recognition timeout - restarting...")
             
             if self.isListening {
-                self.stopListening()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    if !isPaused {
-                        self.startListening()
+                Task { [weak self] in
+                    guard let self else { return }
+                    let finalPrediction = await self.whisperLetterService.finalizeCurrentBufferIfNeeded()
+
+                    await MainActor.run {
+                        if let finalPrediction,
+                           finalPrediction.normalizedLetter != nil,
+                           !finalPrediction.isIgnorableNonAnswer,
+                           !finalPrediction.isFiller,
+                           !self.isPaused {
+                            self.handleWhisperPrediction(finalPrediction)
+                            return
+                        }
+
+                        self.transcriptionLabel.text = "Still listening... try the letter again"
+                        self.stopListening()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            if !self.isPaused {
+                                self.startListening()
+                            }
+                        }
                     }
                 }
             }
@@ -1826,24 +1448,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
     private func stopSpeechTimeoutTimer() {
         speechTimeoutTimer?.invalidate()
         speechTimeoutTimer = nil
-    }
-    
-    /*
-     * Immediately resets speech recognition to clear unwanted transcription.
-     * Used when sentences or invalid input is detected.
-     */
-    private func resetSpeechRecognition() {
-        print("🎤 🔄 Resetting speech recognition due to invalid input")
-        
-        // Stop current recognition
-        stopListening()
-        
-        // Restart immediately to clear the transcription buffer
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            if !isPaused {
-                self.startListening()
-            }
-        }
     }
     
     // MARK: - Animation Methods
@@ -1904,5 +1508,3 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecogniz
         }
     }
 }
-
-

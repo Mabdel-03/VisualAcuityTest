@@ -8,8 +8,8 @@
 import UIKit
 
 /*
- * SettingsViewController manages the app settings for the Landolt-C only version.
- * Users can toggle audio preferences. Test type is fixed to Landolt C.
+ * SettingsViewController manages the app settings.
+ * Users can toggle audio preferences and choose the active visual acuity test.
  */
 class SettingsViewController: UIViewController {
     
@@ -36,10 +36,10 @@ class SettingsViewController: UIViewController {
         return label
     }()
     
-    // Test Type Info Section (Read-only)
+    // Test Type Section
     private lazy var testTypeLabel: UILabel = {
         let label = UILabel()
-        label.text = "Test Type: Landolt C"
+        label.text = "Test Type"
         label.drawHeader2()
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -48,12 +48,20 @@ class SettingsViewController: UIViewController {
     
     private lazy var testTypeDescriptionLabel: UILabel = {
         let label = UILabel()
-        label.text = "C-shaped letters with swipe gestures"
+        label.text = "Choose the test pipeline used when starting a vision test."
         label.drawSmallText()
         label.textAlignment = .center
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+
+    private lazy var testTypeSegmentedControl: UISegmentedControl = {
+        let control = UISegmentedControl(items: ["Landolt C", "ETDRS"])
+        control.selectedSegmentIndex = 0
+        control.addTarget(self, action: #selector(testTypeChanged(_:)), for: .valueChanged)
+        control.translatesAutoresizingMaskIntoConstraints = false
+        return control
     }()
     
     // Audio Section
@@ -85,7 +93,7 @@ class SettingsViewController: UIViewController {
     
     private lazy var audioContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemGray6
+        view.backgroundColor = AppThemeColors.systemGreySurface
         view.layer.cornerRadius = 8
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
@@ -116,14 +124,17 @@ class SettingsViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         updateAudioSwitch()
-        
-        // Ensure Landolt C is always selected in this version
-        setETDRSTestEnabled(false)
+        updateTestTypeUI()
         
         // Play audio instructions for the settings screen
         if isAudioEnabled() {
             playAudioInstructions()
         }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        animateDecorativeDaisies()
     }
     
     // MARK: - UI Setup
@@ -142,6 +153,7 @@ class SettingsViewController: UIViewController {
         contentView.addSubview(titleLabel)
         contentView.addSubview(testTypeLabel)
         contentView.addSubview(testTypeDescriptionLabel)
+        contentView.addSubview(testTypeSegmentedControl)
         contentView.addSubview(audioLabel)
         contentView.addSubview(audioDescriptionLabel)
         contentView.addSubview(audioContainer)
@@ -183,8 +195,13 @@ class SettingsViewController: UIViewController {
             testTypeDescriptionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             testTypeDescriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
+            testTypeSegmentedControl.topAnchor.constraint(equalTo: testTypeDescriptionLabel.bottomAnchor, constant: 15),
+            testTypeSegmentedControl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            testTypeSegmentedControl.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            testTypeSegmentedControl.heightAnchor.constraint(equalToConstant: 36),
+            
             // Audio Section
-            audioLabel.topAnchor.constraint(equalTo: testTypeDescriptionLabel.bottomAnchor, constant: 30),
+            audioLabel.topAnchor.constraint(equalTo: testTypeSegmentedControl.bottomAnchor, constant: 30),
             audioLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             audioLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
@@ -225,10 +242,22 @@ class SettingsViewController: UIViewController {
             SharedAudioManager.shared.playText(message, source: "Settings")
         }
     }
+
+    @objc private func testTypeChanged(_ sender: UISegmentedControl) {
+        let enabled = sender.selectedSegmentIndex == 1
+        setETDRSTestEnabled(enabled)
+        updateTestTypeUI()
+
+        if isAudioEnabled() {
+            let testName = enabled ? "ETDRS" : "Landolt C"
+            SharedAudioManager.shared.playText("\(testName) test selected.", source: "Settings")
+        }
+    }
     
     @objc private func doneButtonTapped() {
         if isAudioEnabled() {
-            SharedAudioManager.shared.playText("Settings saved. Landolt C test is active. Returning to main menu.", source: "Settings")
+            let testName = isETDRSTestEnabled() ? "ETDRS" : "Landolt C"
+            SharedAudioManager.shared.playText("Settings saved. \(testName) test is active. Returning to main menu.", source: "Settings")
         }
         
         navigationController?.popViewController(animated: true)
@@ -238,6 +267,14 @@ class SettingsViewController: UIViewController {
     
     private func updateAudioSwitch() {
         audioSwitch.isOn = isAudioEnabled()
+    }
+
+    private func updateTestTypeUI() {
+        let isETDRS = isETDRSTestEnabled()
+        testTypeSegmentedControl.selectedSegmentIndex = isETDRS ? 1 : 0
+        testTypeDescriptionLabel.text = isETDRS
+            ? "ETDRS letters with spoken letter responses"
+            : "C-shaped letters with swipe gestures"
     }
     
     // MARK: - Settings Management
@@ -262,9 +299,10 @@ class SettingsViewController: UIViewController {
     
     private func playAudioInstructions() {
         let audioStatus = isAudioEnabled() ? "enabled" : "disabled"
+        let testName = isETDRSTestEnabled() ? "ETDRS letters with spoken responses" : "Landolt C with swipe gestures"
         
         let instructionText = """
-        Settings screen. This app uses the Landolt C test with swipe gestures to indicate the opening direction of C-shaped letters. 
+        Settings screen. Current test type is \(testName).
         Audio instructions are currently \(audioStatus). You can toggle audio instructions on or off. Tap Done when finished.
         """
         
@@ -279,7 +317,7 @@ class SettingsViewController: UIViewController {
         // Decorative daisy 1 - top right (magenta)
         addDecorativeDaisy(
             size: 105,
-            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            petalColor: AppThemeColors.magentaAccent,
             centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
             alpha: 0.11,
             trailingOffset: 18,
@@ -289,7 +327,7 @@ class SettingsViewController: UIViewController {
         // Decorative daisy 2 - bottom left (teal)
         addDecorativeDaisy(
             size: 95,
-            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            petalColor: AppThemeColors.teal,
             centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
             alpha: 0.13,
             leadingOffset: 22,
