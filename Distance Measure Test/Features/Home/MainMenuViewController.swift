@@ -181,7 +181,7 @@ class MainMenu: UIViewController {
 
     private lazy var whisperLoadingFlowerView: DaisyFlowerView = {
         let flower = DaisyFlowerView(
-            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            petalColor: AppThemeColors.magentaAccent,
             centerColor: .white
         )
         flower.translatesAutoresizingMaskIntoConstraints = false
@@ -192,7 +192,7 @@ class MainMenu: UIViewController {
         let label = UILabel()
         label.text = "Preparing speech model..."
         label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        label.textColor = .darkGray
+        label.textColor = AppThemeColors.systemGrey
         label.textAlignment = .center
         label.numberOfLines = 1
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -204,8 +204,8 @@ class MainMenu: UIViewController {
 
     private lazy var whisperLoadingProgressView: UIProgressView = {
         let progressView = UIProgressView(progressViewStyle: .default)
-        progressView.progressTintColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
-        progressView.trackTintColor = UIColor.systemGray5
+        progressView.progressTintColor = AppThemeColors.teal
+        progressView.trackTintColor = AppThemeColors.systemGreyBackground
         progressView.translatesAutoresizingMaskIntoConstraints = false
         return progressView
     }()
@@ -227,6 +227,7 @@ class MainMenu: UIViewController {
         super.viewDidAppear(animated)
         startWhisperPreloadAfterFirstFrame()
         playAudioInstructions()
+        animateDecorativeDaisies()
     }
     
     /* Initializes the audio settings for the user.
@@ -395,7 +396,7 @@ class MainMenu: UIViewController {
         // Decorative daisy 1 - top left (teal)
         addDecorativeDaisy(
             size: 120,
-            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            petalColor: AppThemeColors.teal,
             centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
             alpha: 0.15,
             leadingOffset: 10,
@@ -405,7 +406,7 @@ class MainMenu: UIViewController {
         // Decorative daisy 2 - top right (magenta)
         addDecorativeDaisy(
             size: 110,
-            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            petalColor: AppThemeColors.magentaAccent,
             centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
             alpha: 0.1,
             trailingOffset: 15,
@@ -415,7 +416,7 @@ class MainMenu: UIViewController {
         // Decorative daisy 3 - bottom left (teal)
         addDecorativeDaisy(
             size: 100,
-            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            petalColor: AppThemeColors.teal,
             centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
             alpha: 0.12,
             leadingOffset: 20,
@@ -440,12 +441,9 @@ class MainMenu: UIViewController {
     }
     
     @IBAction func goToDataCollection(_ sender: Any) {
-        let dataCollectionVC = DataCollectionViewController()
-        navigationController?.pushViewController(dataCollectionVC, animated: true)
-        
-        if isAudioEnabled() {
-            SharedAudioManager.shared.playText("Opening data collection for algorithm optimization", source: "Main Menu")
-        }
+        // Intentionally left inactive for now.
+        // The Training button is present in the UI, but it does not navigate yet.
+        print("ℹ️ Training button tapped - no action configured")
     }
     
     

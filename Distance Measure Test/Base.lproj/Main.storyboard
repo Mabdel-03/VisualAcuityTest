@@ -304,7 +304,7 @@
                             <constraint firstItem="8gA-I0-gb7" firstAttribute="height" constant="50" id="one-eye-title-height"/>
                             <constraint firstItem="test-type-label" firstAttribute="leading" secondItem="Y32-v7-92g" secondAttribute="leading" constant="16" id="one-eye-test-leading"/>
                             <constraint firstItem="test-type-label" firstAttribute="trailing" secondItem="Y32-v7-92g" secondAttribute="trailing" constant="-16" id="one-eye-test-trailing"/>
-                            <constraint firstItem="test-type-label" firstAttribute="top" secondItem="Y32-v7-92g" secondAttribute="top" constant="200" id="one-eye-test-top"/>
+                            <constraint firstItem="test-type-label" firstAttribute="top" secondItem="Y32-v7-92g" secondAttribute="top" constant="180" id="one-eye-test-top"/>
                             <constraint firstItem="test-type-label" firstAttribute="height" constant="40" id="one-eye-test-height"/>
                             <constraint firstItem="sc9-43-YfN" firstAttribute="leading" secondItem="Y32-v7-92g" secondAttribute="leading" constant="16" id="one-eye-text-leading"/>
                             <constraint firstItem="sc9-43-YfN" firstAttribute="trailing" secondItem="Y32-v7-92g" secondAttribute="trailing" constant="-16" id="one-eye-text-trailing"/>
@@ -369,7 +369,7 @@
                             <constraint firstItem="cWB-iE-6yw" firstAttribute="width" constant="393" id="distance-image-width"/>
                             <constraint firstItem="cWB-iE-6yw" firstAttribute="height" constant="344" id="distance-image-height"/>
                             <constraint firstItem="WiV-Y2-Iqc" firstAttribute="centerX" secondItem="U0K-SW-4ec" secondAttribute="centerX" id="distance-capture-centerX"/>
-                            <constraint firstItem="WiV-Y2-Iqc" firstAttribute="top" secondItem="U0K-SW-4ec" secondAttribute="top" constant="640" id="distance-capture-top"/>
+                            <constraint firstItem="WiV-Y2-Iqc" firstAttribute="top" secondItem="U0K-SW-4ec" secondAttribute="top" constant="670" id="distance-capture-top"/>
                             <constraint firstItem="WiV-Y2-Iqc" firstAttribute="width" constant="242" id="distance-capture-width"/>
                             <constraint firstItem="WiV-Y2-Iqc" firstAttribute="height" constant="60" id="distance-capture-height"/>
                             <constraint firstItem="BrB-h1-WRS" firstAttribute="leading" secondItem="fQZ-KI-GVf" secondAttribute="leading" id="GsS-dJ-CKf"/>

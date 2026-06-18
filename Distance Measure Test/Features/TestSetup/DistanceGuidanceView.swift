@@ -81,21 +81,16 @@ final class DistanceGuidanceView: UIView {
     }
 
     private func configureLabel(_ label: PaddedStatusLabel, backgroundColor: UIColor, borderColor: UIColor) {
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        label.textAlignment = .center
-        label.numberOfLines = 0
-        label.backgroundColor = backgroundColor
-        label.layer.cornerRadius = 18
-        label.layer.cornerCurve = .continuous
-        label.layer.borderWidth = 1
-        label.layer.borderColor = borderColor.cgColor
-        label.layer.shadowColor = UIColor.black.withAlphaComponent(0.08).cgColor
-        label.layer.shadowOpacity = 1
-        label.layer.shadowRadius = 18
-        label.layer.shadowOffset = CGSize(width: 0, height: 8)
-        label.textInsets = UIEdgeInsets(top: 10, left: 16, bottom: 10, right: 16)
-        label.setContentHuggingPriority(.required, for: .vertical)
+        label.applyStatusPillStyle(
+            backgroundColor: backgroundColor,
+            borderColor: borderColor,
+            textInsets: UIEdgeInsets(top: 10, left: 16, bottom: 10, right: 16),
+            cornerRadius: 18,
+            shadowColor: AppThemeColors.black.withAlphaComponent(0.08),
+            shadowOpacity: 1,
+            shadowRadius: 18,
+            shadowOffset: CGSize(width: 0, height: 8)
+        )
     }
     
     private func setup() {

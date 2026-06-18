@@ -93,7 +93,7 @@ class SettingsViewController: UIViewController {
     
     private lazy var audioContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.systemGray6
+        view.backgroundColor = AppThemeColors.systemGreySurface
         view.layer.cornerRadius = 8
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
@@ -130,6 +130,11 @@ class SettingsViewController: UIViewController {
         if isAudioEnabled() {
             playAudioInstructions()
         }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        animateDecorativeDaisies()
     }
     
     // MARK: - UI Setup
@@ -312,7 +317,7 @@ class SettingsViewController: UIViewController {
         // Decorative daisy 1 - top right (magenta)
         addDecorativeDaisy(
             size: 105,
-            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            petalColor: AppThemeColors.magentaAccent,
             centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
             alpha: 0.11,
             trailingOffset: 18,
@@ -322,7 +327,7 @@ class SettingsViewController: UIViewController {
         // Decorative daisy 2 - bottom left (teal)
         addDecorativeDaisy(
             size: 95,
-            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            petalColor: AppThemeColors.teal,
             centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
             alpha: 0.13,
             leadingOffset: 22,

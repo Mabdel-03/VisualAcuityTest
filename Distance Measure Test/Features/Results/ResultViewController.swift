@@ -94,6 +94,30 @@ class ResultViewController: UIViewController {
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
+
+    private lazy var headerLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Results"
+        label.drawHeader()
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private lazy var subtitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Your visual acuity summary by eye"
+        label.drawSmallText()
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private lazy var rightEyeCardView: UIView = makeResultCard()
+    private lazy var leftEyeCardView: UIView = makeResultCard()
+    private lazy var rightEyeAccentView: UIView = makeAccentStrip(color: AppThemeColors.magentaAccent)
+    private lazy var leftEyeAccentView: UIView = makeAccentStrip(color: AppThemeColors.magentaAccent)
     
     private lazy var leftEyeTitleLabel: UILabel = {
         let label = UILabel()
@@ -108,7 +132,7 @@ class ResultViewController: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 27, weight: .bold)
         label.textAlignment = .center
-        label.textColor = UIColor.black
+        label.textColor = AppThemeColors.black
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -127,7 +151,7 @@ class ResultViewController: UIViewController {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 27, weight: .bold)
         label.textAlignment = .center
-        label.textColor = UIColor.black
+        label.textColor = AppThemeColors.black
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -146,10 +170,8 @@ class ResultViewController: UIViewController {
     private lazy var retestButton: UIButton = {
         let button = UIButton(type: .custom)
         button.setTitle("Retest", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 35, weight: .regular)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 1.0) // Same red as Test History clear button
-        button.layer.cornerRadius = 10
+        button.drawStandardButton()
+        button.backgroundColor = AppThemeColors.destructiveRed
         button.addTarget(self, action: #selector(retestButtonTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.isHidden = true
@@ -159,10 +181,8 @@ class ResultViewController: UIViewController {
     private lazy var saveButton: UIButton = {
         let button = UIButton(type: .custom)
         button.setTitle("Save", for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 35, weight: .regular)
-        button.setTitleColor(.white, for: .normal)
-        button.backgroundColor = UIColor.systemBlue
-        button.layer.cornerRadius = 10
+        button.drawStandardButton()
+        button.backgroundColor = AppThemeColors.actionBlue
         button.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.isHidden = true
@@ -174,6 +194,30 @@ class ResultViewController: UIViewController {
         saveButton.isEnabled = true
         saveButton.alpha = 1.0
     }
+
+    private func makeResultCard() -> UIView {
+        let card = UIView()
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.backgroundColor = .white
+        card.layer.cornerRadius = 24
+        card.layer.cornerCurve = .continuous
+        card.layer.borderWidth = 1
+        card.layer.borderColor = AppThemeColors.systemGreyBackground.withAlphaComponent(0.55).cgColor
+        card.layer.shadowColor = AppThemeColors.black.withAlphaComponent(0.08).cgColor
+        card.layer.shadowOpacity = 1
+        card.layer.shadowRadius = 18
+        card.layer.shadowOffset = CGSize(width: 0, height: 10)
+        return card
+    }
+
+    private func makeAccentStrip(color: UIColor) -> UIView {
+        let strip = UIView()
+        strip.translatesAutoresizingMaskIntoConstraints = false
+        strip.backgroundColor = color
+        strip.layer.cornerRadius = 3
+        strip.layer.masksToBounds = true
+        return strip
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -183,13 +227,14 @@ class ResultViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         playAudioInstructions()
+        animateDecorativeDaisies()
     }
     
     /* Sets up the UI for the result scene.
     */
     private func setupUI() {
-        view.backgroundColor = UIColor.systemBackground
-        title = "Test Results"
+        view.backgroundColor = AppThemeColors.systemGreySurface
+        navigationItem.title = nil
         
         // Add decorative circles
         addDecorativeCircles()
@@ -199,13 +244,20 @@ class ResultViewController: UIViewController {
         scrollView.addSubview(contentView)
         
         // Add subviews to content view
-        contentView.addSubview(leftEyeTitleLabel)
-        contentView.addSubview(leftEyeResultsLabel)
-        contentView.addSubview(rightEyeTitleLabel)
-        contentView.addSubview(rightEyeResultsLabel)
+        contentView.addSubview(headerLabel)
+        contentView.addSubview(subtitleLabel)
+        contentView.addSubview(rightEyeCardView)
+        contentView.addSubview(leftEyeCardView)
         contentView.addSubview(homeButton)
         contentView.addSubview(retestButton)
         contentView.addSubview(saveButton)
+
+        rightEyeCardView.addSubview(rightEyeTitleLabel)
+        rightEyeCardView.addSubview(rightEyeResultsLabel)
+        rightEyeCardView.addSubview(rightEyeAccentView)
+        leftEyeCardView.addSubview(leftEyeTitleLabel)
+        leftEyeCardView.addSubview(leftEyeResultsLabel)
+        leftEyeCardView.addSubview(leftEyeAccentView)
         
         // Set up constraints
         NSLayoutConstraint.activate([
@@ -221,51 +273,78 @@ class ResultViewController: UIViewController {
             contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+
+            headerLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            headerLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 26),
+            headerLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
+            headerLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
+
+            subtitleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            subtitleLabel.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 8),
+            subtitleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 24),
+            subtitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -24),
             
-            // Right eye title constraints
-            rightEyeTitleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            rightEyeTitleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 100),
-            rightEyeTitleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
-            rightEyeTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
-            
-            // Right eye results constraints
-            rightEyeResultsLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            rightEyeResultsLabel.topAnchor.constraint(equalTo: rightEyeTitleLabel.bottomAnchor, constant: 20),
-            rightEyeResultsLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
-            rightEyeResultsLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
-            
-            // Left eye title constraints
-            leftEyeTitleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            leftEyeTitleLabel.topAnchor.constraint(equalTo: rightEyeResultsLabel.bottomAnchor, constant: 50),
-            leftEyeTitleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
-            leftEyeTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
-            
-            // Left eye results constraints
-            leftEyeResultsLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            leftEyeResultsLabel.topAnchor.constraint(equalTo: leftEyeTitleLabel.bottomAnchor, constant: 20),
-            leftEyeResultsLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
-            leftEyeResultsLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20),
+            // Right eye card constraints
+            rightEyeCardView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 36),
+            rightEyeCardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            rightEyeCardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+
+            // Right eye card internals
+            rightEyeAccentView.leadingAnchor.constraint(equalTo: rightEyeCardView.leadingAnchor),
+            rightEyeAccentView.topAnchor.constraint(equalTo: rightEyeCardView.topAnchor),
+            rightEyeAccentView.bottomAnchor.constraint(equalTo: rightEyeCardView.bottomAnchor),
+            rightEyeAccentView.widthAnchor.constraint(equalToConstant: 6),
+
+            rightEyeTitleLabel.topAnchor.constraint(equalTo: rightEyeCardView.topAnchor, constant: 20),
+            rightEyeTitleLabel.leadingAnchor.constraint(equalTo: rightEyeAccentView.trailingAnchor, constant: 16),
+            rightEyeTitleLabel.trailingAnchor.constraint(equalTo: rightEyeCardView.trailingAnchor, constant: -20),
+
+            rightEyeResultsLabel.topAnchor.constraint(equalTo: rightEyeTitleLabel.bottomAnchor, constant: 12),
+            rightEyeResultsLabel.leadingAnchor.constraint(equalTo: rightEyeAccentView.trailingAnchor, constant: 16),
+            rightEyeResultsLabel.trailingAnchor.constraint(equalTo: rightEyeCardView.trailingAnchor, constant: -20),
+            rightEyeResultsLabel.bottomAnchor.constraint(equalTo: rightEyeCardView.bottomAnchor, constant: -20),
+
+            // Left eye card constraints
+            leftEyeCardView.topAnchor.constraint(equalTo: rightEyeCardView.bottomAnchor, constant: 18),
+            leftEyeCardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            leftEyeCardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+
+            // Left eye card internals
+            leftEyeAccentView.leadingAnchor.constraint(equalTo: leftEyeCardView.leadingAnchor),
+            leftEyeAccentView.topAnchor.constraint(equalTo: leftEyeCardView.topAnchor),
+            leftEyeAccentView.bottomAnchor.constraint(equalTo: leftEyeCardView.bottomAnchor),
+            leftEyeAccentView.widthAnchor.constraint(equalToConstant: 6),
+
+            leftEyeTitleLabel.topAnchor.constraint(equalTo: leftEyeCardView.topAnchor, constant: 20),
+            leftEyeTitleLabel.leadingAnchor.constraint(equalTo: leftEyeAccentView.trailingAnchor, constant: 16),
+            leftEyeTitleLabel.trailingAnchor.constraint(equalTo: leftEyeCardView.trailingAnchor, constant: -20),
+
+            leftEyeResultsLabel.topAnchor.constraint(equalTo: leftEyeTitleLabel.bottomAnchor, constant: 12),
+            leftEyeResultsLabel.leadingAnchor.constraint(equalTo: leftEyeAccentView.trailingAnchor, constant: 16),
+            leftEyeResultsLabel.trailingAnchor.constraint(equalTo: leftEyeCardView.trailingAnchor, constant: -20),
+            leftEyeResultsLabel.bottomAnchor.constraint(equalTo: leftEyeCardView.bottomAnchor, constant: -20),
             
             // Home button constraints (top button - teal)
             homeButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            homeButton.topAnchor.constraint(equalTo: leftEyeResultsLabel.bottomAnchor, constant: 50),
+            homeButton.topAnchor.constraint(equalTo: leftEyeCardView.bottomAnchor, constant: 40),
             homeButton.widthAnchor.constraint(equalToConstant: 242),
             homeButton.heightAnchor.constraint(equalToConstant: 60),
             
             // Retest button constraints (middle button - red)
             retestButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            retestButton.topAnchor.constraint(equalTo: homeButton.bottomAnchor, constant: 20),
+            retestButton.topAnchor.constraint(equalTo: homeButton.bottomAnchor, constant: 16),
             retestButton.widthAnchor.constraint(equalToConstant: 242),
             retestButton.heightAnchor.constraint(equalToConstant: 60),
             
             // Save button constraints (bottom button - green)
             saveButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            saveButton.topAnchor.constraint(equalTo: retestButton.bottomAnchor, constant: 20),
+            saveButton.topAnchor.constraint(equalTo: retestButton.bottomAnchor, constant: 16),
             saveButton.widthAnchor.constraint(equalToConstant: 242),
             saveButton.heightAnchor.constraint(equalToConstant: 60),
-            saveButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
+            saveButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -34)
         ])
         
+        hideStoryboardResultsTitleIfPresent()
         displayResults()
     }
 
@@ -298,6 +377,20 @@ class ResultViewController: UIViewController {
     private func isDefaultValue(_ result: String) -> Bool {
         // Check for default values that indicate the eye wasn't actually tested
         return result.contains("-1.000") || result.contains("20/-1") || result.contains("LogMAR: -1")
+    }
+
+    private func hideStoryboardResultsTitleIfPresent() {
+        func walk(_ view: UIView) {
+            for subview in view.subviews {
+                if let field = subview as? UITextField, field.text == "Results" {
+                    field.isHidden = true
+                } else {
+                    walk(subview)
+                }
+            }
+        }
+
+        walk(view)
     }
 
     /* Plays audio instructions to the user.
@@ -585,7 +678,7 @@ class ResultViewController: UIViewController {
         // Decorative daisy 1 - top left (teal)
         addDecorativeDaisy(
             size: 115,
-            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            petalColor: AppThemeColors.teal,
             centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
             alpha: 0.14,
             leadingOffset: 12,
@@ -595,7 +688,7 @@ class ResultViewController: UIViewController {
         // Decorative daisy 2 - bottom right (magenta)
         addDecorativeDaisy(
             size: 105,
-            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            petalColor: AppThemeColors.magentaAccent,
             centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
             alpha: 0.11,
             trailingOffset: 17,

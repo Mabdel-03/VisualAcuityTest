@@ -106,9 +106,11 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     private var isListening = false
     private var shouldResumeListeningAfterSpeech = false
     private var resumeListeningWorkItem: DispatchWorkItem?
+    private var listeningStatusWorkItem: DispatchWorkItem?
     private var pendingRecognizedLetter: String?
     private var pendingRecognizedLetterCount = 0
     private var pendingRecognizedLetterTimestamp: Date?
+    private let showWhisperDebugLabel = true
     
     // MARK: - UI Elements
     
@@ -148,28 +150,38 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     private lazy var microphoneLabel: UILabel = {
         let label = PaddedStatusLabel()
         label.text = "VOICE INPUT ACTIVE"
-        label.font = UIFont.systemFont(ofSize: 13, weight: .black)
+        label.font = UIFont.systemFont(ofSize: 14, weight: .black)
         label.textColor = TextPalette.teal
-        label.backgroundColor = TextPalette.mist
-        label.textAlignment = .center
-        label.layer.cornerRadius = 14
-        label.layer.cornerCurve = .continuous
-        label.layer.borderWidth = 1
-        label.layer.borderColor = TextPalette.teal.withAlphaComponent(0.20).cgColor
-        label.textInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
+        label.applyStatusPillStyle(
+            backgroundColor: TextPalette.mist,
+            borderColor: TextPalette.teal.withAlphaComponent(0.20),
+            textInsets: UIEdgeInsets(top: 9, left: 16, bottom: 9, right: 16),
+            cornerRadius: 14,
+            textColor: TextPalette.teal
+        )
         return label
     }()
 
     private lazy var transcriptionLabel: UILabel = {
         let label = UILabel()
         label.text = "Waiting for a spoken letter"
-        label.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        label.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 2
+        return label
+    }()
+
+    private lazy var whisperDebugLabel: UILabel = {
+        let label = UILabel()
+        label.text = ""
+        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        label.textColor = AppThemeColors.systemGrey
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.numberOfLines = 2
+        label.isHidden = !showWhisperDebugLabel
         return label
     }()
     
@@ -267,10 +279,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         lastScaleFactor = 1.0
         lastScalingDistance = 0.0
         
-        // Add triple-tap gesture to bypass distance checking if needed
-        setupEmergencyOverride()
-        
-        
         // Finish layout and generate the first letter
         view.layoutIfNeeded()
         generateNewLetter()
@@ -340,6 +348,8 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         shouldResumeListeningAfterSpeech = false
         resumeListeningWorkItem?.cancel()
         resumeListeningWorkItem = nil
+        listeningStatusWorkItem?.cancel()
+        listeningStatusWorkItem = nil
         NotificationCenter.default.removeObserver(self)
 
         // Pause AR when leaving this eye test so the next screen can safely
@@ -435,64 +445,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         print("📏 ETDRS Distance bounds set to: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
     }
     
-    /*
-     * Sets up an emergency override gesture (triple tap) to bypass
-     * distance checking if the user encounters persistent distance issues.
-     */
-    private func setupEmergencyOverride() {
-        // Setup override gesture - triple tap to bypass distance checking
-        let tripleTap = UITapGestureRecognizer(target: self, action: #selector(handleTripleTap))
-        tripleTap.numberOfTapsRequired = 3
-        view.addGestureRecognizer(tripleTap)
-    }
-
-    /*
-     * Handles the triple-tap gesture to bypass distance checking.
-     * This is an emergency override for when distance detection is problematic.
-     */
-    @objc private func handleTripleTap() {
-        isPaused = false
-        hideAllDistanceIndicators()
-        showDistanceOK()
-        
-        // Show a temporary message
-        let overrideLabel = UILabel()
-        overrideLabel.text = "⚠️ Distance Check Bypassed"
-        overrideLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        overrideLabel.textColor = .orange
-        overrideLabel.textAlignment = .center
-        overrideLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(overrideLabel)
-        
-        NSLayoutConstraint.activate([
-            overrideLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            overrideLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80)
-        ])
-        
-        // Also reset current distance to target to avoid further problems
-        DistanceTracker.shared.currentDistanceCM = averageDistanceCM
-        
-        // Reset scaling factors to trigger immediate rescaling with new approach
-        letterLabel.transform = CGAffineTransform.identity
-        lastScaleFactor = 1.0
-        lastScalingDistance = 0.0
-        
-        // Clear any pending audio instructions
-        lastAudioInstruction = ""
-        audioInstructionTimer?.invalidate()
-        
-        print("🔧 Distance check bypassed via triple tap")
-        
-        // Resume the test
-        resumeTest()
-        
-        // Remove the message after 3 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            overrideLabel.removeFromSuperview()
-        }
-    }
-
     /*
      * Sets up AR face tracking for distance monitoring.
      * Initializes the AR scene and creates tracking nodes for the eyes.
@@ -658,6 +610,8 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         view.addSubview(distanceGuidanceView)
         view.addSubview(microphoneLabel)
         view.addSubview(transcriptionLabel)
+        view.addSubview(whisperDebugLabel)
+        whisperDebugLabel.isHidden = !showWhisperDebugLabel
 
         distanceGuidanceView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -687,6 +641,10 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             transcriptionLabel.topAnchor.constraint(equalTo: microphoneLabel.bottomAnchor, constant: 10),
             transcriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
             transcriptionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+
+            whisperDebugLabel.topAnchor.constraint(equalTo: transcriptionLabel.bottomAnchor, constant: 8),
+            whisperDebugLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            whisperDebugLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
             
             // Instruction label constraints
             instructionLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
@@ -750,6 +708,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         guard !SharedAudioManager.shared.isSpeaking else {
             shouldResumeListeningAfterSpeech = true
             microphoneLabel.isHidden = true
+            transcriptionLabel.isHidden = true
             transcriptionLabel.text = "Waiting for spoken instructions to finish"
             return
         }
@@ -761,10 +720,13 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         shouldResumeListeningAfterSpeech = false
         isListening = true
         resetPendingRecognition()
-        microphoneLabel.isHidden = false
         transcriptionLabel.text = "Listening for one spoken letter"
+        if showWhisperDebugLabel {
+            whisperDebugLabel.text = "Raw: —    →    Mapped: —"
+        }
         startSpeechTimeoutTimer()
         print("[ETDRSWhisper] Starting WhisperKit listening for ETDRS letters...")
+        revealListeningStatusAfterLetterDelay()
 
         Task { [weak self] in
             guard let self else { return }
@@ -781,6 +743,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
                 await MainActor.run {
                     self.isListening = false
                     self.microphoneLabel.isHidden = true
+                    self.transcriptionLabel.isHidden = true
                     self.stopSpeechTimeoutTimer()
                     self.transcriptionLabel.text = "Microphone unavailable"
                     self.showSpeechPermissionAlert(message: error.localizedDescription)
@@ -795,6 +758,11 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
 
         print("[ETDRSWhisper] Heard: '\(prediction.rawTranscription)' normalized: \(prediction.normalizedLetter ?? "<none>") latency: \(String(format: "%.2f", prediction.latency))s")
         transcriptionLabel.text = "Heard: \"\(prediction.rawTranscription)\""
+        if showWhisperDebugLabel {
+            let mappedText = prediction.normalizedLetter ?? "—"
+            let matchesCurrent = mappedText == currentLetter ? "yes" : "no"
+            whisperDebugLabel.text = "Raw: \(prediction.rawTranscription)    →    Mapped: \(mappedText)    | Match: \(matchesCurrent)"
+        }
 
         if prediction.isIgnorableNonAnswer {
             print("[ETDRSWhisper] Ignoring non-answer: '\(prediction.rawTranscription)'")
@@ -813,27 +781,17 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             if prediction.isFinal {
                 transcriptionLabel.text = "Could not confirm a letter"
             }
+            if showWhisperDebugLabel {
+                whisperDebugLabel.text = "Raw: \(prediction.rawTranscription)    →    Mapped: —    | Match: no"
+            }
             return
         }
 
         if !prediction.isFinal {
-            let now = Date()
-            if pendingRecognizedLetter == letter,
-               let timestamp = pendingRecognizedLetterTimestamp,
-               now.timeIntervalSince(timestamp) <= 1.2 {
-                pendingRecognizedLetterCount += 1
-            } else {
-                pendingRecognizedLetter = letter
-                pendingRecognizedLetterCount = 1
-            }
-            pendingRecognizedLetterTimestamp = now
-
-            let needsConfirmation = pendingRecognizedLetterCount < 2
-            transcriptionLabel.text = needsConfirmation
-                ? "Picked up: \(letter) · say it again"
-                : "Picked up: \(letter)"
-
-            guard pendingRecognizedLetterCount >= 2 else { return }
+            pendingRecognizedLetter = letter
+            pendingRecognizedLetterCount = 1
+            pendingRecognizedLetterTimestamp = Date()
+            transcriptionLabel.text = "Picked up: \(letter)"
         }
 
         resetPendingRecognition()
@@ -842,13 +800,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         print("[ETDRSWhisper] Processing recognized ETDRS letter: \(letter) for target: \(currentLetter)")
         stopListening()
         handleLetterInput(letter)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self else { return }
-            if !isPaused {
-                self.startListening()
-            }
-        }
     }
     
     /*
@@ -865,6 +816,9 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         isListening = false
         resetPendingRecognition()
         microphoneLabel.isHidden = true
+        transcriptionLabel.isHidden = true
+        listeningStatusWorkItem?.cancel()
+        listeningStatusWorkItem = nil
         
         // Stop the timeout timer
         stopSpeechTimeoutTimer()
@@ -878,10 +832,35 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         startListening()
     }
 
+    private func revealListeningStatusAfterLetterDelay() {
+        listeningStatusWorkItem?.cancel()
+
+        microphoneLabel.isHidden = true
+        transcriptionLabel.isHidden = true
+        transcriptionLabel.alpha = 0
+        if showWhisperDebugLabel {
+            whisperDebugLabel.alpha = 1
+            whisperDebugLabel.isHidden = false
+        }
+
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self, self.isListening, !self.isPaused else { return }
+            self.microphoneLabel.isHidden = false
+            self.transcriptionLabel.isHidden = false
+            UIView.animate(withDuration: 0.18, delay: 0, options: [.curveEaseOut, .allowUserInteraction], animations: {
+                self.transcriptionLabel.alpha = 1
+            })
+        }
+        listeningStatusWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: workItem)
+    }
+
     @objc private func handleSharedAudioDidStart() {
         guard view.window != nil else { return }
         resumeListeningWorkItem?.cancel()
         resumeListeningWorkItem = nil
+        listeningStatusWorkItem?.cancel()
+        listeningStatusWorkItem = nil
 
         if isListening {
             stopListening()
@@ -1025,6 +1004,10 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             correctAnswersInSet = 0
         }
         generateNewLetter() // Generate the next letter with updated size or same size
+        DispatchQueue.main.async { [weak self] in
+            guard let self, !self.isPaused else { return }
+            self.startListening()
+        }
     }
     
     /* Generates a new ETDRS letter randomly.

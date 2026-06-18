@@ -28,12 +28,64 @@ final class PaddedStatusLabel: UILabel {
     }
 }
 
+extension PaddedStatusLabel {
+    func applyStatusPillStyle(
+        backgroundColor: UIColor,
+        borderColor: UIColor,
+        textInsets: UIEdgeInsets = UIEdgeInsets(top: 10, left: 16, bottom: 10, right: 16),
+        cornerRadius: CGFloat = 18,
+        textColor: UIColor? = nil,
+        shadowColor: UIColor? = nil,
+        shadowOpacity: Float = 0,
+        shadowRadius: CGFloat = 0,
+        shadowOffset: CGSize = .zero
+    ) {
+        translatesAutoresizingMaskIntoConstraints = false
+        isHidden = true
+        textAlignment = .center
+        numberOfLines = 0
+        self.backgroundColor = backgroundColor
+        layer.cornerRadius = cornerRadius
+        layer.cornerCurve = .continuous
+        layer.borderWidth = 1
+        layer.borderColor = borderColor.cgColor
+        layer.shadowColor = shadowColor?.cgColor
+        layer.shadowOpacity = shadowOpacity
+        layer.shadowRadius = shadowRadius
+        layer.shadowOffset = shadowOffset
+        clipsToBounds = shadowOpacity == 0
+        self.textInsets = textInsets
+        if let textColor {
+            self.textColor = textColor
+        }
+        setContentHuggingPriority(.required, for: .vertical)
+    }
+}
+
+public enum AppThemeColors {
+    public static var teal = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+    public static var actionBlue = UIColor.systemBlue
+    public static var destructiveRed = UIColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 1.0)
+    public static var magentaAccent = UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0)
+    public static var black = UIColor.black
+    public static var systemGrey = UIColor.systemGray
+    public static var systemGreyBackground = UIColor.systemGray5
+    public static var systemGreySurface = UIColor.systemGray6
+
+    public static var tealTint: UIColor { teal.withAlphaComponent(0.10) }
+    public static var tealBorder: UIColor { teal.withAlphaComponent(0.22) }
+    public static var magentaTint: UIColor { magentaAccent.withAlphaComponent(0.10) }
+    public static var magentaBorder: UIColor { magentaAccent.withAlphaComponent(0.22) }
+    public static var softTealBackground: UIColor { UIColor(red: 0.93, green: 0.96, blue: 0.95, alpha: 1.0) }
+    public static var softMagentaBackground: UIColor { UIColor(red: 0.98, green: 0.93, blue: 0.95, alpha: 1.0) }
+}
+
 enum TextPalette {
-    static let magenta = UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0)
-    static let teal = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
-    static let ink = UIColor(red: 0.15, green: 0.20, blue: 0.23, alpha: 1.0)
-    static let mist = UIColor(red: 0.93, green: 0.96, blue: 0.95, alpha: 1.0)
-    static let blush = UIColor(red: 0.98, green: 0.93, blue: 0.95, alpha: 1.0)
+    static var magenta: UIColor { AppThemeColors.magentaAccent }
+    static var teal: UIColor { AppThemeColors.teal }
+    static var ink: UIColor { AppThemeColors.black }
+    static var mist: UIColor { AppThemeColors.softTealBackground }
+    static var blush: UIColor { AppThemeColors.softMagentaBackground }
 }
 
 enum VisualAcuitySession {
@@ -92,22 +144,22 @@ extension UITextField: TextStylable {
 public extension UILabel {
     func drawHeader() {
         font = UIFont.systemFont(ofSize: 40, weight: .bold)
-        textColor = TextPalette.magenta
+        textColor = AppThemeColors.magentaAccent
     }
     
     func drawHeader2() {
         font = UIFont.systemFont(ofSize: 35, weight: .semibold)
-        textColor = TextPalette.teal
+        textColor = AppThemeColors.teal
     }
     
     func drawInstruction() {
         font = UIFont.systemFont(ofSize: 30, weight: .regular)
-        textColor = .black
+        textColor = AppThemeColors.black
     }
     
     func drawSmallText() {
         font = UIFont.systemFont(ofSize: 18, weight: .regular)
-        textColor = .darkGray
+        textColor = AppThemeColors.systemGrey
     }
 
     func applyEyeTestTitle(eyeName: String, testName: String) {
@@ -122,8 +174,8 @@ public extension UILabel {
             NSAttributedString(
                 string: "\(eyeName) Eye Test",
                 attributes: [
-                    .font: UIFont.systemFont(ofSize: 33, weight: .bold),
-                    .foregroundColor: TextPalette.ink,
+                    .font: UIFont.systemFont(ofSize: 36, weight: .bold),
+                    .foregroundColor: AppThemeColors.black,
                     .paragraphStyle: paragraph
                 ]
             )
@@ -133,8 +185,8 @@ public extension UILabel {
             NSAttributedString(
                 string: testName.uppercased(),
                 attributes: [
-                    .font: UIFont.systemFont(ofSize: 17, weight: .black),
-                    .foregroundColor: TextPalette.magenta,
+                    .font: UIFont.systemFont(ofSize: 19, weight: .black),
+                    .foregroundColor: AppThemeColors.magentaAccent,
                     .kern: 1.8,
                     .paragraphStyle: paragraph
                 ]
@@ -145,33 +197,53 @@ public extension UILabel {
         numberOfLines = 0
         textAlignment = .center
     }
+
+    func applyTestTypeTitle(_ testName: String, color: UIColor = AppThemeColors.magentaAccent) {
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        paragraph.lineSpacing = 2
+
+        let title = NSAttributedString(
+            string: testName.uppercased(),
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 19, weight: .black),
+                .foregroundColor: color,
+                .kern: 1.8,
+                .paragraphStyle: paragraph
+            ]
+        )
+
+        attributedText = title
+        numberOfLines = 1
+        textAlignment = .center
+    }
 }
 
 public extension UITextField {
     func drawHeader() {
         font = UIFont.systemFont(ofSize: 40, weight: .bold)
-        textColor = TextPalette.magenta
+        textColor = AppThemeColors.magentaAccent
     }
     
     func drawHeader2() {
         font = UIFont.systemFont(ofSize: 35, weight: .semibold)
-        textColor = TextPalette.teal
+        textColor = AppThemeColors.teal
     }
     
     func drawInstruction() {
         font = UIFont.systemFont(ofSize: 30, weight: .regular)
-        textColor = .black
+        textColor = AppThemeColors.black
     }
     
     func drawSmallText() {
         font = UIFont.systemFont(ofSize: 18, weight: .regular)
-        textColor = .darkGray
+        textColor = AppThemeColors.systemGrey
     }
 }
 
 public extension UIButton {
     func drawStandardButton() {
-        backgroundColor = TextPalette.teal
+        backgroundColor = AppThemeColors.teal
         setTitleColor(.white, for: .normal)
         titleLabel?.font = UIFont.systemFont(ofSize: 35, weight: .regular)
         layer.cornerRadius = 8
@@ -189,6 +261,60 @@ public extension UIViewController {
         )
         endButton.tintColor = .systemRed
         return endButton
+    }
+
+    func animatePolishedEntrance(
+        for views: [UIView],
+        verticalOffset: CGFloat = 10,
+        stagger: TimeInterval = 0.05,
+        duration: TimeInterval = 0.45
+    ) {
+        for (index, view) in views.enumerated() {
+            view.alpha = 0
+            view.transform = CGAffineTransform(translationX: 0, y: verticalOffset)
+            UIView.animate(
+                withDuration: duration,
+                delay: Double(index) * stagger,
+                usingSpringWithDamping: 0.9,
+                initialSpringVelocity: 0.2,
+                options: [.allowUserInteraction, .beginFromCurrentState],
+                animations: {
+                    view.alpha = 1
+                    view.transform = .identity
+                }
+            )
+        }
+    }
+
+    func animateDecorativeDaisies(in containerView: UIView? = nil) {
+        let searchRoot = containerView ?? view
+        let daisies = findDaisyFlowerViews(in: searchRoot)
+
+        for (index, daisy) in daisies.enumerated() {
+            daisy.layer.removeAllAnimations()
+            daisy.transform = .identity
+            let delay = Double(index) * 0.12
+            UIView.animate(
+                withDuration: 2.8,
+                delay: delay,
+                options: [.autoreverse, .repeat, .allowUserInteraction, .curveEaseInOut],
+                animations: {
+                    daisy.transform = CGAffineTransform(translationX: 0, y: -4)
+                }
+            )
+        }
+    }
+
+    private func findDaisyFlowerViews(in root: UIView?) -> [DaisyFlowerView] {
+        guard let root else { return [] }
+        var result: [DaisyFlowerView] = []
+        for subview in root.subviews {
+            if let daisy = subview as? DaisyFlowerView {
+                result.append(daisy)
+            }
+            result.append(contentsOf: findDaisyFlowerViews(in: subview))
+        }
+        return result
     }
 }
 

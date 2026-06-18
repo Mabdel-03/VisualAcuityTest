@@ -67,6 +67,9 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     var stableReadingCount = 0
     var lastCapturedDistance: Double = 0.0
     private var captureAvailabilityWorkItem: DispatchWorkItem?
+    private var waitingDotsTimer: Timer?
+    private var waitingDotsCount: Int = 0
+    private let waitingDotCount = 4
     
     // Header label
     private lazy var headerLabel: UILabel = {
@@ -81,12 +84,43 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     private lazy var holdSteadyLabel: UILabel = {
         let label = UILabel()
         label.text = "Hold camera steady"
-        label.font = UIFont.systemFont(ofSize: 22, weight: .semibold)
-        label.textColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+        label.drawInstruction()
         label.textAlignment = .center
-        label.numberOfLines = 0
+        label.numberOfLines = 1
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
+    }()
+
+    private lazy var statusRowStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 8
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+
+    private lazy var waitingDotsStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 3
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+
+    private lazy var waitingDotLabels: [UILabel] = {
+        (0..<waitingDotCount).map { _ in
+            let label = UILabel()
+            label.text = "."
+            label.font = UIFont.systemFont(ofSize: 30, weight: .regular)
+            label.textColor = AppThemeColors.black
+            label.textAlignment = .center
+            label.translatesAutoresizingMaskIntoConstraints = false
+            label.alpha = 0
+            label.isHidden = true
+            return label
+        }
     }()
 
     override func viewDidLoad() {
@@ -99,8 +133,11 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         view.addSubview(headerLabel)
         view.bringSubviewToFront(headerLabel)
 
-        view.addSubview(holdSteadyLabel)
-        view.bringSubviewToFront(holdSteadyLabel)
+        view.addSubview(statusRowStack)
+        view.bringSubviewToFront(statusRowStack)
+        statusRowStack.addArrangedSubview(holdSteadyLabel)
+        statusRowStack.addArrangedSubview(waitingDotsStack)
+        waitingDotLabels.forEach { waitingDotsStack.addArrangedSubview($0) }
         
         // Set up header constraints
         NSLayoutConstraint.activate([
@@ -108,9 +145,10 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
             headerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             headerLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
 
-            holdSteadyLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
-            holdSteadyLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32),
-            holdSteadyLabel.bottomAnchor.constraint(equalTo: captureDistanceButton.topAnchor, constant: -18)
+            statusRowStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            statusRowStack.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 24),
+            statusRowStack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -24),
+            statusRowStack.bottomAnchor.constraint(equalTo: captureDistanceButton.topAnchor, constant: -16)
         ])
 
         prepareCaptureButtonAfterSteadyDelay()
@@ -139,6 +177,7 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         playAudioInstructions()
+        animateDecorativeDaisies()
     }
 
     /* Plays audio instructions to the user.
@@ -163,6 +202,7 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         
         captureAvailabilityWorkItem?.cancel()
         captureAvailabilityWorkItem = nil
+        stopWaitingDotsAnimation()
 
         // Pause the view's session
         sceneView.session.pause()
@@ -170,14 +210,18 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
 
     private func prepareCaptureButtonAfterSteadyDelay() {
         captureAvailabilityWorkItem?.cancel()
+        stopWaitingDotsAnimation()
 
+        statusRowStack.isHidden = false
         holdSteadyLabel.isHidden = false
         captureDistanceButton.isEnabled = false
         captureDistanceButton.alpha = 0.45
+        startWaitingDotsAnimation()
 
         let workItem = DispatchWorkItem { [weak self] in
             guard let self else { return }
-            self.holdSteadyLabel.isHidden = true
+            self.stopWaitingDotsAnimation()
+            self.statusRowStack.isHidden = true
             self.captureDistanceButton.isEnabled = true
             UIView.animate(withDuration: 0.2) {
                 self.captureDistanceButton.alpha = 1.0
@@ -185,6 +229,68 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         }
         captureAvailabilityWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: workItem)
+    }
+
+    private func startWaitingDotsAnimation() {
+        waitingDotsCount = 0
+        waitingDotsStack.isHidden = false
+        waitingDotsStack.alpha = 1
+        waitingDotsStack.transform = .identity
+        animateStatusRowEntranceIfNeeded()
+        revealNextWaitingDot()
+
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            guard self.waitingDotsCount < self.waitingDotCount else { return }
+            self.revealNextWaitingDot()
+        }
+        waitingDotsTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func stopWaitingDotsAnimation() {
+        waitingDotsTimer?.invalidate()
+        waitingDotsTimer = nil
+        waitingDotsCount = 0
+        waitingDotLabels.forEach { dotLabel in
+            dotLabel.isHidden = true
+            dotLabel.alpha = 0
+            dotLabel.transform = .identity
+        }
+    }
+
+    private func animateStatusRowEntranceIfNeeded() {
+        guard statusRowStack.alpha == 1, statusRowStack.transform == .identity else { return }
+        statusRowStack.alpha = 0
+        statusRowStack.transform = CGAffineTransform(translationX: -24, y: 0)
+        UIView.animate(
+            withDuration: 0.45,
+            delay: 0,
+            options: [.curveEaseOut, .allowUserInteraction, .beginFromCurrentState],
+            animations: {
+                self.statusRowStack.alpha = 1
+                self.statusRowStack.transform = .identity
+            }
+        )
+    }
+
+    private func revealNextWaitingDot() {
+        guard waitingDotsCount < waitingDotCount else { return }
+        let dotLabel = waitingDotLabels[waitingDotsCount]
+        waitingDotsCount += 1
+        dotLabel.isHidden = false
+        dotLabel.alpha = 0
+        dotLabel.transform = CGAffineTransform(scaleX: 0.45, y: 0.45)
+
+        UIView.animate(
+            withDuration: 0.16,
+            delay: 0,
+            options: [.curveEaseOut, .allowUserInteraction, .beginFromCurrentState],
+            animations: {
+                dotLabel.alpha = 1
+                dotLabel.transform = .identity
+            }
+        )
     }
 
     /* Captures the distance and immediately transitions to the next scene when the 
@@ -325,7 +431,7 @@ extension DistanceOptimization {
         // Decorative daisy 1 - top right (magenta)
         addDecorativeDaisy(
             size: 90,
-            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            petalColor: AppThemeColors.magentaAccent,
             centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
             alpha: 0.07,
             trailingOffset: 25,
@@ -335,7 +441,7 @@ extension DistanceOptimization {
         // Decorative daisy 2 - bottom left (teal)
         addDecorativeDaisy(
             size: 85,
-            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            petalColor: AppThemeColors.teal,
             centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
             alpha: 0.11,
             leadingOffset: 30,

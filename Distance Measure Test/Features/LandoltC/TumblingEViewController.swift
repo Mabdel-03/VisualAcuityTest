@@ -212,9 +212,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         lastScaleFactor = 1.0
         lastScalingDistance = 0.0
         
-        // Add triple-tap gesture to bypass distance checking if needed
-        setupEmergencyOverride()
-        
         // Finish layout and generate the first rotated letter
         view.layoutIfNeeded()
         generateNewE()
@@ -331,64 +328,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         print("Distance bounds set to: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
     }
     
-    /*
-     * Sets up an emergency override gesture (triple tap) to bypass
-     * distance checking if the user encounters persistent distance issues.
-     */
-    private func setupEmergencyOverride() {
-        // Setup override gesture - triple tap to bypass distance checking
-        let tripleTap = UITapGestureRecognizer(target: self, action: #selector(handleTripleTap))
-        tripleTap.numberOfTapsRequired = 3
-        view.addGestureRecognizer(tripleTap)
-    }
-
-    /*
-     * Handles the triple-tap gesture to bypass distance checking.
-     * This is an emergency override for when distance detection is problematic.
-     */
-    @objc private func handleTripleTap() {
-        isPaused = false
-        distanceGuidanceView.hideAll()
-        distanceGuidanceView.showOK()
-        
-        // Show a temporary message
-        let overrideLabel = UILabel()
-        overrideLabel.text = "⚠️ Distance Check Bypassed"
-        overrideLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        overrideLabel.textColor = .orange
-        overrideLabel.textAlignment = .center
-        overrideLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(overrideLabel)
-        
-        NSLayoutConstraint.activate([
-            overrideLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            overrideLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80)
-        ])
-        
-        // Also reset current distance to target to avoid further problems
-        DistanceTracker.shared.currentDistanceCM = averageDistanceCM
-        
-        // Reset scaling factors to trigger immediate rescaling with new approach
-        letterLabel.transform = CGAffineTransform.identity
-        lastScaleFactor = 1.0
-        lastScalingDistance = 0.0
-        
-        // Clear any pending audio instructions
-        lastAudioInstruction = ""
-        audioInstructionTimer?.invalidate()
-        
-        print("🔧 Distance check bypassed via triple tap")
-        
-        // Resume the test
-        resumeTest()
-        
-        // Remove the message after 3 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            overrideLabel.removeFromSuperview()
-        }
-    }
-
     /*
      * Sets up AR face tracking for distance monitoring.
      * Initializes the AR scene and creates tracking nodes for the eyes.
@@ -826,17 +765,17 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      */
     private func updateDirectionalIndicators(tooClose: Bool, tooFar: Bool, distance: Double) {
         if tooClose {
-            showDistancePlaceholder("Move farther\nto continue")
-            playAudioInstructionIfNeeded("Move farther.")
+            distanceGuidanceView.showMoveFarther()
+            playAudioInstructionIfNeeded("Move farther to continue.")
         } else if tooFar {
-            showDistancePlaceholder("Move closer\nto continue")
-            playAudioInstructionIfNeeded("Move closer.")
+            distanceGuidanceView.showMoveCloser()
+            playAudioInstructionIfNeeded("Move closer to continue.")
         }
     }
 
     private func restoreOptotypeDisplay() {
         letterLabel.text = LETTER
-        letterLabel.textColor = .black
+        letterLabel.textColor = AppThemeColors.black
         letterLabel.textAlignment = .center
         letterLabel.numberOfLines = 0
         _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER)
@@ -845,15 +784,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         lastScalingDistance = 0.0
     }
 
-    private func showDistancePlaceholder(_ message: String) {
-        letterLabel.transform = .identity
-        letterLabel.text = message
-        letterLabel.font = UIFont.systemFont(ofSize: 28, weight: .semibold)
-        letterLabel.textColor = .systemRed
-        letterLabel.textAlignment = .center
-        letterLabel.numberOfLines = 0
-    }
-    
     /* Plays audio instruction only if it's different from the last one played or enough time has passed.
      */
     private func playAudioInstructionIfNeeded(_ instruction: String) {

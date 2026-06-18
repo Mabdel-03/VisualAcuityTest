@@ -32,6 +32,7 @@ class OneEyeInstruc: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         playAudioInstructions()
+        animateDecorativeDaisies()
     }
     
     /* Sets up the UI for the one eye instructions scene.
@@ -50,7 +51,6 @@ class OneEyeInstruc: UIViewController {
         
         // Center the test type label and apply header2 style
         testTypeLabel?.textAlignment = .center
-        testTypeLabel?.drawHeader2()
         testTypeLabel?.numberOfLines = 1
         testTypeLabel?.adjustsFontSizeToFitWidth = true
         testTypeLabel?.minimumScaleFactor = 0.8
@@ -65,7 +65,7 @@ class OneEyeInstruc: UIViewController {
         // Decorative daisy 1 - top left (teal)
         addDecorativeDaisy(
             size: 100,
-            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            petalColor: AppThemeColors.teal,
             centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
             alpha: 0.12,
             leadingOffset: 20,
@@ -75,7 +75,7 @@ class OneEyeInstruc: UIViewController {
         // Decorative daisy 2 - bottom right (magenta)
         addDecorativeDaisy(
             size: 95,
-            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            petalColor: AppThemeColors.magentaAccent,
             centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
             alpha: 0.09,
             trailingOffset: 25,
@@ -107,7 +107,7 @@ class OneEyeInstruc: UIViewController {
             instructionText.text = "Cover right eye. Tap \"Begin\" when ready to start the test."
         }
         
-        testTypeLabel?.text = testType
+        testTypeLabel?.applyTestTypeTitle(testType, color: AppThemeColors.teal)
     }
     
     /* Begins the selected visual acuity test.

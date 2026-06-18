@@ -122,8 +122,8 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         let label = PaddedStatusLabel()
         label.text = "Listening for response"
         label.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
-        label.textColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
-        label.backgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 0.10)
+        label.textColor = AppThemeColors.teal
+        label.backgroundColor = AppThemeColors.teal.withAlphaComponent(0.10)
         label.textAlignment = .center
         label.layer.cornerRadius = 14
         label.layer.masksToBounds = true
@@ -137,7 +137,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         let label = UILabel()
         label.text = ""
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = .systemGray
+        label.textColor = AppThemeColors.systemGrey
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 2
@@ -921,7 +921,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         // Decorative daisy 1 - top right (magenta)
         addDecorativeDaisy(
             size: 100,
-            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            petalColor: AppThemeColors.magentaAccent,
             centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
             alpha: 0.1,
             trailingOffset: 20,
@@ -931,7 +931,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         // Decorative daisy 2 - bottom left (teal)
         addDecorativeDaisy(
             size: 92,
-            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            petalColor: AppThemeColors.teal,
             centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
             alpha: 0.12,
             leadingOffset: 25,

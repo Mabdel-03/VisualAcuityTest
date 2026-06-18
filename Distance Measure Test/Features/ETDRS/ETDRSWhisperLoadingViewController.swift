@@ -36,7 +36,7 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
         view.backgroundColor = UIColor.white.withAlphaComponent(0.88)
         view.layer.cornerRadius = 28
         view.layer.cornerCurve = .continuous
-        view.layer.shadowColor = UIColor.black.withAlphaComponent(0.08).cgColor
+        view.layer.shadowColor = AppThemeColors.black.withAlphaComponent(0.08).cgColor
         view.layer.shadowOpacity = 1
         view.layer.shadowRadius = 30
         view.layer.shadowOffset = CGSize(width: 0, height: 14)
@@ -61,14 +61,14 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = UIFont.systemFont(ofSize: 17, weight: .medium)
-        label.textColor = UIColor.darkGray
+        label.textColor = AppThemeColors.systemGrey
         return label
     }()
 
     private lazy var flowerView: DaisyFlowerView = {
         let flower = DaisyFlowerView(
             numberOfPetals: 18,
-            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            petalColor: AppThemeColors.magentaAccent,
             centerColor: UIColor(red: 1.0, green: 0.97, blue: 0.84, alpha: 1.0)
         )
         flower.translatesAutoresizingMaskIntoConstraints = false
@@ -98,7 +98,7 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
 
     private lazy var progressView: UIProgressView = {
         let progressView = UIProgressView(progressViewStyle: .default)
-        progressView.progressTintColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+        progressView.progressTintColor = AppThemeColors.teal
         progressView.trackTintColor = UIColor(red: 0.88, green: 0.91, blue: 0.90, alpha: 1.0)
         progressView.transform = CGAffineTransform(scaleX: 1.0, y: 3.2)
         progressView.layer.cornerRadius = 6
@@ -146,9 +146,18 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
         gradientLayer.frame = view.bounds
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        resetLoadingStateForAppearance()
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         startLoadingIfNeeded()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
     }
 
     deinit {
@@ -156,13 +165,6 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
     }
 
     private func setupUI() {
-        let haloView = UIView()
-        haloView.translatesAutoresizingMaskIntoConstraints = false
-        haloView.backgroundColor = UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 0.10)
-        haloView.layer.cornerRadius = 92
-        haloView.layer.cornerCurve = .continuous
-
-        view.addSubview(haloView)
         view.addSubview(flowerView)
         view.addSubview(loadingCard)
         loadingCard.addSubview(titleLabel)
@@ -173,13 +175,8 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
         loadingCard.addSubview(startButton)
 
         NSLayoutConstraint.activate([
-            haloView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            haloView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -160),
-            haloView.widthAnchor.constraint(equalToConstant: 184),
-            haloView.heightAnchor.constraint(equalToConstant: 184),
-
-            flowerView.centerXAnchor.constraint(equalTo: haloView.centerXAnchor),
-            flowerView.centerYAnchor.constraint(equalTo: haloView.centerYAnchor),
+            flowerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            flowerView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -184),
             flowerView.widthAnchor.constraint(equalToConstant: 120),
             flowerView.heightAnchor.constraint(equalToConstant: 120),
 
@@ -226,7 +223,6 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
     private func startLoadingIfNeeded() {
         guard !hasStartedLoading else { return }
         hasStartedLoading = true
-        startFlowerAnimation()
 
         Task { [weak self] in
             guard let self else { return }
@@ -258,18 +254,11 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
         statusLabel.text = status
         progressView.setProgress(Float(progress), animated: true)
         progressPercentLabel.text = "\(Int((progress * 100).rounded()))%"
-
-        if progress >= 1.0 && !isReadyToStart {
-            stopFlowerAnimation()
-        } else {
-            startFlowerAnimation()
-        }
     }
 
     private func showReadyState() {
         guard !isReadyToStart else { return }
         isReadyToStart = true
-        stopFlowerAnimation()
         titleLabel.text = launchPurpose == .appStartup ? "Speech Model Ready" : "Model Ready"
         subtitleLabel.text = launchPurpose == .appStartup
             ? "WhisperKit is ready. Opening the main menu now."
@@ -292,21 +281,17 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
         }
     }
 
-    private func startFlowerAnimation() {
-        guard flowerView.layer.animation(forKey: "pulse") == nil else { return }
-
-        let animation = CABasicAnimation(keyPath: "transform.scale")
-        animation.fromValue = 1.0
-        animation.toValue = 1.18
-        animation.duration = 0.9
-        animation.autoreverses = true
-        animation.repeatCount = .infinity
-        animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-        flowerView.layer.add(animation, forKey: "pulse")
-    }
-
-    private func stopFlowerAnimation() {
-        flowerView.layer.removeAnimation(forKey: "pulse")
+    private func resetLoadingStateForAppearance() {
+        hasStartedLoading = false
+        isReadyToStart = false
+        hasRoutedForward = false
+        titleLabel.text = "Loading Speech Model"
+        subtitleLabel.text = "WhisperKit is getting ready before the ETDRS test begins."
+        statusLabel.text = "Preparing speech model..."
+        progressPercentLabel.text = "0%"
+        progressView.setProgress(0.0, animated: false)
+        startButton.isHidden = true
+        startButton.alpha = 0.0
     }
 
     @objc private func startTestTapped() {
@@ -361,7 +346,6 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
     }
 
     private func showLoadingError(_ error: Error) {
-        stopFlowerAnimation()
         isReadyToStart = false
         hasRoutedForward = false
 

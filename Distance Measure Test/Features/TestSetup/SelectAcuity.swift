@@ -30,7 +30,7 @@ class SelectAcuity: UIViewController {
         super.viewDidLoad()
         
         // Set background to teal
-        view.backgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+        view.backgroundColor = AppThemeColors.teal
         
         print("🔍 SelectAcuity averageDistanceCM:", averageDistanceCM)
         

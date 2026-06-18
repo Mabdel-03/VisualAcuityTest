@@ -33,7 +33,7 @@ final class ETDRSWhisperLetterService {
 
     private let expectedLanguage = "en"
     private let bundledModelsFolderName = "WhisperModels"
-    private let minimumRealtimeBufferSeconds: Float = 0.50
+    private let minimumRealtimeBufferSeconds: Float = 0.35
     private let realtimeTranscriptionWindowSeconds: Float = 2.4
     private let silenceThreshold: Float = 0.10
     private let minimumFinalBufferSeconds: Float = 0.15
@@ -88,7 +88,7 @@ final class ETDRSWhisperLetterService {
         "KAY": "K", "KEY": "K", "OKAY": "K",
         "EN": "N", "ENN": "N", "AN": "N", "AND": "N", "NAND": "N",
         "PEA": "P", "PEE": "P", "PI": "P", "PEACE": "P",
-        "ARE": "R", "AR": "R", "ARR": "R", "OUR": "R",
+        "ARE": "R", "AR": "R", "ARR": "R", "OUR": "R", "OR": "R",
         "YOU": "U", "YEW": "U", "YOO": "U",
         "VEE": "V", "VI": "V", "VIE": "V",
         "ZEE": "Z", "ZED": "Z", "ZI": "Z"
