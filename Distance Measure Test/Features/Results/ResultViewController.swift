@@ -77,7 +77,9 @@ class ResultViewController: UIViewController {
     
     // Flag to prevent duplicate CSV export prompts
     private var hasTriggeredExport = false
-    
+    // Timestamp of the test entry we just saved, so we can attach the name after prompting
+    private var lastSavedTimestamp: String?
+
     // Store CSV data for share sheet fallback
     private var currentCSVContent: String?
     private var currentFileName: String?
@@ -180,7 +182,7 @@ class ResultViewController: UIViewController {
     
     private lazy var saveButton: UIButton = {
         let button = UIButton(type: .custom)
-        button.setTitle("Save", for: .normal)
+        button.setTitle("Share", for: .normal)
         button.drawStandardButton()
         button.backgroundColor = AppThemeColors.actionBlue
         button.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
@@ -396,18 +398,58 @@ class ResultViewController: UIViewController {
     /* Plays audio instructions to the user.
     */
     private func playAudioInstructions() {
-        let instructionText = "Here are your test results. Your visual acuity scores are displayed for each eye tested. Choose Home to return to main menu, Retest to take the test again, or Save to save your results."
+        let instructionText = "Here are your test results. Your visual acuity scores are displayed for each eye tested. Choose Home to return to main menu, Retest to take the test again, or Share to save and share your results."
         SharedAudioManager.shared.playText(instructionText, source: "Results")
     }
 
-    /* Returns to home screen without saving.
+    /* Prompts for a name, saves the test to history, then returns to the home screen.
     */
     @objc func homeButtonTapped() {
-        VisualAcuitySession.resetResults()
-        finalAcuityScore = -Double.infinity
-        
-        // Navigate back to the main screen
-        navigationController?.popToRootViewController(animated: true)
+        // If the user already tapped Share, the test is already saved — just go home.
+        if hasTriggeredExport {
+            VisualAcuitySession.resetResults()
+            finalAcuityScore = -Double.infinity
+            navigationController?.popToRootViewController(animated: true)
+            return
+        }
+
+        // Only save if there are real results.
+        let hasLeft  = VisualAcuitySession.finalAcuityResults[1].map { !isDefaultValue($0) } ?? false
+        let hasRight = VisualAcuitySession.finalAcuityResults[2].map { !isDefaultValue($0) } ?? false
+        guard hasLeft || hasRight else {
+            VisualAcuitySession.resetResults()
+            finalAcuityScore = -Double.infinity
+            navigationController?.popToRootViewController(animated: true)
+            return
+        }
+
+        // Prompt for name — the test is always saved regardless of whether
+        // the user provides a name or cancels the prompt.
+        promptForSubjectName(allowSkip: true) { [weak self] success in
+            guard let self = self else { return }
+
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            let timestamp = dateFormatter.string(from: Date())
+
+            var testResults: [String: String] = [:]
+            if let left = VisualAcuitySession.finalAcuityResults[1] {
+                testResults["Left Eye"] = left
+            }
+            if let right = VisualAcuitySession.finalAcuityResults[2] {
+                testResults["Right Eye"] = right
+            }
+            if success, let stored = SubjectNameManager.shared.getSubjectName() {
+                testResults["Name"] = "\(stored.firstName) \(stored.lastName)"
+                    .replacingOccurrences(of: "_", with: " ")
+            }
+
+            TestDataManager.shared.saveTestResults(testResults, for: timestamp)
+
+            VisualAcuitySession.resetResults()
+            finalAcuityScore = -Double.infinity
+            self.navigationController?.popToRootViewController(animated: true)
+        }
     }
     
     /* Retests by going back to test setup.
@@ -443,12 +485,12 @@ class ResultViewController: UIViewController {
         }
         
         // Add to all tests dictionary
+        lastSavedTimestamp = timestamp
         TestDataManager.shared.saveTestResults(testResults, for: timestamp)
-        
-        // Debug: Print the saved data
+
         print("Test results saved for timestamp: \(timestamp)")
         print("All tests count: \(TestDataManager.shared.getTestCount())")
-        
+
         // Now initiate CSV export with name prompt
         hasTriggeredExport = true
         initiateCSVExport()
@@ -469,8 +511,20 @@ class ResultViewController: UIViewController {
                 self.resetExportState()
                 return
             }
-            
-            // Proceed with CSV generation and email
+
+            // Persist the name into this test's history entry so Share All can read it later
+            if let ts = self.lastSavedTimestamp,
+               let stored = SubjectNameManager.shared.getSubjectName() {
+                let fullName = "\(stored.firstName) \(stored.lastName)"
+                    .replacingOccurrences(of: "_", with: " ")
+                var allTests = TestDataManager.shared.getAllTests()
+                if var results = allTests[ts] {
+                    results["Name"] = fullName
+                    TestDataManager.shared.saveTestResults(results, for: ts)
+                }
+            }
+
+            // Proceed with CSV generation
             self.generateAndEmailCSV()
         }
     }
@@ -481,34 +535,54 @@ class ResultViewController: UIViewController {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let progressionDataCollector = TestProgressionDataCollector.shared
             let nameManager = SubjectNameManager.shared
-            
-            // Generate CSV content off the main thread so export doesn't stall the results UI.
-            let csvContent = progressionDataCollector.generateCombinedCSV()
-            
-            // Generate filename with subject name - format: DateTime_FirstName_LastName.csv
+
+            let allData = progressionDataCollector.getAllStoredProgressionData()
+
+            guard !allData.isEmpty else {
+                DispatchQueue.main.async { [weak self] in
+                    self?.showNoDataAlert()
+                    self?.resetExportState()
+                }
+                return
+            }
+
+            // Build participant name string (already prompted before this runs)
+            let participantName: String
+            if let stored = nameManager.getSubjectName() {
+                participantName = "\(stored.firstName) \(stored.lastName)"
+                    .replacingOccurrences(of: "_", with: " ")
+            } else {
+                participantName = "Unknown"
+            }
+
+            let responseFormatter = DateFormatter()
+            responseFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+
+            var csvContent = "Name,Timestamp,Eye,Test_Type,Acuity_Level,Letter_Displayed,Distance_CM,Response_Time_MS,User_Response,Is_Correct,Trial_Number,Session_ID\n"
+            for r in allData.sorted(by: { $0.timestamp < $1.timestamp }) {
+                let row = (["\"\(participantName)\""] + [
+                    responseFormatter.string(from: r.timestamp),
+                    r.eye, r.testType, r.acuityLevel, r.letterDisplayed,
+                    String(format: "%.1f", r.distanceCM),
+                    String(r.responseTimeMS),
+                    r.userResponse,
+                    r.isCorrect ? "TRUE" : "FALSE",
+                    String(r.trialNumber),
+                    r.sessionId
+                ]).joined(separator: ",")
+                csvContent += row + "\n"
+            }
+
             let fileName = nameManager.generateCSVFilename() ?? {
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "yyyyMMdd-HHmmss"
                 let timestamp = dateFormatter.string(from: Date())
                 return "\(timestamp)_test_data.csv"
             }()
-            
+
             DispatchQueue.main.async {
                 guard let self = self else { return }
-                
-                // Check if we have actual data
-                if csvContent.contains("No test data available") {
-                    print("📊 No test data available for export")
-                    self.showNoDataAlert()
-                    self.resetExportState()
-                    return
-                }
-                
                 print("📊 Generated CSV filename: \(fileName)")
-                
-                // TEMPORARY: Using manual share sheet only
-                // Automatic Dropbox API upload is disabled for now
-                print("📊 Presenting share sheet for manual upload")
                 self.showShareSheet(csvContent: csvContent, fileName: fileName)
             }
         }

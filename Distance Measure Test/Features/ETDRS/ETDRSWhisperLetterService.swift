@@ -86,7 +86,7 @@ final class ETDRSWhisperLetterService {
         "EF": "F", "EFF": "F", "EARTH": "F",
         "AITCH": "H", "EACH": "H", "HATCH": "H", "ATCH": "H",
         "KAY": "K", "KEY": "K", "OKAY": "K",
-        "EN": "N", "ENN": "N", "AN": "N", "AND": "N", "NAND": "N",
+        "EN": "N", "ENN": "N", "AN": "N", "AND": "N", "NAND": "N","IN": "N",
         "PEA": "P", "PEE": "P", "PI": "P", "PEACE": "P",
         "ARE": "R", "AR": "R", "ARR": "R", "OUR": "R", "OR": "R",
         "YOU": "U", "YEW": "U", "YOO": "U",

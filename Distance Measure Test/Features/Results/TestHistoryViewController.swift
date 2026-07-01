@@ -5,6 +5,10 @@ import AVFoundation
     On this page, the user is given a list of all the tests they have completed.
 */
 class TestHistoryViewController: UIViewController {
+    // Stores test data keyed by button tag so per-test share buttons can retrieve it
+    private var testShareData: [Int: (timestamp: String, testResults: [String: String])] = [:]
+    private var shareButtonCounter = 0
+
     // UI ELEMENTS
     private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -110,14 +114,9 @@ class TestHistoryViewController: UIViewController {
     private func displayTestHistory() {
         // Get test results from persistent storage
         let allTestsDictionary = TestDataManager.shared.getAllTests()
-        
-        // Check progression data availability
-        let progressionDataCollector = TestProgressionDataCollector.shared
-        let allProgressionData = progressionDataCollector.getAllStoredProgressionData()
-        let hasProgressionData = !allProgressionData.isEmpty
-        
+
         // Check if there are any tests
-        if allTestsDictionary.isEmpty && !hasProgressionData {
+        if allTestsDictionary.isEmpty {
             // Hide clear button when no tests
             clearButton.isHidden = true
             
@@ -141,120 +140,94 @@ class TestHistoryViewController: UIViewController {
         
         // Show clear button when tests exist
         clearButton.isHidden = false
+        testShareData.removeAll()
+        shareButtonCounter = 0
         var previousView: UIView = clearButton
-        
+
         // Sort timestamps in descending order (newest first)
         let sortedTimestamps = allTestsDictionary.keys.sorted(by: >)
-        
+
         for timestamp in sortedTimestamps {
             if let testResults = allTestsDictionary[timestamp] {
                 // Create timestamp label
                 let timestampLabel = createLabel(text: timestamp, fontSize: 20, weight: .semibold)
                 contentView.addSubview(timestampLabel)
-                
+
                 NSLayoutConstraint.activate([
                     timestampLabel.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 30),
                     timestampLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
                     timestampLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
                     timestampLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20)
                 ])
-                
+
                 previousView = timestampLabel
-                
-                // Add right eye results and export button
+
+                // Add right eye results
                 if let rightEyeResult = testResults["Right Eye"] {
                     let displayText = isDefaultValue(rightEyeResult) ? "Right Eye: Not Tested" : "Right Eye: " + rightEyeResult
                     let rightEyeLabel = createLabel(text: displayText, fontSize: 18, weight: .regular)
                     contentView.addSubview(rightEyeLabel)
-                    
+
                     NSLayoutConstraint.activate([
                         rightEyeLabel.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 15),
                         rightEyeLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
                         rightEyeLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
                         rightEyeLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20)
                     ])
-                    
+
                     previousView = rightEyeLabel
-                    
-                    // Add right eye export button if data exists
-                    if hasProgressionData {
-                        let rightEyeData = allProgressionData.filter { $0.eye == "Right" }
-                        if !rightEyeData.isEmpty {
-                            let rightEyeExportButton = createExportButton(
-                                title: "📊 Export Right Eye Data\n(\(rightEyeData.count) responses)",
-                                eye: "Right"
-                            )
-                            contentView.addSubview(rightEyeExportButton)
-                            
-                            NSLayoutConstraint.activate([
-                                rightEyeExportButton.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 10),
-                                rightEyeExportButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-                                rightEyeExportButton.widthAnchor.constraint(equalToConstant: 250),
-                                rightEyeExportButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-                            ])
-                            
-                            previousView = rightEyeExportButton
-                        }
-                    }
                 }
-                
-                // Add left eye results and export button
+
+                // Add left eye results
                 if let leftEyeResult = testResults["Left Eye"] {
                     let displayText = isDefaultValue(leftEyeResult) ? "Left Eye: Not Tested" : "Left Eye: " + leftEyeResult
                     let leftEyeLabel = createLabel(text: displayText, fontSize: 18, weight: .regular)
                     contentView.addSubview(leftEyeLabel)
-                    
+
                     NSLayoutConstraint.activate([
                         leftEyeLabel.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 15),
                         leftEyeLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
                         leftEyeLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 20),
                         leftEyeLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -20)
                     ])
-                    
+
                     previousView = leftEyeLabel
-                    
-                    // Add left eye export button if data exists
-                    if hasProgressionData {
-                        let leftEyeData = allProgressionData.filter { $0.eye == "Left" }
-                        if !leftEyeData.isEmpty {
-                            let leftEyeExportButton = createExportButton(
-                                title: "📊 Export Left Eye Data\n(\(leftEyeData.count) responses)",
-                                eye: "Left"
-                            )
-                            contentView.addSubview(leftEyeExportButton)
-                            
-                            NSLayoutConstraint.activate([
-                                leftEyeExportButton.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 10),
-                                leftEyeExportButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-                                leftEyeExportButton.widthAnchor.constraint(equalToConstant: 250),
-                                leftEyeExportButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-                            ])
-                            
-                            previousView = leftEyeExportButton
-                        }
-                    }
                 }
+
+                // Per-test save/share button
+                let shareButton = createPerTestShareButton(tag: shareButtonCounter)
+                testShareData[shareButtonCounter] = (timestamp: timestamp, testResults: testResults)
+                shareButtonCounter += 1
+                contentView.addSubview(shareButton)
+
+                NSLayoutConstraint.activate([
+                    shareButton.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 12),
+                    shareButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                    shareButton.widthAnchor.constraint(equalToConstant: 220),
+                    shareButton.heightAnchor.constraint(equalToConstant: 44)
+                ])
+
+                previousView = shareButton
             }
         }
         
-        // Add combined export button at the end if we have progression data
-        if hasProgressionData {
-            let combinedExportButton = createExportButton(
-                title: "📊 Export Both Eyes Combined Data\n(\(allProgressionData.count) total responses)",
-                eye: nil
-            )
-            combinedExportButton.backgroundColor = UIColor(red: 0.2, green: 0.6, blue: 0.2, alpha: 1.0) // Green
-            contentView.addSubview(combinedExportButton)
-            
-            NSLayoutConstraint.activate([
-                combinedExportButton.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 30),
-                combinedExportButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-                combinedExportButton.widthAnchor.constraint(equalToConstant: 280),
-                combinedExportButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-            ])
-            
-            previousView = combinedExportButton
-        }
+        // Share All button — exports every test in history with participant name
+        let shareAllButton = UIButton(type: .system)
+        shareAllButton.setTitle("Share All Tests", for: .normal)
+        shareAllButton.drawStandardButton()
+        shareAllButton.backgroundColor = UIColor(red: 0.2, green: 0.6, blue: 0.2, alpha: 1.0)
+        shareAllButton.addTarget(self, action: #selector(shareAllTapped), for: .touchUpInside)
+        shareAllButton.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(shareAllButton)
+
+        NSLayoutConstraint.activate([
+            shareAllButton.topAnchor.constraint(equalTo: previousView.bottomAnchor, constant: 30),
+            shareAllButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            shareAllButton.widthAnchor.constraint(equalToConstant: 240),
+            shareAllButton.heightAnchor.constraint(equalToConstant: 50)
+        ])
+
+        previousView = shareAllButton
         
         // Set the bottom constraint of the last view to the content view
         NSLayoutConstraint.activate([
@@ -280,37 +253,6 @@ class TestHistoryViewController: UIViewController {
         label.text = text
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
-    }
-    
-    /* Creates an export button for CSV data.
-    */
-    private func createExportButton(title: String, eye: String?) -> UIButton {
-        let button = UIButton(type: .system)
-        button.setTitle(title, for: .normal)
-        button.drawStandardButton()
-        button.titleLabel?.numberOfLines = 0
-        button.titleLabel?.textAlignment = .center
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.filled()
-            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
-            button.configuration = config
-        } else {
-            button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
-        }
-        
-        // Add appropriate target based on eye
-        if let eye = eye {
-            if eye == "Left" {
-                button.addTarget(self, action: #selector(exportLeftEyeCSVTapped), for: .touchUpInside)
-            } else {
-                button.addTarget(self, action: #selector(exportRightEyeCSVTapped), for: .touchUpInside)
-            }
-        } else {
-            button.addTarget(self, action: #selector(exportCombinedCSVTapped), for: .touchUpInside)
-        }
-        
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
     }
     
     /* Handles the clear history button tap with confirmation alert.
@@ -365,99 +307,201 @@ class TestHistoryViewController: UIViewController {
         present(successAlert, animated: true, completion: nil)
     }
     
-    // MARK: - Export Actions
-    
-    @objc private func exportLeftEyeCSVTapped() {
-        exportCSV(for: "Left")
+    // MARK: - Share All Tests
+
+    @objc private func shareAllTapped() {
+        performShareAll()
     }
-    
-    @objc private func exportRightEyeCSVTapped() {
-        exportCSV(for: "Right")
-    }
-    
-    @objc private func exportCombinedCSVTapped() {
-        exportCSV(for: nil) // nil means combined data
-    }
-    
-    /*
-     * Exports CSV data for the specified eye or combined data
-     */
-    private func exportCSV(for eye: String?) {
-        // Prompt for subject name first
-        promptForSubjectName(allowSkip: true) { [weak self] success in
-            guard let self = self, success else {
-                print("📊 CSV export cancelled - no subject name provided")
-                return
-            }
-            
-            // Proceed with export now that we have a name
-            self.performCSVExport(for: eye)
+
+    private func performShareAll() {
+        let allProgressionData = TestProgressionDataCollector.shared.getAllStoredProgressionData()
+        guard !allProgressionData.isEmpty else { return }
+
+        // Build a lookup: for each history entry, what timestamp window does it cover
+        // and what name was stored when it was individually shared?
+        let allTests = TestDataManager.shared.getAllTests()
+        let historyFormatter = DateFormatter()
+        historyFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let sortedTimestampsAsc = allTests.keys.sorted(by: <)
+
+        // Pre-compute (lowerBound, saveDate, name) tuples for efficient per-row lookup
+        let windows: [(lower: Date, upper: Date, name: String)] = sortedTimestampsAsc.enumerated().compactMap { idx, ts in
+            guard let saveDate = historyFormatter.date(from: ts) else { return nil }
+            let lower: Date = idx > 0
+                ? (historyFormatter.date(from: sortedTimestampsAsc[idx - 1]) ?? Date.distantPast)
+                : Date.distantPast
+            let name = allTests[ts]?["Name"] ?? "Unknown"
+            return (lower: lower, upper: saveDate, name: name)
         }
-    }
-    
-    /*
-     * Performs the actual CSV export after subject name is confirmed
-     */
-    private func performCSVExport(for eye: String?) {
-        let progressionDataCollector = TestProgressionDataCollector.shared
-        let nameManager = SubjectNameManager.shared
-        
-        let csvContent: String
-        let fileName: String
-        
-        // Generate filename with subject name
-        if let eye = eye {
-            csvContent = progressionDataCollector.generateCSV(for: eye)
-            let suffix = "\(eye.lowercased())_eye"
-            fileName = nameManager.generateCSVFilename(withSuffix: suffix) ?? "visual_acuity_\(eye.lowercased())_eye_data.csv"
-        } else {
-            csvContent = progressionDataCollector.generateCombinedCSV()
-            fileName = nameManager.generateCSVFilename(withSuffix: "combined") ?? "visual_acuity_combined_data.csv"
+
+        let responseFormatter = DateFormatter()
+        responseFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+
+        var csv = "Name,Timestamp,Eye,Test_Type,Acuity_Level,Letter_Displayed,Distance_CM,Response_Time_MS,User_Response,Is_Correct,Trial_Number,Session_ID\n"
+        for r in allProgressionData.sorted(by: { $0.timestamp < $1.timestamp }) {
+            let participantName = windows.first(where: {
+                r.timestamp > $0.lower && r.timestamp <= $0.upper
+            })?.name ?? "Unknown"
+
+            let row = (["\"\(participantName)\""] + [
+                responseFormatter.string(from: r.timestamp),
+                r.eye, r.testType, r.acuityLevel, r.letterDisplayed,
+                String(format: "%.1f", r.distanceCM),
+                String(r.responseTimeMS),
+                r.userResponse,
+                r.isCorrect ? "TRUE" : "FALSE",
+                String(r.trialNumber),
+                r.sessionId
+            ]).joined(separator: ",")
+            csv += row + "\n"
         }
-        
-        // Create temporary file
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd-HHmmss"
+        let fileName = "visual_acuity_all_tests_\(dateFormatter.string(from: Date())).csv"
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-        
+
         do {
-            try csvContent.write(to: tempURL, atomically: true, encoding: .utf8)
-            
-            print("📊 CSV file created: \(fileName)")
-            
-            // Present activity view controller for sharing
-            let activityViewController = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
-            
-            // For iPad compatibility - use the view center since we have dynamic buttons
-            if let popoverController = activityViewController.popoverPresentationController {
-                popoverController.sourceView = view
-                popoverController.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
-                popoverController.permittedArrowDirections = []
+            try csv.write(to: tempURL, atomically: true, encoding: .utf8)
+            let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+            if let popover = activityVC.popoverPresentationController {
+                popover.sourceView = view
+                popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+                popover.permittedArrowDirections = []
             }
-            
-            // Add completion handler to clean up temporary file
-            activityViewController.completionWithItemsHandler = { _, _, _, _ in
+            activityVC.completionWithItemsHandler = { _, _, _, _ in
                 try? FileManager.default.removeItem(at: tempURL)
             }
-            
-            present(activityViewController, animated: true)
-            
-            // Play audio feedback
-            if SharedAudioManager.shared.isAudioEnabled() {
-                let eyeText = eye ?? "combined"
-                SharedAudioManager.shared.playText("Exporting \(eyeText) test data", source: "Test History")
-            }
-            
+            present(activityVC, animated: true)
         } catch {
-            // Show error alert
-            let errorAlert = UIAlertController(
+            let alert = UIAlertController(
                 title: "Export Error",
-                message: "Failed to create CSV file: \(error.localizedDescription)",
+                message: "Failed to create file: \(error.localizedDescription)",
                 preferredStyle: .alert
             )
-            errorAlert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(errorAlert, animated: true)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
         }
     }
-    
+
+    // MARK: - Per-Test Share
+
+    private func createPerTestShareButton(tag: Int) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle("Share", for: .normal)
+        button.drawStandardButton()
+        button.backgroundColor = AppThemeColors.actionBlue
+        button.tag = tag
+        button.addTarget(self, action: #selector(perTestShareTapped(_:)), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }
+
+    @objc private func perTestShareTapped(_ sender: UIButton) {
+        guard let entry = testShareData[sender.tag] else { return }
+        promptForSubjectName(allowSkip: true) { [weak self] success in
+            guard let self = self, success else { return }
+
+            // Persist the name into this test's history entry so Share All can read it later
+            var updatedResults = entry.testResults
+            if let stored = SubjectNameManager.shared.getSubjectName() {
+                updatedResults["Name"] = "\(stored.firstName) \(stored.lastName)"
+                    .replacingOccurrences(of: "_", with: " ")
+                TestDataManager.shared.saveTestResults(updatedResults, for: entry.timestamp)
+                self.testShareData[sender.tag] = (timestamp: entry.timestamp, testResults: updatedResults)
+            }
+
+            self.shareTestResult(timestamp: entry.timestamp, testResults: updatedResults)
+        }
+    }
+
+    private func shareTestResult(timestamp: String, testResults: [String: String]) {
+        let historyFormatter = DateFormatter()
+        historyFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        guard let saveDate = historyFormatter.date(from: timestamp) else { return }
+
+        // Lower bound = the save timestamp of the previous history entry (so we only
+        // include responses that occurred during this specific test session).
+        let allTests = TestDataManager.shared.getAllTests()
+        let sortedAsc = allTests.keys.sorted(by: <)
+        let lowerBound: Date
+        if let idx = sortedAsc.firstIndex(of: timestamp), idx > 0 {
+            lowerBound = historyFormatter.date(from: sortedAsc[idx - 1]) ?? Date.distantPast
+        } else {
+            lowerBound = Date.distantPast
+        }
+
+        // Participant name (already prompted before this is called)
+        let nameManager = SubjectNameManager.shared
+        let participantName: String
+        if let stored = nameManager.getSubjectName() {
+            participantName = "\(stored.firstName) \(stored.lastName)"
+                .replacingOccurrences(of: "_", with: " ")
+        } else {
+            participantName = "Unknown"
+        }
+
+        // Grab only the progression rows that belong to this test window.
+        let allProgressionData = TestProgressionDataCollector.shared.getAllStoredProgressionData()
+        let sessionData = allProgressionData.filter {
+            $0.timestamp > lowerBound && $0.timestamp <= saveDate
+        }.sorted { $0.timestamp < $1.timestamp }
+
+        let csvContent: String
+        if sessionData.isEmpty {
+            // No detailed data saved for this session — fall back to summary.
+            let right = isDefaultValue(testResults["Right Eye"] ?? "") ? "Not Tested" : (testResults["Right Eye"] ?? "Not Tested")
+            let left  = isDefaultValue(testResults["Left Eye"]  ?? "") ? "Not Tested" : (testResults["Left Eye"]  ?? "Not Tested")
+            csvContent = "Name,Test_Date,Right_Eye_Result,Left_Eye_Result\n\"\(participantName)\",\"\(timestamp)\",\"\(right)\",\"\(left)\"\n"
+        } else {
+            let responseFormatter = DateFormatter()
+            responseFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+            var csv = "Name,Timestamp,Eye,Test_Type,Acuity_Level,Letter_Displayed,Distance_CM,Response_Time_MS,User_Response,Is_Correct,Trial_Number,Session_ID\n"
+            for r in sessionData {
+                let row = (["\"\(participantName)\""] + [
+                    responseFormatter.string(from: r.timestamp),
+                    r.eye, r.testType, r.acuityLevel, r.letterDisplayed,
+                    String(format: "%.1f", r.distanceCM),
+                    String(r.responseTimeMS),
+                    r.userResponse,
+                    r.isCorrect ? "TRUE" : "FALSE",
+                    String(r.trialNumber),
+                    r.sessionId
+                ]).joined(separator: ",")
+                csv += row + "\n"
+            }
+            csvContent = csv
+        }
+
+        let safeName = timestamp
+            .replacingOccurrences(of: ":", with: "-")
+            .replacingOccurrences(of: " ", with: "_")
+        let fileName = nameManager.generateCSVFilename(withSuffix: safeName) ?? "visual_acuity_\(safeName).csv"
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+
+        do {
+            try csvContent.write(to: tempURL, atomically: true, encoding: .utf8)
+            let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+            if let popover = activityVC.popoverPresentationController {
+                popover.sourceView = view
+                popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+                popover.permittedArrowDirections = []
+            }
+            activityVC.completionWithItemsHandler = { _, _, _, _ in
+                try? FileManager.default.removeItem(at: tempURL)
+            }
+            present(activityVC, animated: true)
+        } catch {
+            let alert = UIAlertController(
+                title: "Export Error",
+                message: "Failed to create file: \(error.localizedDescription)",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        }
+    }
+
     /* Adds decorative daisy flowers to the background for visual cohesion.
     */
     private func addDecorativeCircles() {
