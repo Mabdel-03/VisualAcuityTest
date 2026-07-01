@@ -1,5 +1,5 @@
 //
-//  Select_Acuity.swift
+//  SelectAcuity.swift
 //  Distance Measure Test
 //
 //  Created by Maggie Bao on 5/14/24.
@@ -8,18 +8,17 @@
 import UIKit
 import AVFoundation
 
-let LETTER = "C" // Landold C-- the letter that is displayed on the acuity selection scene.
-var selectedAcuity: Int?
+let LETTER = "C" // Landolt C-- the letter that is displayed on the acuity selection scene.
 
-// Global test type preference - Fixed to Landolt C in this version
+// Global test type preference
 var isETDRSTest: Bool {
-    return false  // Always use Landolt C test
+    return UserDefaults.standard.bool(forKey: "etdrs_test_enabled")
 }
 
-/* Select_Acuity class is designed to display the acuity selection scene.
+/* SelectAcuity class is designed to display the acuity selection scene.
     On this page, the user is given a list of acuity levels to start the test at.
 */
-class Select_Acuity: UIViewController {
+class SelectAcuity: UIViewController {
     
     @IBOutlet weak var B200: UIButton!
     @IBOutlet weak var B125: UIButton!
@@ -31,9 +30,9 @@ class Select_Acuity: UIViewController {
         super.viewDidLoad()
         
         // Set background to teal
-        view.backgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+        view.backgroundColor = AppThemeColors.teal
         
-        print("🔍 Select_Acuity averageDistanceCM:", averageDistanceCM)
+        print("🔍 SelectAcuity averageDistanceCM:", averageDistanceCM)
         
         // Ensure we have a valid distance before setting up buttons
         if averageDistanceCM <= 0 {
@@ -89,7 +88,7 @@ class Select_Acuity: UIViewController {
         
         // Calculate size at viewing distance
         let scale_factor = Double(averageDistanceCM) * tan(visual_angle) * scaling_correction_factor
-        let letterHeight = scale_factor * Double(ppi)
+        let letterHeight = scale_factor * VisualAcuitySession.devicePPI
         
         // Adjusted font size - reducing by factor of 2 to match physical acuity cards
         // The 0.3 factor (instead of 0.6) accounts for font rendering differences
@@ -115,7 +114,7 @@ class Select_Acuity: UIViewController {
         // This matches the approach used in TumblingEViewController which works correctly
         button.setTitle(letText, for: .normal)
         
-        // Set content edge insets
+        button.configuration = nil
         button.contentEdgeInsets = UIEdgeInsets(
             top: verticalPadding,
             left: horizontalPadding,
@@ -165,27 +164,27 @@ class Select_Acuity: UIViewController {
     //DIFFERENT ACUITY LEVELS
 
     @IBAction func option1(_ sender: Any) {
-        selectedAcuity = 200
+        VisualAcuitySession.selectedAcuity = 200
         proceedToTest()
     }
     
     @IBAction func option3(_ sender: Any) {
-        selectedAcuity = 125
+        VisualAcuitySession.selectedAcuity = 125
         proceedToTest()
     }
 
     @IBAction func option5(_ sender: Any) {
-        selectedAcuity = 80
+        VisualAcuitySession.selectedAcuity = 80
         proceedToTest()
     }
 
     @IBAction func option7(_ sender: Any) {
-        selectedAcuity = 50
+        VisualAcuitySession.selectedAcuity = 50
         proceedToTest()
     }
     
     @IBAction func option10(_ sender: Any) {
-        selectedAcuity = 20
+        VisualAcuitySession.selectedAcuity = 20
         proceedToTest()
     }
     
@@ -193,19 +192,14 @@ class Select_Acuity: UIViewController {
         to the test scene.
     */
     private func proceedToTest() {
-        print("Proceeding to test with acuity: \(String(describing: selectedAcuity))")
-        
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        
+        print("Proceeding to test with acuity: \(String(describing: VisualAcuitySession.selectedAcuity))")
+
         if isETDRSTest {
-            // Navigate to ETDRS test
-            if let etdrsVC = storyboard.instantiateViewController(withIdentifier: "ETDRSViewController") as? ETDRSViewController {
-                navigationController?.pushViewController(etdrsVC, animated: true)
-                print("🔤 ✅ Successfully navigating to ETDRS test")
-            } else {
-                print("🔤 ❌ Failed to instantiate ETDRSViewController from storyboard")
-            }
+            let loadingVC = ETDRSWhisperLoadingViewController(launchPurpose: .beforeETDRSTest)
+            navigationController?.pushViewController(loadingVC, animated: true)
+            print("🔤 ✅ Successfully navigating to ETDRS loading screen")
         } else {
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
             // Navigate to Landolt C test
             if let tumblingVC = storyboard.instantiateViewController(withIdentifier: "TumblingEViewController") as? TumblingEViewController {
                 navigationController?.pushViewController(tumblingVC, animated: true)

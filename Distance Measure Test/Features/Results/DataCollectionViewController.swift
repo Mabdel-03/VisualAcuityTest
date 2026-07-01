@@ -119,11 +119,14 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     
     // Microphone status label
     private lazy var microphoneLabel: UILabel = {
-        let label = UILabel()
-        label.text = "🎤 Listening..."
-        label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
-        label.textColor = .systemBlue
+        let label = PaddedStatusLabel()
+        label.text = "Listening for response"
+        label.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        label.textColor = AppThemeColors.teal
+        label.backgroundColor = AppThemeColors.teal.withAlphaComponent(0.10)
         label.textAlignment = .center
+        label.layer.cornerRadius = 14
+        label.layer.masksToBounds = true
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
         return label
@@ -134,7 +137,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         let label = UILabel()
         label.text = ""
         label.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        label.textColor = .systemGray
+        label.textColor = AppThemeColors.systemGrey
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 2
@@ -214,6 +217,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
             // Microphone label
             microphoneLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             microphoneLabel.topAnchor.constraint(equalTo: letterLabel.bottomAnchor, constant: 30),
+            microphoneLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30),
             
             // Transcription label
             transcriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -472,33 +476,31 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     }
     
     private func extractDirectLetter(from text: String) -> String? {
-        let letters = text.filter { $0.isLetter }
-        for letter in etdrsLetters {
-            if letters.contains(letter) {
-                return letter
-            }
-        }
-        return nil
+        // Preserve the heard letter without remapping. Return the last single alphabetic character found.
+        let uppercase = text.uppercased()
+        let lettersOnly = uppercase.filter { $0.isLetter }
+        guard let last = lettersOnly.last else { return nil }
+        return String(last)
     }
     
     // MARK: - Phonetic Matching (copied from ETDRSViewController)
     
     private func phoneticMatch(for spokenText: String) -> String? {
-        let text = spokenText.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = spokenText.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Exact phonetic mappings
         let exactPhoneticMap: [String: String] = [
-            "see": "C", "sea": "C", "cee": "C", "si": "C", "c": "C",
-            "dee": "D", "di": "D", "d": "D", "de": "D",
-            "ef": "F", "eff": "F", "f": "F", "aff": "F",
-            "aitch": "H", "atch": "H", "aych": "H", "h": "H",
-            "kay": "K", "key": "K", "k": "K", "kei": "K",
-            "en": "N", "enn": "N", "n": "N", "ne": "N",
-            "pee": "P", "pi": "P", "p": "P", "pe": "P",
-            "are": "R", "ar": "R", "arr": "R", "or": "R", "r": "R",
-            "you": "U", "yu": "U", "u": "U", "yoo": "U",
-            "vee": "V", "vi": "V", "v": "V", "ve": "V", "we": "V",
-            "zee": "Z", "zed": "Z", "zi": "Z", "z": "Z"
+            "SEE": "C", "SEA": "C", "CEE": "C", "SI": "C", "C": "C",
+            "DEE": "D", "DI": "D", "D": "D", "DE": "D",
+            "EF": "F", "EFF": "F", "F": "F", "AFF": "F",
+            "AITCH": "H", "ATCH": "H", "AYCH": "H", "H": "H",
+            "KAY": "K", "KEY": "K", "K": "K", "KEI": "K",
+            "EN": "N", "ENN": "N", "N": "N", "NE": "N", "AND": "N", "NAND": "N",
+            "PEE": "P", "PI": "P", "P": "P", "PE": "P", "PEACE": "P",
+            "ARE": "R", "AR": "R", "ARR": "R", "OR": "R", "R": "R",
+            "YOU": "U", "YU": "U", "U": "U", "YOO": "U",
+            "VEE": "V", "VI": "V", "V": "V", "VE": "V", "WE": "V",
+            "ZEE": "Z", "ZED": "Z", "ZI": "Z", "Z": "Z"
         ]
         
         // Check exact matches first
@@ -513,12 +515,9 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
             }
         }
         
-        // Single letter direct match
-        if text.count == 1 && text.first!.isLetter {
-            let letter = text.uppercased()
-            if etdrsLetters.contains(letter) {
-                return letter
-            }
+        // Single letter direct match — preserve as heard, even if not ETDRS
+        if text.count == 1, let ch = text.first, ch.isLetter {
+            return String(ch).uppercased()
         }
         
         return nil
@@ -845,7 +844,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         let scaling_correction_factor = 1.0 / 2.54  // Conversion from inches to cm
         
         let scale_factor = fixedDistance * tan(visual_angle) * scaling_correction_factor
-        let labelHeight = scale_factor * ppi
+        let labelHeight = scale_factor * VisualAcuitySession.devicePPI
         
         // Set the letter size
         letterLabel.frame.size = CGSize(width: (labelHeight * 5), height: labelHeight)
@@ -922,7 +921,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         // Decorative daisy 1 - top right (magenta)
         addDecorativeDaisy(
             size: 100,
-            petalColor: UIColor(red: 0.788, green: 0.169, blue: 0.369, alpha: 1.0),
+            petalColor: AppThemeColors.magentaAccent,
             centerColor: UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0),
             alpha: 0.1,
             trailingOffset: 20,
@@ -932,7 +931,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         // Decorative daisy 2 - bottom left (teal)
         addDecorativeDaisy(
             size: 92,
-            petalColor: UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0),
+            petalColor: AppThemeColors.teal,
             centerColor: UIColor(red: 0.251, green: 0.427, blue: 0.455, alpha: 1.0),
             alpha: 0.12,
             leadingOffset: 25,

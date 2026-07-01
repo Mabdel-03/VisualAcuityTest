@@ -10,40 +10,10 @@ import DevicePpi
 import ARKit
 import AVFoundation
 
-//Global Variables
-
-/// Flag indicating if the test is currently paused due to distance issues
-var isPaused = false
-
-/// Lower boundary for acceptable testing distance (calculated as percentage of target distance)
-var lowerBound: Double = 0.0
-
-/// Upper boundary for acceptable testing distance (calculated as percentage of target distance)
-var upperBound: Double = 0.0
-
-/// Reference to the AR scene view for face tracking
-var sceneView: ARSCNView!
-
-/// 3D node representing the user's left eye position
-var leftEye: SCNNode!
-
-/// 3D node representing the user's right eye position
-var rightEye: SCNNode!
-
-/// Device's pixels per inch, used for accurate size calculations
-let ppi: Double = {
-    switch Ppi.get() {
-    case .success(let ppi):
-        return ppi
-    case .unknown(let bestGuessPpi, _):
-        return bestGuessPpi
-    }
-}()
-
 /// Final acuity score calculated at the end of the test
 var finalAcuityScore = -Double.infinity
 
-/* TumblingEViewController class implements a visual acuity test using a tumbling E paradigm.
+/* TumblingEViewController class implements a visual acuity test using a tumbling C paradigm.
    The test displays a rotated "C" letter at various sizes, and the user must swipe in the
    direction the C is pointing. The test maintains a fixed testing distance using AR face tracking.
  */
@@ -59,8 +29,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     /// 3D node for right eye tracking
     var rightEye: SCNNode!
     
-    /// Current eye being tested (1 for left eye, 2 for right eye)
-    //var eyeNumber: Int = 1
+    private var isPaused = false
+    private var lowerBound: Double = 0.0
+    private var upperBound: Double = 0.0
     
     /// List of acuity levels to test in 20/x format (from largest to smallest)
     let acuityList = [200, 160, 125, 100, 80, 63, 50, 40, 32, 20, 16]
@@ -122,6 +93,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         label.text = LETTER
         label.font = UIFont(name: "Sloan", size: 50) // Temporary size, will be set by set_Size_E()
         label.textAlignment = .center
+        label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -146,55 +118,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         return label
     }()
     
-    // Label warning the user about incorrect distance
-    private lazy var warningLabel: UILabel = {
-        let label = UILabel()
-        label.text = "⚠️ Adjust Distance"
-        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        label.textColor = .red
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        return label
-    }()
-
-    // Label indicating distance is acceptable
-    private lazy var checkmarkLabel: UILabel = {
-        let label = UILabel()
-        label.text = "✅ Distance OK"
-        label.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        label.textColor = .green
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        return label
-    }()
-    
-    // Label with arrow indicating user should move closer
-    private lazy var moveCloserArrowLabel: UILabel = {
-        let label = UILabel()
-        label.text = "⬇️ Move Closer ⬇️"
-        label.font = UIFont.systemFont(ofSize: 28, weight: .bold)
-        label.textColor = .orange
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        label.numberOfLines = 0
-        return label
-    }()
-    
-    // Label with arrow indicating user should move farther
-    private lazy var moveFartherArrowLabel: UILabel = {
-        let label = UILabel()
-        label.text = "⬆️ Move Farther ⬆️"
-        label.font = UIFont.systemFont(ofSize: 28, weight: .bold)
-        label.textColor = .orange
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.isHidden = true
-        label.numberOfLines = 0
-        return label
-    }()
+    private lazy var distanceGuidanceView = DistanceGuidanceView()
     
     // MARK: - Test Properties
     
@@ -207,7 +131,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     // Total number of test attempts
     private var totalAttempts = 0
     
-    // Available rotation angles for the letter (right, down, left, up)
+    // Available rotation angles for the letter (right, down, left,  up)
     private let possibleRotations = [0.0, 90.0, 180.0, 270.0]
     
     // Last distance used for letter scaling to prevent unnecessary updates
@@ -233,6 +157,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     
     // Last AR update time for throttling updates
     private var lastARUpdateTime: CFTimeInterval?
+    
+    // New private flag to ensure AR setup and distance monitoring only starts once
+    private var didStartAR = false
     
     // MARK: - Data Collection Properties
     
@@ -275,22 +202,15 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         // Set up distance tracking and monitoring
         initializeDistanceTracking()
         
-        // Set up AR face tracking for distance monitoring
-        setupARTracking()
+        // Removed calls to setupARTracking() and startDistanceMonitoring() here to defer start
         
-        // Start monitoring distance with appropriate checks
-        startDistanceMonitoring()
-
         // Size the test letter for the current acuity level
-        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER)
+        _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER)
         print("Initial letter size set for acuity: \(acuityList[currentAcuityIndex])")
         
         // Initialize scaling factors (but preserve the font size calculated above)
         lastScaleFactor = 1.0
         lastScalingDistance = 0.0
-        
-        // Add triple-tap gesture to bypass distance checking if needed
-        setupEmergencyOverride()
         
         // Finish layout and generate the first rotated letter
         view.layoutIfNeeded()
@@ -300,7 +220,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         updateEyeTestLabel()
         
         // Initialize data collection session
-        let eyeName = eyeNumber == 2 ? "Right" : "Left"
+        let eyeName = VisualAcuitySession.eyeName(for: VisualAcuitySession.currentEyeNumber)
         dataCollector.startNewSession(eye: eyeName, testType: "Landolt_C")
     }
     
@@ -315,7 +235,15 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        // Play audio instructions for the tumbling E test screen
+        if !didStartAR {
+            didStartAR = true
+            setupARTracking()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.startDistanceMonitoring()
+            }
+        }
+
+        // Play audio instructions for the tumbling C test screen
         playAudioInstructions()
     }
 
@@ -336,7 +264,8 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     * Updates the eye test label based on the current eye number.
     */
     private func updateEyeTestLabel() {
-        eyeTestLabel.text = eyeNumber == 2 ? "Right Eye Test" : "Left Eye Test"
+        let eyeName = VisualAcuitySession.eyeName(for: VisualAcuitySession.currentEyeNumber)
+        eyeTestLabel.applyEyeTestTitle(eyeName: eyeName, testName: "Landolt C")
     }
 
     /*
@@ -345,9 +274,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      */
     private func initializeAcuityLevel() {
         // Debug: Print selected acuity at start
-        print("Initial selectedAcuity value: \(String(describing: selectedAcuity))")
+        print("Initial selectedAcuity value: \(String(describing: VisualAcuitySession.selectedAcuity))")
         
-        if let selectedAcuity = selectedAcuity {
+        if let selectedAcuity = VisualAcuitySession.selectedAcuity {
             // Find the index of the selected acuity in our acuity list
             currentAcuityIndex = getIndex(numList: acuityList, value: selectedAcuity)
             print("The index of \(selectedAcuity) is \(currentAcuityIndex).")
@@ -400,64 +329,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     }
     
     /*
-     * Sets up an emergency override gesture (triple tap) to bypass
-     * distance checking if the user encounters persistent distance issues.
-     */
-    private func setupEmergencyOverride() {
-        // Setup override gesture - triple tap to bypass distance checking
-        let tripleTap = UITapGestureRecognizer(target: self, action: #selector(handleTripleTap))
-        tripleTap.numberOfTapsRequired = 3
-        view.addGestureRecognizer(tripleTap)
-    }
-
-    /*
-     * Handles the triple-tap gesture to bypass distance checking.
-     * This is an emergency override for when distance detection is problematic.
-     */
-    @objc private func handleTripleTap() {
-        isPaused = false
-        hideAllDistanceIndicators()
-        showDistanceOK()
-        
-        // Show a temporary message
-        let overrideLabel = UILabel()
-        overrideLabel.text = "⚠️ Distance Check Bypassed"
-        overrideLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        overrideLabel.textColor = .orange
-        overrideLabel.textAlignment = .center
-        overrideLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(overrideLabel)
-        
-        NSLayoutConstraint.activate([
-            overrideLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            overrideLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80)
-        ])
-        
-        // Also reset current distance to target to avoid further problems
-        DistanceTracker.shared.currentDistanceCM = averageDistanceCM
-        
-        // Reset scaling factors to trigger immediate rescaling with new approach
-        letterLabel.transform = CGAffineTransform.identity
-        lastScaleFactor = 1.0
-        lastScalingDistance = 0.0
-        
-        // Clear any pending audio instructions
-        lastAudioInstruction = ""
-        audioInstructionTimer?.invalidate()
-        
-        print("🔧 Distance check bypassed via triple tap")
-        
-        // Resume the test
-        resumeTest()
-        
-        // Remove the message after 3 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            overrideLabel.removeFromSuperview()
-        }
-    }
-
-    /*
      * Sets up AR face tracking for distance monitoring.
      * Initializes the AR scene and creates tracking nodes for the eyes.
      */
@@ -501,9 +372,11 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      * Can be configured to bypass distance checking for testing purposes.
      */
     private func startDistanceMonitoring() {
+        if displayLink != nil { return }
+        
         // Add a debug option to skip distance checking for testing
         #if DEBUG
-        let debugBypassDistanceCheck = false // Set to true to bypass distance checking
+        let debugBypassDistanceCheck = ProcessInfo.processInfo.environment["LANDOLT_BYPASS_DISTANCE_CHECK"] == "1"
         
         // Extra debugging for distance
         let debugExtraLogging = true // Set to true for more verbose distance logs
@@ -511,8 +384,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         if debugBypassDistanceCheck {
             print("🔧 DEBUG MODE: Distance checking disabled")
             isPaused = false
-            warningLabel.isHidden = true
-            checkmarkLabel.isHidden = true
+            distanceGuidanceView.hideAll()
             return
         }
         
@@ -534,7 +406,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      * Used to attach eye nodes to detected face anchors.
      */
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
+        guard anchor is ARFaceAnchor else { return }
         
         // Add eye nodes to the face node
         node.addChildNode(leftEye)
@@ -584,7 +456,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
                 let rightEyeDistance = self.SCNVector3Distance(rightEyePos, cameraPosition)
                 
                 // Use only the relevant eye's distance based on which eye is being tested
-                let rawDistance = (eyeNumber == 1) ? leftEyeDistance : rightEyeDistance
+                let rawDistance = (VisualAcuitySession.currentEyeNumber == 1) ? leftEyeDistance : rightEyeDistance
                 let rawAverageDistance = rawDistance * 100  // Convert to cm
                 
                 // Validate and update distance tracker
@@ -620,10 +492,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         view.addSubview(letterLabel)
         view.addSubview(eyeTestLabel)
         view.addSubview(instructionLabel)
-        view.addSubview(warningLabel)
-        view.addSubview(checkmarkLabel)
-        view.addSubview(moveCloserArrowLabel)
-        view.addSubview(moveFartherArrowLabel)
+        view.addSubview(distanceGuidanceView)
+        
+        distanceGuidanceView.translatesAutoresizingMaskIntoConstraints = false
         
         // Set up constraints
         NSLayoutConstraint.activate([
@@ -632,33 +503,22 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             eyeTestLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             eyeTestLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
-            // Warning and checkmark label constraints
-            warningLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            warningLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 50),
-            
-            checkmarkLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            checkmarkLabel.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 10),
+            // Distance guidance view constraints
+            distanceGuidanceView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            distanceGuidanceView.topAnchor.constraint(equalTo: eyeTestLabel.bottomAnchor, constant: 18),
+            distanceGuidanceView.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
+            distanceGuidanceView.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
             
             // Letter label constraints
             letterLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             letterLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            letterLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
+            letterLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
             
             // Instruction label constraints
             instructionLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
             instructionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             instructionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            // Move closer arrow label constraints
-            moveCloserArrowLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            moveCloserArrowLabel.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 10),
-            moveCloserArrowLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            moveCloserArrowLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            // Move farther arrow label constraints
-            moveFartherArrowLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            moveFartherArrowLabel.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 10),
-            moveFartherArrowLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            moveFartherArrowLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
         print("TumblingEViewController - constraints activated")
     }
@@ -682,14 +542,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      * the default Back button is hidden. Tap requires a confirmation alert.
      */
     private func setupEndTestButton() {
-        let endButton = UIBarButtonItem(
-            title: "End Test",
-            style: .plain,
-            target: self,
-            action: #selector(endTestTapped)
-        )
-        endButton.tintColor = .systemRed
-        navigationItem.rightBarButtonItem = endButton
+        navigationItem.rightBarButtonItem = makeEndTestBarButton(action: #selector(endTestTapped))
     }
 
     @objc private func endTestTapped() {
@@ -739,7 +592,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         let userSwipeDirection = getSwipeDirectionString(for: gesture.direction)
         
         // Record the response data
-        let eyeName = eyeNumber == 2 ? "Right" : "Left"
+        let eyeName = VisualAcuitySession.eyeName(for: VisualAcuitySession.currentEyeNumber)
         let acuityString = "20/\(acuityList[currentAcuityIndex])"
         
         dataCollector.recordResponse(
@@ -795,7 +648,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
                         print("Going back to larger acuity...")
                         currentAcuityIndex -= 1
                         resetLetterScaling() // Reset scaling for new acuity level
-                        set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER) // Update the letter size
+                        _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER) // Update the letter size
                     }
                 }
             } else { // User gets at least 6 letters correct, advance to next level
@@ -806,7 +659,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
                     print("Advancing to smaller acuity...")
                     currentAcuityIndex += 1
                     resetLetterScaling() // Reset scaling for new acuity level
-                    set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER) // Update the letter size
+                    _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER) // Update the letter size
                 }
             }
             // Reset trial counter and correct answers count
@@ -816,7 +669,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         generateNewE() // Generate the next letter with updated size or same size
     }
     
-    /* Generates a new tumbling E with a random rotation.
+    /* Generates a new tumbling C with a random rotation.
        Animates the rotation of the letter to one of four possible orientations.
      */
     private func generateNewE() {
@@ -874,14 +727,13 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         // Determine user's position relative to acceptable range
         let tooClose = liveDistance < lowerBound
         let tooFar = liveDistance > upperBound
-        let inRange = !tooClose && !tooFar
-        
+
         if isPaused {
             // When already paused, require a more definitive return to range
             if liveDistance > (lowerBound + outOfRangeTolerance) && liveDistance < (upperBound - outOfRangeTolerance) {
                 isPaused = false
-                hideAllDistanceIndicators()
-                showDistanceOK()
+                distanceGuidanceView.hideAll()
+                distanceGuidanceView.showOK()
                 print("✅ RESUMING TEST - Distance Back in Range: \(String(format: "%.1f", liveDistance)) cm")
                 resumeTest()
                 
@@ -895,8 +747,8 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             // When not paused, use standard bounds
             if tooClose || tooFar {
                 isPaused = true
-                hideAllDistanceIndicators()
-                showDistanceWarning()
+                distanceGuidanceView.hideAll()
+                distanceGuidanceView.showWarning()
                 updateDirectionalIndicators(tooClose: tooClose, tooFar: tooFar, distance: liveDistance)
                 print("⚠️ PAUSING TEST - Distance Out of Range: \(String(format: "%.1f", liveDistance)) cm")
                 pauseTest()
@@ -904,7 +756,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
                 // Distance is within acceptable bounds - update letter size if needed
                 updateLetterSizeForDistance(liveDistance)
                 // Ensure all distance indicators are hidden when in range
-                hideAllDistanceIndicators()
+                distanceGuidanceView.hideAll()
             }
         }
     }
@@ -913,18 +765,25 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      */
     private func updateDirectionalIndicators(tooClose: Bool, tooFar: Bool, distance: Double) {
         if tooClose {
-            // User is too close - show "move farther" arrow
-            moveCloserArrowLabel.isHidden = true
-            moveFartherArrowLabel.isHidden = false
-            playAudioInstructionIfNeeded("Move farther.")
+            distanceGuidanceView.showMoveFarther()
+            playAudioInstructionIfNeeded("Move farther to continue.")
         } else if tooFar {
-            // User is too far - show "move closer" arrow
-            moveFartherArrowLabel.isHidden = true
-            moveCloserArrowLabel.isHidden = false
-            playAudioInstructionIfNeeded("Move closer.")
+            distanceGuidanceView.showMoveCloser()
+            playAudioInstructionIfNeeded("Move closer to continue.")
         }
     }
-    
+
+    private func restoreOptotypeDisplay() {
+        letterLabel.text = LETTER
+        letterLabel.textColor = AppThemeColors.black
+        letterLabel.textAlignment = .center
+        letterLabel.numberOfLines = 0
+        _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER)
+        letterLabel.transform = CGAffineTransform(rotationAngle: CGFloat(currentRotation) * .pi / 180)
+        lastScaleFactor = 1.0
+        lastScalingDistance = 0.0
+    }
+
     /* Plays audio instruction only if it's different from the last one played or enough time has passed.
      */
     private func playAudioInstructionIfNeeded(_ instruction: String) {
@@ -944,25 +803,19 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     /* Shows the distance warning indicator.
      */
     private func showDistanceWarning() {
-        warningLabel.isHidden = false
+        distanceGuidanceView.showWarning()
     }
     
     /* Shows the distance OK indicator temporarily.
      */
     private func showDistanceOK() {
-        checkmarkLabel.isHidden = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.checkmarkLabel.isHidden = true
-        }
+        distanceGuidanceView.showOK()
     }
     
     /* Hides all distance-related indicators.
      */
     private func hideAllDistanceIndicators() {
-        warningLabel.isHidden = true
-        checkmarkLabel.isHidden = true
-        moveCloserArrowLabel.isHidden = true
-        moveFartherArrowLabel.isHidden = true
+        distanceGuidanceView.hideAll()
     }
     
     /* Updates the letter size based on current distance if the change is significant enough.
@@ -1021,6 +874,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
        Updates UI elements and re-enables user interaction.
      */
     private func resumeTest() {
+        restoreOptotypeDisplay()
         instructionLabel.text = "Please swipe in the direction the C is pointing."
         view.isUserInteractionEnabled = true // Re-enable swipes
     }
@@ -1048,7 +902,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             
             // For testing purposes, DON'T override with target distance to see if extreme values are detected
             #if DEBUG
-            let debugStrictDistanceTesting = true // Set to true to test extreme distance values
+            let debugStrictDistanceTesting = ProcessInfo.processInfo.environment["LANDOLT_STRICT_DISTANCE_TESTING"] != "0"
             if debugStrictDistanceTesting {
                 if shouldLog {
                     print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
@@ -1070,7 +924,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             }
             
             #if DEBUG
-            let debugStrictDistanceTesting = true // Set to true to test extreme distance values
+            let debugStrictDistanceTesting = ProcessInfo.processInfo.environment["LANDOLT_STRICT_DISTANCE_TESTING"] != "0"
             if debugStrictDistanceTesting {
                 if shouldLog {
                     print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
@@ -1122,7 +976,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             oneLetter.text = nonNilLetterText
             
             // Adjust size based on scale factor with standard 5:1 width to height ratio
-            let labelHeight = scale_factor * ppi
+            let labelHeight = scale_factor * VisualAcuitySession.devicePPI
             oneLetter.frame.size = CGSize(width: (labelHeight * 5), height: labelHeight)
             
             // Adjusted font size - reducing by factor of 2 to match physical acuity cards
@@ -1183,15 +1037,19 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         // Navigate to the results screen
         
         finalAcuityScore = acuityScore
-        logMARValue = finalAcuityScore
-        snellenValue = 20 * pow(10, logMARValue)
+        VisualAcuitySession.logMARValue = finalAcuityScore
+        VisualAcuitySession.snellenValue = 20 * pow(10, VisualAcuitySession.logMARValue)
         
-        if eyeNumber == 2 {
+        if VisualAcuitySession.currentEyeNumber == 2 {
             // Store the right eye's results (tested first)
-            finalAcuityDictionary[2] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+            VisualAcuitySession.finalAcuityResults[2] = String(
+                format: "LogMAR: %.4f, Snellen: 20/%.0f",
+                VisualAcuitySession.logMARValue,
+                VisualAcuitySession.snellenValue
+            )
             
             // Set eye number for left eye test (tested second)
-            eyeNumber = 1
+            VisualAcuitySession.currentEyeNumber = 1
             let storyboard = UIStoryboard(name: "Main", bundle: nil)
             if let leftInstrucVC = storyboard.instantiateViewController(withIdentifier: "OneEyeInstruc") as? OneEyeInstruc {
                 navigationController?.pushViewController(leftInstrucVC, animated: true)
@@ -1199,7 +1057,11 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             
         } else {
             // Store the left eye's results (tested second)
-            finalAcuityDictionary[1] = String(format: "LogMAR: %.4f, Snellen: 20/%.0f", logMARValue, snellenValue)
+            VisualAcuitySession.finalAcuityResults[1] = String(
+                format: "LogMAR: %.4f, Snellen: 20/%.0f",
+                VisualAcuitySession.logMARValue,
+                VisualAcuitySession.snellenValue
+            )
             
             performSegue(withIdentifier: "ShowResults", sender: self)
         }

@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>The camera is used to measure and maintain the correct visual acuity testing distance.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The microphone is used during ETDRS testing to recognize spoken letter responses.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Sloan.otf</string>

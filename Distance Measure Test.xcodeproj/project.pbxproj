@@ -7,62 +7,75 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A1B2C3D42E5F6E780089CD23 /* SubjectNameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D32E5F6E780089CD23 /* SubjectNameManager.swift */; };
-		A1B2C3D62E5F6E890089CD23 /* UIViewController+NamePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D52E5F6E890089CD23 /* UIViewController+NamePrompt.swift */; };
-		B2C3D4E62F6G7H890089DE34 /* DropboxUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E52F6G7H890089DE34 /* DropboxUploadManager.swift */; };
-		C0C987052CC9F141003EEEFF /* TumblingEViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */; };
-		C0C9870A2CC9F413003EEEFF /* ResultViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987092CC9F413003EEEFF /* ResultViewController.swift */; };
-		C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD6292A687790002A58BA /* AppDelegate.swift */; };
-		C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */; };
+		A1B2C3D42E5F6E780089CD23 /* Core/SubjectNameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D32E5F6E780089CD23 /* Core/SubjectNameManager.swift */; };
+		A1B2C3D62E5F6E890089CD23 /* Shared/Extensions/UIViewController+NamePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D52E5F6E890089CD23 /* Shared/Extensions/UIViewController+NamePrompt.swift */; };
+		B2C3D4E62F6G7H890089DE34 /* Core/DropboxUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E52F6G7H890089DE34 /* Core/DropboxUploadManager.swift */; };
+		C0C987052CC9F141003EEEFF /* Features/LandoltC/TumblingEViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987042CC9F139003EEEFF /* Features/LandoltC/TumblingEViewController.swift */; };
+		C0C9870A2CC9F413003EEEFF /* Features/Results/ResultViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987092CC9F413003EEEFF /* Features/Results/ResultViewController.swift */; };
+		C0CDD62A2A687790002A58BA /* App/AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD6292A687790002A58BA /* App/AppDelegate.swift */; };
+		C0CDD62E2A687790002A58BA /* Features/TestSetup/DistanceOptimization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CDD62D2A687790002A58BA /* Features/TestSetup/DistanceOptimization.swift */; };
 		C0CDD6312A687790002A58BA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD62F2A687790002A58BA /* Main.storyboard */; };
 		C0CDD6332A687792002A58BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD6322A687792002A58BA /* Assets.xcassets */; };
 		C0CDD6362A687792002A58BA /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */; };
-		C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EA2A81B87500CAD336 /* Main Menu.swift */; };
-		C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EC2A81B89300CAD336 /* Instructions.swift */; };
-		D11297512DF08938006DB97E /* OneEyeInstruc.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11297502DF08938006DB97E /* OneEyeInstruc.swift */; };
+		C94D36EB2A81B87500CAD336 /* Features/Home/MainMenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EA2A81B87500CAD336 /* Features/Home/MainMenuViewController.swift */; };
+		C94D36ED2A81B89300CAD336 /* Features/Home/InstructionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94D36EC2A81B89300CAD336 /* Features/Home/InstructionsViewController.swift */; };
+		D11297512DF08938006DB97E /* Features/TestSetup/OneEyeInstructionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D11297502DF08938006DB97E /* Features/TestSetup/OneEyeInstructionsViewController.swift */; };
 		D12072E62A9F12BA00B92792 /* texture.png in Resources */ = {isa = PBXBuildFile; fileRef = D12072E42A9F12BA00B92792 /* texture.png */; };
 		D12072E72A9F12BA00B92792 /* ship.scn in Resources */ = {isa = PBXBuildFile; fileRef = D12072E52A9F12BA00B92792 /* ship.scn */; };
 		D12072E92A9F132000B92792 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = D12072E82A9F132000B92792 /* art.scnassets */; };
+		D126CEEB2FE27F6700951C38 /* Features/TestSetup/DistanceGuidanceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D126CEEA2FE27F6700951C38 /* Features/TestSetup/DistanceGuidanceController.swift */; };
+		D126CEED2FE2850000951C38 /* Features/TestSetup/DistanceGuidanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D126CEEC2FE2850000951C38 /* Features/TestSetup/DistanceGuidanceView.swift */; };
 		D13F546D2ACA7C2A00673C13 /* DevicePpi in Frameworks */ = {isa = PBXBuildFile; productRef = D13F546C2ACA7C2A00673C13 /* DevicePpi */; };
 		D14180E62D3049990070FB19 /* Sloan.otf in Resources */ = {isa = PBXBuildFile; fileRef = D14180E52D3049990070FB19 /* Sloan.otf */; };
-		D17FC2C82DAF9FB300B08D03 /* TestHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */; };
+		D17FC2C82DAF9FB300B08D03 /* Features/Results/TestHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17FC2C72DAF9FB300B08D03 /* Features/Results/TestHistoryViewController.swift */; };
 		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
-		D1B67B5B2ECB1C3700BFAEF4 /* UIStyle+Text.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B67B5A2ECB1C3700BFAEF4 /* UIStyle+Text.swift */; };
-		D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */; };
-		DC123ABC2CC9F141003EEEFF /* DataCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC123ABD2CC9F139003EEEFF /* DataCollectionViewController.swift */; };
-		E0E987052CC9F141003EEEFF /* ETDRSViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E987042CC9F139003EEEFF /* ETDRSViewController.swift */; };
-		E0F987052CC9F141003EEEFF /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F987042CC9F139003EEEFF /* SettingsViewController.swift */; };
-		F1A2B3C42E4F5D670089AB12 /* TestProgressionDataCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C32E4F5D670089AB12 /* TestProgressionDataCollector.swift */; };
+		D1A000100001000100010001 /* Resources/WhisperModels in Resources */ = {isa = PBXBuildFile; fileRef = D1A0000F0001000100010001 /* Resources/WhisperModels */; };
+		D1B67B5B2ECB1C3700BFAEF4 /* Shared/Styling/UIStyle+Text.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B67B5A2ECB1C3700BFAEF4 /* Shared/Styling/UIStyle+Text.swift */; };
+		D1BCC4A52BF32D710023E4B9 /* Features/TestSetup/SelectAcuity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BCC4A42BF32D710023E4B9 /* Features/TestSetup/SelectAcuity.swift */; };
+		D1E7D0012FE6100000ED7A01 /* Features/ETDRS/ETDRSWhisperLetterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E7D0002FE6100000ED7A01 /* Features/ETDRS/ETDRSWhisperLetterService.swift */; };
+		D1E7D0042FE6100000ED7A01 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = D1E7D0032FE6100000ED7A01 /* WhisperKit */; };
+		D1E7D0062FE6200000ED7A01 /* Features/ETDRS/ETDRSWhisperLoadingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E7D0052FE6200000ED7A01 /* Features/ETDRS/ETDRSWhisperLoadingViewController.swift */; };
+		DC123ABC2CC9F141003EEEFF /* Features/Results/DataCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC123ABD2CC9F139003EEEFF /* Features/Results/DataCollectionViewController.swift */; };
+		E0E987052CC9F141003EEEFF /* Features/ETDRS/ETDRSViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E987042CC9F139003EEEFF /* Features/ETDRS/ETDRSViewController.swift */; };
+		E0F987052CC9F141003EEEFF /* Features/Settings/SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F987042CC9F139003EEEFF /* Features/Settings/SettingsViewController.swift */; };
+		F1A2B3C42E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C32E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A1B2C3D32E5F6E780089CD23 /* SubjectNameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubjectNameManager.swift; sourceTree = "<group>"; };
-		A1B2C3D52E5F6E890089CD23 /* UIViewController+NamePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+NamePrompt.swift"; sourceTree = "<group>"; };
-		B2C3D4E52F6G7H890089DE34 /* DropboxUploadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropboxUploadManager.swift; sourceTree = "<group>"; };
-		C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TumblingEViewController.swift; sourceTree = "<group>"; };
-		C0C987092CC9F413003EEEFF /* ResultViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultViewController.swift; sourceTree = "<group>"; };
+		A1B2C3D32E5F6E780089CD23 /* Core/SubjectNameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/SubjectNameManager.swift; sourceTree = "<group>"; };
+		A1B2C3D52E5F6E890089CD23 /* Shared/Extensions/UIViewController+NamePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Shared/Extensions/UIViewController+NamePrompt.swift"; sourceTree = "<group>"; };
+		B2C3D4E52F6G7H890089DE34 /* Core/DropboxUploadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/DropboxUploadManager.swift; sourceTree = "<group>"; };
+		C0C987042CC9F139003EEEFF /* Features/LandoltC/TumblingEViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/LandoltC/TumblingEViewController.swift; sourceTree = "<group>"; };
+		C0C987092CC9F413003EEEFF /* Features/Results/ResultViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Results/ResultViewController.swift; sourceTree = "<group>"; };
 		C0CDD6262A687790002A58BA /* Distance Measure Test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Distance Measure Test.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C0CDD6292A687790002A58BA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistanceOptimization.swift; sourceTree = "<group>"; };
+		C0CDD6292A687790002A58BA /* App/AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AppDelegate.swift; sourceTree = "<group>"; };
+		C0CDD62D2A687790002A58BA /* Features/TestSetup/DistanceOptimization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/TestSetup/DistanceOptimization.swift; sourceTree = "<group>"; };
 		C0CDD6302A687790002A58BA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		C0CDD6322A687792002A58BA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C0CDD6352A687792002A58BA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		C94D36EA2A81B87500CAD336 /* Main Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Main Menu.swift"; sourceTree = "<group>"; };
-		C94D36EC2A81B89300CAD336 /* Instructions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instructions.swift; sourceTree = "<group>"; };
-		D11297502DF08938006DB97E /* OneEyeInstruc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneEyeInstruc.swift; sourceTree = "<group>"; };
+		C94D36EA2A81B87500CAD336 /* Features/Home/MainMenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Home/MainMenuViewController.swift; sourceTree = "<group>"; };
+		C94D36EC2A81B89300CAD336 /* Features/Home/InstructionsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Home/InstructionsViewController.swift; sourceTree = "<group>"; };
+		D11297502DF08938006DB97E /* Features/TestSetup/OneEyeInstructionsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/TestSetup/OneEyeInstructionsViewController.swift; sourceTree = "<group>"; };
 		D12072E42A9F12BA00B92792 /* texture.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = texture.png; path = art.scnassets/texture.png; sourceTree = "<group>"; };
 		D12072E52A9F12BA00B92792 /* ship.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; name = ship.scn; path = art.scnassets/ship.scn; sourceTree = "<group>"; };
 		D12072E82A9F132000B92792 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
+		D126CEEA2FE27F6700951C38 /* Features/TestSetup/DistanceGuidanceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/TestSetup/DistanceGuidanceController.swift; sourceTree = "<group>"; };
+		D126CEEC2FE2850000951C38 /* Features/TestSetup/DistanceGuidanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/TestSetup/DistanceGuidanceView.swift; sourceTree = "<group>"; };
+		D126CEEE2FE2C1A600951C38 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		D14180E52D3049990070FB19 /* Sloan.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Sloan.otf; sourceTree = "<group>"; };
-		D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHistoryViewController.swift; sourceTree = "<group>"; };
+		D17FC2C72DAF9FB300B08D03 /* Features/Results/TestHistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Results/TestHistoryViewController.swift; sourceTree = "<group>"; };
 		D19933C42A955CCF0050CF92 /* info.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = info.txt; sourceTree = "<group>"; };
 		D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Distance-Measure-Test-Info.plist"; sourceTree = SOURCE_ROOT; };
-		D1B67B5A2ECB1C3700BFAEF4 /* UIStyle+Text.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIStyle+Text.swift"; sourceTree = "<group>"; };
-		D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Select_Acuity.swift; sourceTree = "<group>"; };
-		DC123ABD2CC9F139003EEEFF /* DataCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataCollectionViewController.swift; sourceTree = "<group>"; };
-		E0E987042CC9F139003EEEFF /* ETDRSViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETDRSViewController.swift; sourceTree = "<group>"; };
-		E0F987042CC9F139003EEEFF /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
-		F1A2B3C32E4F5D670089AB12 /* TestProgressionDataCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestProgressionDataCollector.swift; sourceTree = "<group>"; };
+		D1A0000F0001000100010001 /* Resources/WhisperModels */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources/WhisperModels; sourceTree = "<group>"; };
+		D1B67B5A2ECB1C3700BFAEF4 /* Shared/Styling/UIStyle+Text.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Shared/Styling/UIStyle+Text.swift"; sourceTree = "<group>"; };
+		D1B67B5C2ECB1C3700BFAEF4 /* Shared/Views/DaisyFlowerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/Views/DaisyFlowerView.swift; sourceTree = "<group>"; };
+		D1BCC4A42BF32D710023E4B9 /* Features/TestSetup/SelectAcuity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/TestSetup/SelectAcuity.swift; sourceTree = "<group>"; };
+		D1E7D0002FE6100000ED7A01 /* Features/ETDRS/ETDRSWhisperLetterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ETDRS/ETDRSWhisperLetterService.swift; sourceTree = "<group>"; };
+		D1E7D0052FE6200000ED7A01 /* Features/ETDRS/ETDRSWhisperLoadingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ETDRS/ETDRSWhisperLoadingViewController.swift; sourceTree = "<group>"; };
+		DC123ABD2CC9F139003EEEFF /* Features/Results/DataCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Results/DataCollectionViewController.swift; sourceTree = "<group>"; };
+		E0E987042CC9F139003EEEFF /* Features/ETDRS/ETDRSViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ETDRS/ETDRSViewController.swift; sourceTree = "<group>"; };
+		E0F987042CC9F139003EEEFF /* Features/Settings/SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Settings/SettingsViewController.swift; sourceTree = "<group>"; };
+		F1A2B3C32E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/TestProgressionDataCollector.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +84,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D13F546D2ACA7C2A00673C13 /* DevicePpi in Frameworks */,
+				D1E7D0042FE6100000ED7A01 /* WhisperKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,6 +97,7 @@
 				C0CDD6282A687790002A58BA /* Distance Measure Test */,
 				C0CDD6272A687790002A58BA /* Products */,
 				D19933C22A955CCF0050CF92 /* optician-sans-font */,
+				D126CEEE2FE2C1A600951C38 /* PrivacyInfo.xcprivacy */,
 			);
 			sourceTree = "<group>";
 		};
@@ -97,30 +112,11 @@
 		C0CDD6282A687790002A58BA /* Distance Measure Test */ = {
 			isa = PBXGroup;
 			children = (
-				D1B67B5A2ECB1C3700BFAEF4 /* UIStyle+Text.swift */,
-				C0CDD6292A687790002A58BA /* AppDelegate.swift */,
-				C94D36EA2A81B87500CAD336 /* Main Menu.swift */,
-				D11297502DF08938006DB97E /* OneEyeInstruc.swift */,
-				C94D36EC2A81B89300CAD336 /* Instructions.swift */,
-				C0CDD62D2A687790002A58BA /* DistanceOptimization.swift */,
-				D1BCC4A42BF32D710023E4B9 /* Select_Acuity.swift */,
-				C0C987042CC9F139003EEEFF /* TumblingEViewController.swift */,
-				E0E987042CC9F139003EEEFF /* ETDRSViewController.swift */,
-				E0F987042CC9F139003EEEFF /* SettingsViewController.swift */,
-				DC123ABD2CC9F139003EEEFF /* DataCollectionViewController.swift */,
-				C0C987092CC9F413003EEEFF /* ResultViewController.swift */,
-				D17FC2C72DAF9FB300B08D03 /* TestHistoryViewController.swift */,
-				F1A2B3C32E4F5D670089AB12 /* TestProgressionDataCollector.swift */,
-				A1B2C3D32E5F6E780089CD23 /* SubjectNameManager.swift */,
-				A1B2C3D52E5F6E890089CD23 /* UIViewController+NamePrompt.swift */,
-				B2C3D4E52F6G7H890089DE34 /* DropboxUploadManager.swift */,
-				D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */,
-				C0CDD62F2A687790002A58BA /* Main.storyboard */,
-				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
-				C0CDD6322A687792002A58BA /* Assets.xcassets */,
-				D12072E82A9F132000B92792 /* art.scnassets */,
-				D12072E52A9F12BA00B92792 /* ship.scn */,
-				D12072E42A9F12BA00B92792 /* texture.png */,
+				D1A000010001000100010001 /* App */,
+				D1A000020001000100010001 /* Core */,
+				D1A000030001000100010001 /* Shared */,
+				D1A000070001000100010001 /* Features */,
+				D1A0000E0001000100010001 /* Resources */,
 			);
 			path = "Distance Measure Test";
 			sourceTree = "<group>";
@@ -132,6 +128,143 @@
 				D19933C42A955CCF0050CF92 /* info.txt */,
 			);
 			path = "optician-sans-font";
+			sourceTree = "<group>";
+		};
+		D1A000010001000100010001 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				C0CDD6292A687790002A58BA /* App/AppDelegate.swift */,
+			);
+			name = App;
+			sourceTree = "<group>";
+		};
+		D1A000020001000100010001 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				B2C3D4E52F6G7H890089DE34 /* Core/DropboxUploadManager.swift */,
+				A1B2C3D32E5F6E780089CD23 /* Core/SubjectNameManager.swift */,
+				F1A2B3C32E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift */,
+			);
+			name = Core;
+			sourceTree = "<group>";
+		};
+		D1A000030001000100010001 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				D1A000040001000100010001 /* Extensions */,
+				D1A000050001000100010001 /* Styling */,
+				D1A000060001000100010001 /* Views */,
+			);
+			name = Shared;
+			sourceTree = "<group>";
+		};
+		D1A000040001000100010001 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D52E5F6E890089CD23 /* Shared/Extensions/UIViewController+NamePrompt.swift */,
+			);
+			name = Extensions;
+			sourceTree = "<group>";
+		};
+		D1A000050001000100010001 /* Styling */ = {
+			isa = PBXGroup;
+			children = (
+				D1B67B5A2ECB1C3700BFAEF4 /* Shared/Styling/UIStyle+Text.swift */,
+			);
+			name = Styling;
+			sourceTree = "<group>";
+		};
+		D1A000060001000100010001 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				D1B67B5C2ECB1C3700BFAEF4 /* Shared/Views/DaisyFlowerView.swift */,
+			);
+			name = Views;
+			sourceTree = "<group>";
+		};
+		D1A000070001000100010001 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				D1A000080001000100010001 /* Home */,
+				D1A000090001000100010001 /* Settings */,
+				D1A0000A0001000100010001 /* TestSetup */,
+				D1A0000B0001000100010001 /* ETDRS */,
+				D1A0000C0001000100010001 /* LandoltC */,
+				D1A0000D0001000100010001 /* Results */,
+			);
+			name = Features;
+			sourceTree = "<group>";
+		};
+		D1A000080001000100010001 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				C94D36EC2A81B89300CAD336 /* Features/Home/InstructionsViewController.swift */,
+				C94D36EA2A81B87500CAD336 /* Features/Home/MainMenuViewController.swift */,
+			);
+			name = Home;
+			sourceTree = "<group>";
+		};
+		D1A000090001000100010001 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				E0F987042CC9F139003EEEFF /* Features/Settings/SettingsViewController.swift */,
+			);
+			name = Settings;
+			sourceTree = "<group>";
+		};
+		D1A0000A0001000100010001 /* TestSetup */ = {
+			isa = PBXGroup;
+			children = (
+				D126CEEA2FE27F6700951C38 /* Features/TestSetup/DistanceGuidanceController.swift */,
+				D126CEEC2FE2850000951C38 /* Features/TestSetup/DistanceGuidanceView.swift */,
+				C0CDD62D2A687790002A58BA /* Features/TestSetup/DistanceOptimization.swift */,
+				D11297502DF08938006DB97E /* Features/TestSetup/OneEyeInstructionsViewController.swift */,
+				D1BCC4A42BF32D710023E4B9 /* Features/TestSetup/SelectAcuity.swift */,
+			);
+			name = TestSetup;
+			sourceTree = "<group>";
+		};
+		D1A0000B0001000100010001 /* ETDRS */ = {
+			isa = PBXGroup;
+			children = (
+				E0E987042CC9F139003EEEFF /* Features/ETDRS/ETDRSViewController.swift */,
+				D1E7D0052FE6200000ED7A01 /* Features/ETDRS/ETDRSWhisperLoadingViewController.swift */,
+				D1E7D0002FE6100000ED7A01 /* Features/ETDRS/ETDRSWhisperLetterService.swift */,
+			);
+			name = ETDRS;
+			sourceTree = "<group>";
+		};
+		D1A0000C0001000100010001 /* LandoltC */ = {
+			isa = PBXGroup;
+			children = (
+				C0C987042CC9F139003EEEFF /* Features/LandoltC/TumblingEViewController.swift */,
+			);
+			name = LandoltC;
+			sourceTree = "<group>";
+		};
+		D1A0000D0001000100010001 /* Results */ = {
+			isa = PBXGroup;
+			children = (
+				DC123ABD2CC9F139003EEEFF /* Features/Results/DataCollectionViewController.swift */,
+				C0C987092CC9F413003EEEFF /* Features/Results/ResultViewController.swift */,
+				D17FC2C72DAF9FB300B08D03 /* Features/Results/TestHistoryViewController.swift */,
+			);
+			name = Results;
+			sourceTree = "<group>";
+		};
+		D1A0000E0001000100010001 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */,
+				C0CDD62F2A687790002A58BA /* Main.storyboard */,
+				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
+				C0CDD6322A687792002A58BA /* Assets.xcassets */,
+				D1A0000F0001000100010001 /* Resources/WhisperModels */,
+				D12072E82A9F132000B92792 /* art.scnassets */,
+				D12072E52A9F12BA00B92792 /* ship.scn */,
+				D12072E42A9F12BA00B92792 /* texture.png */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -152,6 +285,7 @@
 			name = "Distance Measure Test";
 			packageProductDependencies = (
 				D13F546C2ACA7C2A00673C13 /* DevicePpi */,
+				D1E7D0032FE6100000ED7A01 /* WhisperKit */,
 			);
 			productName = "Distance Measure Test";
 			productReference = C0CDD6262A687790002A58BA /* Distance Measure Test.app */;
@@ -183,6 +317,7 @@
 			mainGroup = C0CDD61D2A687790002A58BA;
 			packageReferences = (
 				D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */,
+				D1E7D0022FE6100000ED7A01 /* XCRemoteSwiftPackageReference "argmax-oss-swift" */,
 			);
 			productRefGroup = C0CDD6272A687790002A58BA /* Products */;
 			projectDirPath = "";
@@ -204,6 +339,7 @@
 				C0CDD6332A687792002A58BA /* Assets.xcassets in Resources */,
 				C0CDD6312A687790002A58BA /* Main.storyboard in Resources */,
 				D19933C62A955CCF0050CF92 /* info.txt in Resources */,
+				D1A000100001000100010001 /* Resources/WhisperModels in Resources */,
 				D12072E72A9F12BA00B92792 /* ship.scn in Resources */,
 				D14180E62D3049990070FB19 /* Sloan.otf in Resources */,
 			);
@@ -216,23 +352,27 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C94D36EB2A81B87500CAD336 /* Main Menu.swift in Sources */,
-				D11297512DF08938006DB97E /* OneEyeInstruc.swift in Sources */,
-				C0CDD62E2A687790002A58BA /* DistanceOptimization.swift in Sources */,
-				C0C9870A2CC9F413003EEEFF /* ResultViewController.swift in Sources */,
-				D17FC2C82DAF9FB300B08D03 /* TestHistoryViewController.swift in Sources */,
-				F1A2B3C42E4F5D670089AB12 /* TestProgressionDataCollector.swift in Sources */,
-				C94D36ED2A81B89300CAD336 /* Instructions.swift in Sources */,
-				C0C987052CC9F141003EEEFF /* TumblingEViewController.swift in Sources */,
-				E0E987052CC9F141003EEEFF /* ETDRSViewController.swift in Sources */,
-				E0F987052CC9F141003EEEFF /* SettingsViewController.swift in Sources */,
-				DC123ABC2CC9F141003EEEFF /* DataCollectionViewController.swift in Sources */,
-				D1BCC4A52BF32D710023E4B9 /* Select_Acuity.swift in Sources */,
-				D1B67B5B2ECB1C3700BFAEF4 /* UIStyle+Text.swift in Sources */,
-				A1B2C3D42E5F6E780089CD23 /* SubjectNameManager.swift in Sources */,
-				A1B2C3D62E5F6E890089CD23 /* UIViewController+NamePrompt.swift in Sources */,
-				B2C3D4E62F6G7H890089DE34 /* DropboxUploadManager.swift in Sources */,
-				C0CDD62A2A687790002A58BA /* AppDelegate.swift in Sources */,
+				C94D36EB2A81B87500CAD336 /* Features/Home/MainMenuViewController.swift in Sources */,
+				D11297512DF08938006DB97E /* Features/TestSetup/OneEyeInstructionsViewController.swift in Sources */,
+				C0CDD62E2A687790002A58BA /* Features/TestSetup/DistanceOptimization.swift in Sources */,
+				C0C9870A2CC9F413003EEEFF /* Features/Results/ResultViewController.swift in Sources */,
+				D17FC2C82DAF9FB300B08D03 /* Features/Results/TestHistoryViewController.swift in Sources */,
+				F1A2B3C42E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift in Sources */,
+				C94D36ED2A81B89300CAD336 /* Features/Home/InstructionsViewController.swift in Sources */,
+				C0C987052CC9F141003EEEFF /* Features/LandoltC/TumblingEViewController.swift in Sources */,
+				D126CEEB2FE27F6700951C38 /* Features/TestSetup/DistanceGuidanceController.swift in Sources */,
+				E0E987052CC9F141003EEEFF /* Features/ETDRS/ETDRSViewController.swift in Sources */,
+				D1E7D0012FE6100000ED7A01 /* Features/ETDRS/ETDRSWhisperLetterService.swift in Sources */,
+				D1E7D0062FE6200000ED7A01 /* Features/ETDRS/ETDRSWhisperLoadingViewController.swift in Sources */,
+				E0F987052CC9F141003EEEFF /* Features/Settings/SettingsViewController.swift in Sources */,
+				DC123ABC2CC9F141003EEEFF /* Features/Results/DataCollectionViewController.swift in Sources */,
+				D1BCC4A52BF32D710023E4B9 /* Features/TestSetup/SelectAcuity.swift in Sources */,
+				D1B67B5B2ECB1C3700BFAEF4 /* Shared/Styling/UIStyle+Text.swift in Sources */,
+				A1B2C3D42E5F6E780089CD23 /* Core/SubjectNameManager.swift in Sources */,
+				A1B2C3D62E5F6E890089CD23 /* Shared/Extensions/UIViewController+NamePrompt.swift in Sources */,
+				B2C3D4E62F6G7H890089DE34 /* Core/DropboxUploadManager.swift in Sources */,
+				C0CDD62A2A687790002A58BA /* App/AppDelegate.swift in Sources */,
+				D126CEED2FE2850000951C38 /* Features/TestSetup/DistanceGuidanceView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,12 +519,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = HW8LWQ35S9;
+				DEVELOPMENT_TEAM = L4924K5F8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
-				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is recorded to transcribe the meeting. Audio recordings are discarded after transcription.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "You can view a text transcription of your meeting in the app.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera is used to measure and maintain the correct visual acuity testing distance.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to recognize spoken visual acuity test letters.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -392,6 +531,7 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_CFBundleDisplayName = Visinear;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -413,12 +553,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = HW8LWQ35S9;
+				DEVELOPMENT_TEAM = L4924K5F8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
-				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Audio is recorded to transcribe the meeting. Audio recordings are discarded after transcription.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "You can view a text transcription of your meeting in the app.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera is used to measure and maintain the correct visual acuity testing distance.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to recognize spoken visual acuity test letters.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -426,6 +565,7 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_CFBundleDisplayName = Visinear;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -472,6 +612,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		D1E7D0022FE6100000ED7A01 /* XCRemoteSwiftPackageReference "argmax-oss-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/argmax-oss-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.18.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -479,6 +627,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D13F546B2ACA7C2A00673C13 /* XCRemoteSwiftPackageReference "DevicePpi" */;
 			productName = DevicePpi;
+		};
+		D1E7D0032FE6100000ED7A01 /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1E7D0022FE6100000ED7A01 /* XCRemoteSwiftPackageReference "argmax-oss-swift" */;
+			productName = WhisperKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

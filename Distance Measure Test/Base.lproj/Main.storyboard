@@ -98,7 +98,7 @@
                                     <action selector="goToDataCollection:" destination="lbh-aZ-5cA" eventType="touchUpInside" id="data-collection-connection"/>
                                 </connections>
                             </button>
-                            <textField opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" text="V i s i N e a r" textAlignment="center" minimumFontSize="20" translatesAutoresizingMaskIntoConstraints="NO" id="55T-vu-dlo">
+                            <textField opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" text="V i s i n e a r" textAlignment="center" minimumFontSize="20" translatesAutoresizingMaskIntoConstraints="NO" id="55T-vu-dlo">
                                 <rect key="frame" x="-12" y="210" width="424" height="50"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="textColor" red="0.25098040700000002" green="0.42745098469999998" blue="0.45490193369999998" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
@@ -122,6 +122,48 @@
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="YpT-7O-F0S"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="1zV-I3-jsd" firstAttribute="centerX" secondItem="9Hc-NX-yaE" secondAttribute="centerX" id="main-logo-centerX"/>
+                            <constraint firstItem="1zV-I3-jsd" firstAttribute="top" secondItem="9Hc-NX-yaE" secondAttribute="top" constant="100" id="main-logo-top"/>
+                            <constraint firstItem="1zV-I3-jsd" firstAttribute="width" constant="250" id="main-logo-width"/>
+                            <constraint firstItem="1zV-I3-jsd" firstAttribute="height" constant="150" id="main-logo-height"/>
+                            <constraint firstItem="55T-vu-dlo" firstAttribute="leading" secondItem="9Hc-NX-yaE" secondAttribute="leading" constant="16" id="main-title-leading"/>
+                            <constraint firstItem="55T-vu-dlo" firstAttribute="trailing" secondItem="9Hc-NX-yaE" secondAttribute="trailing" constant="-16" id="main-title-trailing"/>
+                            <constraint firstItem="55T-vu-dlo" firstAttribute="top" secondItem="9Hc-NX-yaE" secondAttribute="top" constant="210" id="main-title-top"/>
+                            <constraint firstItem="55T-vu-dlo" firstAttribute="height" constant="50" id="main-title-height"/>
+                            <constraint firstItem="app-description-label" firstAttribute="leading" secondItem="9Hc-NX-yaE" secondAttribute="leading" constant="24" id="main-desc-leading"/>
+                            <constraint firstItem="app-description-label" firstAttribute="trailing" secondItem="9Hc-NX-yaE" secondAttribute="trailing" constant="-24" id="main-desc-trailing"/>
+                            <constraint firstItem="app-description-label" firstAttribute="top" secondItem="9Hc-NX-yaE" secondAttribute="top" constant="272" id="main-desc-top"/>
+                            <constraint firstItem="app-description-label" firstAttribute="height" constant="22" id="main-desc-height"/>
+                            <constraint firstItem="yzh-wX-bij" firstAttribute="leading" secondItem="9Hc-NX-yaE" secondAttribute="leading" constant="16" id="main-menu-leading"/>
+                            <constraint firstItem="yzh-wX-bij" firstAttribute="trailing" secondItem="9Hc-NX-yaE" secondAttribute="trailing" constant="-16" id="main-menu-trailing"/>
+                            <constraint firstItem="yzh-wX-bij" firstAttribute="top" secondItem="9Hc-NX-yaE" secondAttribute="top" constant="355" id="main-menu-top"/>
+                            <constraint firstItem="yzh-wX-bij" firstAttribute="height" constant="50" id="main-menu-height"/>
+                            <constraint firstItem="button-background" firstAttribute="centerX" secondItem="9Hc-NX-yaE" secondAttribute="centerX" id="main-bg-centerX"/>
+                            <constraint firstItem="button-background" firstAttribute="top" secondItem="9Hc-NX-yaE" secondAttribute="top" constant="420" id="main-bg-top"/>
+                            <constraint firstItem="button-background" firstAttribute="width" constant="313" id="main-bg-width"/>
+                            <constraint firstItem="button-background" firstAttribute="height" constant="420" id="main-bg-height"/>
+                            <constraint firstItem="xGJ-vI-2Hr" firstAttribute="centerX" secondItem="9Hc-NX-yaE" secondAttribute="centerX" id="main-test-centerX"/>
+                            <constraint firstItem="xGJ-vI-2Hr" firstAttribute="top" secondItem="9Hc-NX-yaE" secondAttribute="top" constant="445" id="main-test-top"/>
+                            <constraint firstItem="xGJ-vI-2Hr" firstAttribute="width" constant="242" id="main-test-width"/>
+                            <constraint firstItem="xGJ-vI-2Hr" firstAttribute="height" constant="60" id="main-test-height"/>
+                            <constraint firstItem="completed-tests-button" firstAttribute="centerX" secondItem="9Hc-NX-yaE" secondAttribute="centerX" id="main-history-centerX"/>
+                            <constraint firstItem="completed-tests-button" firstAttribute="top" secondItem="9Hc-NX-yaE" secondAttribute="top" constant="525" id="main-history-top"/>
+                            <constraint firstItem="completed-tests-button" firstAttribute="width" constant="242" id="main-history-width"/>
+                            <constraint firstItem="completed-tests-button" firstAttribute="height" constant="60" id="main-history-height"/>
+                            <constraint firstItem="data-collection-button" firstAttribute="centerX" secondItem="9Hc-NX-yaE" secondAttribute="centerX" id="main-training-centerX"/>
+                            <constraint firstItem="data-collection-button" firstAttribute="top" secondItem="9Hc-NX-yaE" secondAttribute="top" constant="605" id="main-training-top"/>
+                            <constraint firstItem="data-collection-button" firstAttribute="width" constant="242" id="main-training-width"/>
+                            <constraint firstItem="data-collection-button" firstAttribute="height" constant="60" id="main-training-height"/>
+                            <constraint firstItem="sZd-9K-Efi" firstAttribute="centerX" secondItem="9Hc-NX-yaE" secondAttribute="centerX" id="main-settings-centerX"/>
+                            <constraint firstItem="sZd-9K-Efi" firstAttribute="top" secondItem="9Hc-NX-yaE" secondAttribute="top" constant="685" id="main-settings-top"/>
+                            <constraint firstItem="sZd-9K-Efi" firstAttribute="width" constant="242" id="main-settings-width"/>
+                            <constraint firstItem="sZd-9K-Efi" firstAttribute="height" constant="60" id="main-settings-height"/>
+                            <constraint firstItem="JwZ-uV-ako" firstAttribute="centerX" secondItem="9Hc-NX-yaE" secondAttribute="centerX" id="main-about-centerX"/>
+                            <constraint firstItem="JwZ-uV-ako" firstAttribute="top" secondItem="9Hc-NX-yaE" secondAttribute="top" constant="765" id="main-about-top"/>
+                            <constraint firstItem="JwZ-uV-ako" firstAttribute="width" constant="242" id="main-about-width"/>
+                            <constraint firstItem="JwZ-uV-ako" firstAttribute="height" constant="60" id="main-about-height"/>
+                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="5JC-9l-je9"/>
                     <connections>
@@ -172,6 +214,20 @@
                         <viewLayoutGuide key="safeArea" id="eJP-j7-cPI"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="pQp-hp-hYX" firstAttribute="leading" secondItem="MEN-w6-4KY" secondAttribute="leading" constant="16" id="instr-header-leading"/>
+                            <constraint firstItem="pQp-hp-hYX" firstAttribute="trailing" secondItem="MEN-w6-4KY" secondAttribute="trailing" constant="-16" id="instr-header-trailing"/>
+                            <constraint firstItem="pQp-hp-hYX" firstAttribute="top" secondItem="MEN-w6-4KY" secondAttribute="top" constant="135" id="instr-header-top"/>
+                            <constraint firstItem="pQp-hp-hYX" firstAttribute="height" constant="50" id="instr-header-height"/>
+                            <constraint firstItem="ert-7t-use" firstAttribute="leading" secondItem="MEN-w6-4KY" secondAttribute="leading" constant="16" id="instr-text-leading"/>
+                            <constraint firstItem="ert-7t-use" firstAttribute="trailing" secondItem="MEN-w6-4KY" secondAttribute="trailing" constant="-16" id="instr-text-trailing"/>
+                            <constraint firstItem="ert-7t-use" firstAttribute="top" secondItem="MEN-w6-4KY" secondAttribute="top" constant="300" id="instr-text-top"/>
+                            <constraint firstItem="ert-7t-use" firstAttribute="height" constant="250" id="instr-text-height"/>
+                            <constraint firstItem="9iw-Zw-bXv" firstAttribute="centerX" secondItem="MEN-w6-4KY" secondAttribute="centerX" id="instr-continue-centerX"/>
+                            <constraint firstItem="9iw-Zw-bXv" firstAttribute="top" secondItem="MEN-w6-4KY" secondAttribute="top" constant="600" id="instr-continue-top"/>
+                            <constraint firstItem="9iw-Zw-bXv" firstAttribute="width" constant="242" id="instr-continue-width"/>
+                            <constraint firstItem="9iw-Zw-bXv" firstAttribute="height" constant="60" id="instr-continue-height"/>
+                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="our-fO-I5C"/>
                     <connections>
@@ -241,6 +297,28 @@
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="hUS-qT-NiR"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="8gA-I0-gb7" firstAttribute="leading" secondItem="Y32-v7-92g" secondAttribute="leading" constant="16" id="one-eye-title-leading"/>
+                            <constraint firstItem="8gA-I0-gb7" firstAttribute="trailing" secondItem="Y32-v7-92g" secondAttribute="trailing" constant="-16" id="one-eye-title-trailing"/>
+                            <constraint firstItem="8gA-I0-gb7" firstAttribute="top" secondItem="Y32-v7-92g" secondAttribute="top" constant="125" id="one-eye-title-top"/>
+                            <constraint firstItem="8gA-I0-gb7" firstAttribute="height" constant="50" id="one-eye-title-height"/>
+                            <constraint firstItem="test-type-label" firstAttribute="leading" secondItem="Y32-v7-92g" secondAttribute="leading" constant="16" id="one-eye-test-leading"/>
+                            <constraint firstItem="test-type-label" firstAttribute="trailing" secondItem="Y32-v7-92g" secondAttribute="trailing" constant="-16" id="one-eye-test-trailing"/>
+                            <constraint firstItem="test-type-label" firstAttribute="top" secondItem="Y32-v7-92g" secondAttribute="top" constant="180" id="one-eye-test-top"/>
+                            <constraint firstItem="test-type-label" firstAttribute="height" constant="40" id="one-eye-test-height"/>
+                            <constraint firstItem="sc9-43-YfN" firstAttribute="leading" secondItem="Y32-v7-92g" secondAttribute="leading" constant="16" id="one-eye-text-leading"/>
+                            <constraint firstItem="sc9-43-YfN" firstAttribute="trailing" secondItem="Y32-v7-92g" secondAttribute="trailing" constant="-16" id="one-eye-text-trailing"/>
+                            <constraint firstItem="sc9-43-YfN" firstAttribute="top" secondItem="Y32-v7-92g" secondAttribute="top" constant="300" id="one-eye-text-top"/>
+                            <constraint firstItem="sc9-43-YfN" firstAttribute="height" constant="250" id="one-eye-text-height"/>
+                            <constraint firstItem="IVK-d6-aiU" firstAttribute="centerX" secondItem="Y32-v7-92g" secondAttribute="centerX" id="one-eye-begin-centerX"/>
+                            <constraint firstItem="IVK-d6-aiU" firstAttribute="top" secondItem="Y32-v7-92g" secondAttribute="top" constant="591" id="one-eye-begin-top"/>
+                            <constraint firstItem="IVK-d6-aiU" firstAttribute="width" constant="242" id="one-eye-begin-width"/>
+                            <constraint firstItem="IVK-d6-aiU" firstAttribute="height" constant="60" id="one-eye-begin-height"/>
+                            <constraint firstItem="CgP-YO-D6N" firstAttribute="centerX" secondItem="Y32-v7-92g" secondAttribute="centerX" id="one-eye-skip-centerX"/>
+                            <constraint firstItem="CgP-YO-D6N" firstAttribute="top" secondItem="Y32-v7-92g" secondAttribute="top" constant="671" id="one-eye-skip-top"/>
+                            <constraint firstItem="CgP-YO-D6N" firstAttribute="width" constant="242" id="one-eye-skip-width"/>
+                            <constraint firstItem="CgP-YO-D6N" firstAttribute="height" constant="60" id="one-eye-skip-height"/>
+                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="UPX-gG-A1C"/>
                     <connections>
@@ -286,6 +364,14 @@
                         <viewLayoutGuide key="safeArea" id="fQZ-KI-GVf"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
+                            <constraint firstItem="cWB-iE-6yw" firstAttribute="centerX" secondItem="U0K-SW-4ec" secondAttribute="centerX" id="distance-image-centerX"/>
+                            <constraint firstItem="cWB-iE-6yw" firstAttribute="centerY" secondItem="U0K-SW-4ec" secondAttribute="centerY" id="distance-image-centerY"/>
+                            <constraint firstItem="cWB-iE-6yw" firstAttribute="width" constant="393" id="distance-image-width"/>
+                            <constraint firstItem="cWB-iE-6yw" firstAttribute="height" constant="344" id="distance-image-height"/>
+                            <constraint firstItem="WiV-Y2-Iqc" firstAttribute="centerX" secondItem="U0K-SW-4ec" secondAttribute="centerX" id="distance-capture-centerX"/>
+                            <constraint firstItem="WiV-Y2-Iqc" firstAttribute="top" secondItem="U0K-SW-4ec" secondAttribute="top" constant="670" id="distance-capture-top"/>
+                            <constraint firstItem="WiV-Y2-Iqc" firstAttribute="width" constant="242" id="distance-capture-width"/>
+                            <constraint firstItem="WiV-Y2-Iqc" firstAttribute="height" constant="60" id="distance-capture-height"/>
                             <constraint firstItem="BrB-h1-WRS" firstAttribute="leading" secondItem="fQZ-KI-GVf" secondAttribute="leading" id="GsS-dJ-CKf"/>
                             <constraint firstItem="BrB-h1-WRS" firstAttribute="bottom" secondItem="fQZ-KI-GVf" secondAttribute="bottom" id="VpT-BR-CcM"/>
                             <constraint firstItem="BrB-h1-WRS" firstAttribute="trailing" secondItem="fQZ-KI-GVf" secondAttribute="trailing" id="XyZ-9z-H8e"/>
@@ -294,6 +380,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="nO7-6h-FCs"/>
                     <connections>
+                        <outlet property="captureDistanceButton" destination="WiV-Y2-Iqc" id="capture-distance-button-outlet"/>
                         <outlet property="sceneView" destination="BrB-h1-WRS" id="5nT-qQ-ynl"/>
                     </connections>
                 </viewController>
@@ -322,7 +409,7 @@
         <!--Acuity Selection-->
         <scene sceneID="gxi-oz-ony">
             <objects>
-                <viewController title="Acuity Selection" id="yoH-g8-Akd" customClass="Select_Acuity" customModule="Distance_Measure_Test" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Acuity Selection" id="yoH-g8-Akd" customClass="SelectAcuity" customModule="Distance_Measure_Test" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ofq-kr-fW5">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -529,6 +616,12 @@
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="o0h-WU-X8V"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="2l2-0S-e4l" firstAttribute="leading" secondItem="ccy-fp-cVj" secondAttribute="leading" constant="16" id="results-title-leading"/>
+                            <constraint firstItem="2l2-0S-e4l" firstAttribute="trailing" secondItem="ccy-fp-cVj" secondAttribute="trailing" constant="-16" id="results-title-trailing"/>
+                            <constraint firstItem="2l2-0S-e4l" firstAttribute="top" secondItem="ccy-fp-cVj" secondAttribute="top" constant="116" id="results-title-top"/>
+                            <constraint firstItem="2l2-0S-e4l" firstAttribute="height" constant="50" id="results-title-height"/>
+                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="cvG-oC-8bB"/>
                 </viewController>
