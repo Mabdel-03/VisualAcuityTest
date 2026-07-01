@@ -24,7 +24,7 @@ This repository contains a sophisticated iOS visual acuity testing application d
 - **Distance Optimization**: Interactive calibration with visual feedback
 - **Eye-Specific Tracking**: Separate left and right eye distance measurements
 
-### 🎙️ **Intelligent Speech Recognition**
+### **Intelligent Speech Recognition**
 - **Advanced Phonetic Matching**: Multi-layered speech-to-text with comprehensive phonetic mapping
 - **Conversation Filtering**: Sophisticated algorithms to distinguish letter responses from conversation
 - **Real-time Audio Processing**: Continuous speech recognition with timeout management
