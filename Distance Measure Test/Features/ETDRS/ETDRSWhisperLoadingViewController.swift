@@ -223,6 +223,7 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
     private func startLoadingIfNeeded() {
         guard !hasStartedLoading else { return }
         hasStartedLoading = true
+        announceForVoiceOver("Loading speech model. Please wait.", delay: 0.6)
 
         Task { [weak self] in
             guard let self else { return }
@@ -275,6 +276,7 @@ final class ETDRSWhisperLoadingViewController: UIViewController {
         }
 
         startButton.isHidden = false
+        announceForVoiceOver("Speech model ready. Double tap Start Test to continue.")
 
         UIView.animate(withDuration: 0.25) {
             self.startButton.alpha = 1.0

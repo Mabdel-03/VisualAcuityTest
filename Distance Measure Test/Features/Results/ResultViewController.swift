@@ -467,6 +467,15 @@ class ResultViewController: UIViewController {
     @objc func saveButtonTapped() {
         guard !hasTriggeredExport else { return }
 
+        // Don't log a "Not Tested / Not Tested" entry into history (or attempt
+        // a CSV export with nothing real behind it) if both eyes were skipped.
+        let hasLeft  = VisualAcuitySession.finalAcuityResults[1].map { !isDefaultValue($0) } ?? false
+        let hasRight = VisualAcuitySession.finalAcuityResults[2].map { !isDefaultValue($0) } ?? false
+        guard hasLeft || hasRight else {
+            showNoDataAlert()
+            return
+        }
+
         saveButton.isEnabled = false
         saveButton.alpha = 0.7
 

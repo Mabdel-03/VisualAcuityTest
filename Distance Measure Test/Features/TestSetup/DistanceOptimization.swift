@@ -63,13 +63,43 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     var faceNode: SCNNode!
     var leftEye: SCNNode!
     var rightEye: SCNNode!
-    var distanceStable = false
-    var stableReadingCount = 0
     var lastCapturedDistance: Double = 0.0
-    private var captureAvailabilityWorkItem: DispatchWorkItem?
-    private var waitingDotsTimer: Timer?
-    private var waitingDotsCount: Int = 0
-    private let waitingDotCount = 4
+
+    // leftEye/rightEye are non-nil placeholder nodes from the moment viewDidLoad
+    // runs, with a hardcoded position that has nothing to do with the user's
+    // actual face — so their presence can't tell us whether ARKit has actually
+    // found a face. This flag is the real signal, set only from the
+    // ARSCNViewDelegate face-anchor callbacks below.
+    private var hasDetectedFace = false {
+        didSet {
+            guard hasDetectedFace != oldValue else { return }
+            updateCaptureAvailability()
+        }
+    }
+
+    // MARK: - Stability Detection
+    // The button should only become available once the measured distance has
+    // held roughly steady for a continuous window, not just at the first
+    // instant a face is detected (a face detected mid-movement produces a
+    // meaningless reading). Tracked as a streak anchored to the first reading
+    // of the current run: as long as later readings stay within tolerance of
+    // it, the streak (and its elapsed time) keeps growing; a reading outside
+    // tolerance restarts the streak from that new reading.
+    private let stabilityWindowSeconds: TimeInterval = 3.0
+    private let stabilityToleranceCM: Double = 4.0
+    private var stabilityAnchorDistanceCM: Double?
+    private var stabilityStreakStartedAt: Date?
+    private var isDistanceStable = false {
+        didSet {
+            guard isDistanceStable != oldValue else { return }
+            updateCaptureAvailability()
+        }
+    }
+
+    // Tracks what the countdown label is currently showing, so repeated
+    // samples with the same remaining-second value don't re-trigger the
+    // change animation on every frame.
+    private var lastDisplayedCountdown: Int?
     
     // Header label
     private lazy var headerLabel: UILabel = {
@@ -83,7 +113,7 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
 
     private lazy var holdSteadyLabel: UILabel = {
         let label = UILabel()
-        label.text = "Hold camera steady"
+        label.text = "Hold camera steady for"
         label.drawInstruction()
         label.textAlignment = .center
         label.numberOfLines = 1
@@ -100,27 +130,16 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         return stack
     }()
 
-    private lazy var waitingDotsStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.alignment = .center
-        stack.spacing = 3
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
-    }()
-
-    private lazy var waitingDotLabels: [UILabel] = {
-        (0..<waitingDotCount).map { _ in
-            let label = UILabel()
-            label.text = "."
-            label.font = UIFont.systemFont(ofSize: 30, weight: .regular)
-            label.textColor = AppThemeColors.black
-            label.textAlignment = .center
-            label.translatesAutoresizingMaskIntoConstraints = false
-            label.alpha = 0
-            label.isHidden = true
-            return label
-        }
+    // Shows the whole seconds remaining until the distance has held steady
+    // for stabilityWindowSeconds, e.g. "3 s" -> "2 s" -> "1 s".
+    private lazy var countdownLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.monospacedDigitSystemFont(ofSize: 22, weight: .bold)
+        label.textColor = AppThemeColors.black
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
     }()
 
     override func viewDidLoad() {
@@ -136,8 +155,7 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         view.addSubview(statusRowStack)
         view.bringSubviewToFront(statusRowStack)
         statusRowStack.addArrangedSubview(holdSteadyLabel)
-        statusRowStack.addArrangedSubview(waitingDotsStack)
-        waitingDotLabels.forEach { waitingDotsStack.addArrangedSubview($0) }
+        statusRowStack.addArrangedSubview(countdownLabel)
         
         // Set up header constraints
         NSLayoutConstraint.activate([
@@ -151,8 +169,6 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
             statusRowStack.bottomAnchor.constraint(equalTo: captureDistanceButton.topAnchor, constant: -16)
         ])
 
-        prepareCaptureButtonAfterSteadyDelay()
-        
         // Set the view's delegate
         sceneView.delegate = self
         
@@ -189,73 +205,58 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+
+        // hasDetectedFace/isDistanceStable's didSet only react to changes, so
+        // force the waiting UI back on for this fresh session even if they
+        // were left true from a previous appearance.
+        hasDetectedFace = false
+        resetStabilityStreak()
+        prepareCaptureButtonAwaitingFaceDetection()
+
         // Create a session configuration
         let configuration = ARFaceTrackingConfiguration()
-        
+
         // Run the view's session
         sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
     }
-    
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
-        captureAvailabilityWorkItem?.cancel()
-        captureAvailabilityWorkItem = nil
-        stopWaitingDotsAnimation()
 
         // Pause the view's session
         sceneView.session.pause()
     }
 
-    private func prepareCaptureButtonAfterSteadyDelay() {
-        captureAvailabilityWorkItem?.cancel()
-        stopWaitingDotsAnimation()
-
+    /* Puts the capture UI in its "waiting for a face" state: button disabled,
+       "Hold camera steady" status row with animated dots visible. Called up
+       front, and again on every fresh appearance — actual enabling happens in
+       updateCaptureAvailability() once a face has been detected AND held
+       steady for stabilityWindowSeconds.
+    */
+    private func prepareCaptureButtonAwaitingFaceDetection() {
         statusRowStack.isHidden = false
         holdSteadyLabel.isHidden = false
         captureDistanceButton.isEnabled = false
         captureDistanceButton.alpha = 0.45
-        startWaitingDotsAnimation()
+        animateStatusRowEntranceIfNeeded()
+        resetCountdownDisplay()
+    }
 
-        let workItem = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            self.stopWaitingDotsAnimation()
-            self.statusRowStack.isHidden = true
-            self.captureDistanceButton.isEnabled = true
+    /* Reflects hasDetectedFace + isDistanceStable in the UI: only enable
+       Capture Distance once ARKit has found a face AND the measured distance
+       has held steady for stabilityWindowSeconds. Disables it again the
+       moment either condition stops holding, so the user can't capture a
+       stale/placeholder or mid-movement reading.
+    */
+    private func updateCaptureAvailability() {
+        if hasDetectedFace && isDistanceStable {
+            statusRowStack.isHidden = true
+            captureDistanceButton.isEnabled = true
             UIView.animate(withDuration: 0.2) {
                 self.captureDistanceButton.alpha = 1.0
             }
-        }
-        captureAvailabilityWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: workItem)
-    }
-
-    private func startWaitingDotsAnimation() {
-        waitingDotsCount = 0
-        waitingDotsStack.isHidden = false
-        waitingDotsStack.alpha = 1
-        waitingDotsStack.transform = .identity
-        animateStatusRowEntranceIfNeeded()
-        revealNextWaitingDot()
-
-        let timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            guard self.waitingDotsCount < self.waitingDotCount else { return }
-            self.revealNextWaitingDot()
-        }
-        waitingDotsTimer = timer
-        RunLoop.main.add(timer, forMode: .common)
-    }
-
-    private func stopWaitingDotsAnimation() {
-        waitingDotsTimer?.invalidate()
-        waitingDotsTimer = nil
-        waitingDotsCount = 0
-        waitingDotLabels.forEach { dotLabel in
-            dotLabel.isHidden = true
-            dotLabel.alpha = 0
-            dotLabel.transform = .identity
+        } else {
+            prepareCaptureButtonAwaitingFaceDetection()
         }
     }
 
@@ -274,21 +275,43 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         )
     }
 
-    private func revealNextWaitingDot() {
-        guard waitingDotsCount < waitingDotCount else { return }
-        let dotLabel = waitingDotLabels[waitingDotsCount]
-        waitingDotsCount += 1
-        dotLabel.isHidden = false
-        dotLabel.alpha = 0
-        dotLabel.transform = CGAffineTransform(scaleX: 0.45, y: 0.45)
+    /* Resets the countdown label back to its starting value ("3 s") —
+       called whenever the stability streak resets (see resetStabilityStreak).
+    */
+    private func resetCountdownDisplay() {
+        let startingValue = Int(stabilityWindowSeconds)
+        lastDisplayedCountdown = startingValue
+        countdownLabel.isHidden = false
+        countdownLabel.alpha = 1
+        countdownLabel.transform = .identity
+        countdownLabel.text = "\(startingValue) s"
+    }
 
+    /* Shows the whole seconds remaining until the current stability streak
+       reaches stabilityWindowSeconds — "3 s", then "2 s", then "1 s" — updating
+       only when the displayed number actually changes.
+    */
+    private func updateCountdownDisplay(elapsedSeconds: TimeInterval) {
+        let remaining = max(0, Int((stabilityWindowSeconds - elapsedSeconds).rounded(.up)))
+        guard remaining != lastDisplayedCountdown else { return }
+        lastDisplayedCountdown = remaining
+
+        guard remaining > 0 else {
+            // Fully stable — updateCaptureAvailability hides the whole row.
+            return
+        }
+
+        countdownLabel.text = "\(remaining) s"
+        countdownLabel.isHidden = false
+        countdownLabel.alpha = 0
+        countdownLabel.transform = CGAffineTransform(scaleX: 1.25, y: 1.25)
         UIView.animate(
-            withDuration: 0.16,
+            withDuration: 0.18,
             delay: 0,
             options: [.curveEaseOut, .allowUserInteraction, .beginFromCurrentState],
             animations: {
-                dotLabel.alpha = 1
-                dotLabel.transform = .identity
+                self.countdownLabel.alpha = 1
+                self.countdownLabel.transform = .identity
             }
         )
     }
@@ -297,9 +320,11 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     user taps the 'Capture Distance' button.
     */
     @IBAction func capDistanceTransition(_ sender: Any) {
-        // Make sure we have valid eye positions before capturing
-        guard let frame = sceneView.session.currentFrame,
-              leftEye != nil && rightEye != nil else {
+        // The button is disabled until hasDetectedFace is true, so this should
+        // only trip in a race (e.g. tracking lost right as the tap lands).
+        // leftEye/rightEye are never nil — they exist from viewDidLoad with a
+        // placeholder position — so checking them can't tell us this.
+        guard let frame = sceneView.session.currentFrame, hasDetectedFace else {
             print("⚠️ Cannot capture distance: Face not detected")
             return
         }
@@ -358,15 +383,30 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         face detection session.
     */
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        guard anchor is ARFaceAnchor else { return }
         faceNode = node
         faceNode.addChildNode(leftEye)
         faceNode.addChildNode(rightEye)
         faceNode.transform = node.transform
-        trackDistance()
+
+        // ARSCNViewDelegate callbacks fire on the render thread, not main —
+        // resetStabilityStreak()/hasDetectedFace drive UIKit updates
+        // (countdownLabel, captureDistanceButton), which must happen on main.
+        // Without this hop, those updates are undefined-behavior-flaky: they
+        // can silently fail to land, which is what left the screen stuck on
+        // "3 s" until the view reloaded.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            // Start the stability streak fresh for this detection — don't let
+            // an earlier, since-lost detection count toward it.
+            self.resetStabilityStreak()
+            self.hasDetectedFace = true
+            self.trackDistance()
+        }
     }
 
-    /* Called every frame(60 times per second on most devices) while the 
-        face is being tracked. Continuously updates face and eye positions as 
+    /* Called every frame(60 times per second on most devices) while the
+        face is being tracked. Continuously updates face and eye positions as
         the user moves.
     */
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
@@ -375,6 +415,61 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         leftEye.simdTransform = faceAnchor.leftEyeTransform
         rightEye.simdTransform = faceAnchor.rightEyeTransform
         trackDistance()
+    }
+
+    /* Called when ARKit loses the face anchor (e.g. the user moves out of
+       frame). Without this, hasDetectedFace would stay true from an earlier
+       detection even though the eye nodes are no longer being updated —
+       disabling the button again keeps it honest about current tracking.
+    */
+    func renderer(_ renderer: SCNSceneRenderer, didRemove node: SCNNode, for anchor: ARAnchor) {
+        guard anchor is ARFaceAnchor else { return }
+        // See the didAdd comment above — this must run on main too.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.hasDetectedFace = false
+            self.resetStabilityStreak()
+        }
+    }
+
+    /* Records a distance reading and updates the stability streak: as long as
+       each new reading stays within stabilityToleranceCM of the reading that
+       started the current streak, the streak's elapsed time keeps growing and
+       drives both the waiting dots and (once it reaches stabilityWindowSeconds)
+       isDistanceStable, which the capture button waits on.
+    */
+    private func recordDistanceSample(_ distanceCM: Double) {
+        guard hasDetectedFace else {
+            resetStabilityStreak()
+            return
+        }
+
+        let now = Date()
+
+        if let anchor = stabilityAnchorDistanceCM, abs(distanceCM - anchor) <= stabilityToleranceCM {
+            // Still within tolerance of the reading that started this streak —
+            // let it keep running.
+        } else {
+            // First reading of a new streak, or this one drifted too far from
+            // the anchor — restart the clock from here.
+            stabilityAnchorDistanceCM = distanceCM
+            stabilityStreakStartedAt = now
+        }
+
+        let elapsed = stabilityStreakStartedAt.map { now.timeIntervalSince($0) } ?? 0
+        updateCountdownDisplay(elapsedSeconds: elapsed)
+        isDistanceStable = elapsed >= stabilityWindowSeconds
+    }
+
+    /* Clears the stability streak and its on-screen countdown — called
+       whenever tracking is lost or restarted, so stale progress never carries
+       over into a new attempt.
+    */
+    private func resetStabilityStreak() {
+        stabilityAnchorDistanceCM = nil
+        stabilityStreakStartedAt = nil
+        resetCountdownDisplay()
+        isDistanceStable = false
     }
 
     /* Tracks the distance between the camera and the eyes.
@@ -405,7 +500,8 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
             if averageDistance > 5 && averageDistance < 100 {
                 // Add the reading to our tracker with built-in smoothing
                 DistanceTracker.shared.addReading(Double(averageDistance))
-                
+                self.recordDistanceSample(Double(averageDistance))
+
                 // Only print occasionally to reduce console spam
                 if Int(Date().timeIntervalSince1970 * 10) % 20 == 0 {
                     print("📏 Distance Tracked: \(String(format: "%.1f", Double(averageDistance))) cm")

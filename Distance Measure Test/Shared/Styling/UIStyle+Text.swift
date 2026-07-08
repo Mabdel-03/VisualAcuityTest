@@ -263,6 +263,37 @@ public extension UIViewController {
         return endButton
     }
 
+    /// Speaks a status announcement two ways: immediately through
+    /// SharedAudioManager (this app's own always-on spoken-instructions
+    /// system — the thing actually audible on a device without real VoiceOver
+    /// enabled, and what every other in-app instruction already uses), and
+    /// through a real VoiceOver announcement after a short delay for users
+    /// who have VoiceOver on. Posting the VoiceOver announcement immediately
+    /// at the moment a control is activated (or a navigation transition
+    /// begins) routinely gets swallowed by VoiceOver's own feedback for that
+    /// same event — the tap-confirmation sound, or the automatic
+    /// screen-changed announcement a push/pop already generates — so it gets
+    /// a beat to land after that settles.
+    func announceForVoiceOver(_ message: String, delay: TimeInterval = 0.5, source: String = "Accessibility Announcement") {
+        SharedAudioManager.shared.playText(message, source: source)
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            UIAccessibility.post(notification: .announcement, argument: message)
+        }
+    }
+
+    /// Like `announceForVoiceOver`, but for cases where whatever runs next
+    /// (typically a navigation transition) must not speak over this message
+    /// before it finishes — e.g. ending a test shouldn't have the previous
+    /// screen's own instructions cut "Test ended." off mid-sentence.
+    /// `completion` only runs once SharedAudioManager has actually finished
+    /// (or skipped, if audio is disabled) speaking `message`.
+    func announceForVoiceOver(_ message: String, source: String = "Accessibility Announcement", thenRun completion: @escaping () -> Void) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            UIAccessibility.post(notification: .announcement, argument: message)
+        }
+        SharedAudioManager.shared.playText(message, source: source, completion: completion)
+    }
+
     func animatePolishedEntrance(
         for views: [UIView],
         verticalOffset: CGFloat = 10,

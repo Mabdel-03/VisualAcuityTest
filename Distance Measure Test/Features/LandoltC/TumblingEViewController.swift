@@ -565,7 +565,12 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         )
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "End Test", style: .destructive) { [weak self] _ in
-            self?.navigationController?.popViewController(animated: true)
+            // Wait for "Test ended." to actually finish speaking before
+            // popping — otherwise the previous screen's own instructions
+            // (played from its viewDidAppear) cut this off mid-sentence.
+            self?.announceForVoiceOver("Test ended.", source: "End Test") {
+                self?.navigationController?.popViewController(animated: true)
+            }
         })
         present(alert, animated: true)
     }
@@ -592,6 +597,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         pauseBarButtonItem.title = "Resume"
         view.isUserInteractionEnabled = false
         instructionLabel.text = "Paused"
+        announceForVoiceOver("Test paused.")
     }
 
     /* Manually resumes the test. If the user is still out of the acceptable
@@ -603,9 +609,11 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         pauseBarButtonItem.title = "Pause"
         if isPaused {
             instructionLabel.text = "Paused: Adjust your distance"
+            announceForVoiceOver("Still out of range. Test will resume automatically once you're back in range.")
         } else {
             instructionLabel.text = "Please swipe in the direction the C is pointing."
             view.isUserInteractionEnabled = true
+            announceForVoiceOver("Test resumed.")
         }
     }
 

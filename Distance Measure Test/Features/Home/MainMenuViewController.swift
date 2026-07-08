@@ -18,12 +18,39 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
     static let speechDidStartNotification = Notification.Name("SharedAudioManagerSpeechDidStart")
     static let speechDidFinishNotification = Notification.Name("SharedAudioManagerSpeechDidFinish")
     private let speechSynthesizer = AVSpeechSynthesizer()
-    
+
+    // Tracks which category is actually active right now, so playText can
+    // skip reconfiguring the session when it's already correct, and so it
+    // knows when a real switch (e.g. mic capture -> playback, after WhisperKit
+    // was listening) just happened and needs a moment to settle before the
+    // first words are spoken — speaking immediately after a category switch
+    // reliably clips/glitches the start of that utterance.
+    private var activeCategory: AVAudioSession.Category?
+
+    // Completions for playText(...completion:), keyed by the specific
+    // utterance so a later call's stop-and-restart can't misfire an earlier
+    // call's completion (or vice versa) regardless of delegate callback timing.
+    private var completions: [ObjectIdentifier: () -> Void] = [:]
+
+    // True from the moment playText is called until the utterance actually
+    // starts (or is cancelled) — covers the brief window where speak() has
+    // been deferred to let an audio-category switch settle. Without this,
+    // `isSpeaking` would read false during that window, and callers that
+    // gate on it (e.g. "don't grab the mic while an instruction is playing")
+    // would race straight into the deferred utterance.
+    private var isPendingSpeech = false
+
+    // Bumped by every playText/stopSpeech call. A deferred speak() closure
+    // captures the value current at the time it was scheduled and checks it
+    // before actually speaking, so a stop (or a newer playText) that lands
+    // during the settle delay correctly cancels it instead of it firing late.
+    private var speechGeneration = 0
+
     private override init() {
         super.init()
         speechSynthesizer.delegate = self
     }
-    
+
     private func configureAudioSession(
         category: AVAudioSession.Category,
         mode: AVAudioSession.Mode,
@@ -40,13 +67,20 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
         }
     }
 
-    private func setupPlaybackAudioSystem() {
+    /// Reconfigures the session for playback only if it isn't already in that
+    /// category. Returns true if a real switch just happened (caller should
+    /// give the route a moment to settle before speaking).
+    @discardableResult
+    private func setupPlaybackAudioSystem() -> Bool {
+        guard activeCategory != .playback else { return false }
         configureAudioSession(
             category: .playback,
             mode: .default,
             options: [],
             logContext: "Playback"
         )
+        activeCategory = .playback
+        return true
     }
 
     func prepareForMicrophoneCapture() {
@@ -56,6 +90,7 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
             options: [.defaultToSpeaker, .allowBluetoothA2DP],
             logContext: "Microphone capture"
         )
+        activeCategory = .playAndRecord
     }
     
     func isAudioEnabled() -> Bool {
@@ -82,27 +117,36 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
     }
 
     var isSpeaking: Bool {
-        speechSynthesizer.isSpeaking || speechSynthesizer.isPaused
+        isPendingSpeech || speechSynthesizer.isSpeaking || speechSynthesizer.isPaused
     }
     
-    func playText(_ text: String, source: String = "Unknown") {
+    /// Speaks `text`. If `completion` is given, it's called once this specific
+    /// utterance finishes (or is cancelled/skipped/superseded) — use it when
+    /// the caller needs to guarantee nothing else speaks over this before
+    /// it's done.
+    func playText(_ text: String, source: String = "Unknown", completion: (() -> Void)? = nil) {
         print("🔊 [\(source)] playText called")
         print("🔊 [\(source)] Audio enabled: \(isAudioEnabled())")
-        
+
         guard isAudioEnabled() else {
             print("🔊 [\(source)] Audio disabled, not playing text")
+            completion?()
             return
         }
 
-        setupPlaybackAudioSystem()
-        
-        // ALWAYS stop any current speech before starting new speech
+        // Cancel any in-flight speech AND invalidate any not-yet-spoken
+        // deferred utterance (see speechGeneration below) before starting ours.
         stopSpeech()
-        
+
+        isPendingSpeech = true
+        speechGeneration += 1
+        let generation = speechGeneration
+        let didSwitchCategory = setupPlaybackAudioSystem()
+
         let utterance = AVSpeechUtterance(string: text)
         utterance.rate = 0.5
         utterance.volume = 1.0
-        
+
         // Try to set a specific voice
         if let voice = AVSpeechSynthesisVoice(language: "en-US") {
             utterance.voice = voice
@@ -110,18 +154,46 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
         } else {
             print("🔊 [\(source)] No voice found, using default")
         }
-        
-        print("🔊 [\(source)] Starting speech synthesis...")
-        speechSynthesizer.speak(utterance)
+
+        if let completion {
+            completions[ObjectIdentifier(utterance)] = completion
+        }
+
+        if didSwitchCategory {
+            // The route just switched (e.g. mic capture -> playback) — give it
+            // a moment to settle. Speaking immediately after a category
+            // switch reliably clips/glitches the first fraction of a second.
+            print("🔊 [\(source)] Audio category just switched — delaying speech briefly to let the route settle")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+                guard let self, self.speechGeneration == generation else {
+                    // Superseded or stopped before it got a chance to speak —
+                    // this utterance never reached the synthesizer, so no
+                    // delegate callback will ever fire for it. Run its
+                    // completion here so the caller isn't left hanging.
+                    self?.completions.removeValue(forKey: ObjectIdentifier(utterance))?()
+                    return
+                }
+                print("🔊 [\(source)] Starting speech synthesis (post-switch)...")
+                self.speechSynthesizer.speak(utterance)
+            }
+        } else {
+            print("🔊 [\(source)] Starting speech synthesis...")
+            speechSynthesizer.speak(utterance)
+        }
         print("🔊 [\(source)] Speech synthesis command sent")
     }
-    
+
     func stopSpeech() {
+        // Invalidate any deferred (not-yet-spoken) utterance from a prior
+        // playText call, and stop treating this manager as "about to speak".
+        speechGeneration += 1
+        isPendingSpeech = false
+
         if speechSynthesizer.isSpeaking {
             print("🔊 Shared Audio Manager - Stopping current speech")
             speechSynthesizer.stopSpeaking(at: .immediate)
         }
-        
+
         if speechSynthesizer.isPaused {
             print("🔊 Shared Audio Manager - Stopping paused speech")
             speechSynthesizer.stopSpeaking(at: .immediate)
@@ -141,17 +213,22 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
 extension SharedAudioManager: @preconcurrency AVSpeechSynthesizerDelegate {
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
         print("🔊 Shared Audio Manager - ✅ Speech synthesis STARTED")
+        isPendingSpeech = false
         NotificationCenter.default.post(name: SharedAudioManager.speechDidStartNotification, object: self)
     }
-    
+
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         print("🔊 Shared Audio Manager - ✅ Speech synthesis FINISHED")
+        isPendingSpeech = false
         NotificationCenter.default.post(name: SharedAudioManager.speechDidFinishNotification, object: self)
+        completions.removeValue(forKey: ObjectIdentifier(utterance))?()
     }
-    
+
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         print("🔊 Shared Audio Manager - ❌ Speech synthesis CANCELLED")
+        isPendingSpeech = false
         NotificationCenter.default.post(name: SharedAudioManager.speechDidFinishNotification, object: self)
+        completions.removeValue(forKey: ObjectIdentifier(utterance))?()
     }
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, willSpeakRangeOfSpeechString range: NSRange, utterance: AVSpeechUtterance) {
