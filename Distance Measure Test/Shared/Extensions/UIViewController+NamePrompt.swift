@@ -12,47 +12,59 @@ extension UIViewController {
     /// Prompts the user to enter their first and last name
     /// - Parameters:
     ///   - allowSkip: Whether to show a "Use Previous" option if a name is already stored
+    ///   - existingName: The name to offer as "previous" — pass the name already associated with a
+    ///     specific test (e.g. from Test History) so the prompt doesn't default to whatever name was
+    ///     most recently entered elsewhere in the app. Falls back to the globally last-used name if nil.
     ///   - completion: Callback with success status - true if name was entered/confirmed, false if cancelled
-    func promptForSubjectName(allowSkip: Bool = true, completion: @escaping (Bool) -> Void) {
+    func promptForSubjectName(
+        allowSkip: Bool = true,
+        existingName: (firstName: String, lastName: String)? = nil,
+        message: String = "Please enter the subject's first and last name for the CSV export.",
+        completion: @escaping (Bool) -> Void
+    ) {
         let nameManager = SubjectNameManager.shared
-        
-        // Check if there's already a stored name
-        if allowSkip, let (firstName, lastName) = nameManager.getSubjectName() {
+        let nameToOffer = existingName ?? nameManager.getSubjectName()
+
+        // Check if there's a name to offer
+        if allowSkip, let (firstName, lastName) = nameToOffer {
             // Show option to use previous name or enter new one
             let confirmAlert = UIAlertController(
                 title: "Subject Name",
                 message: "Use the previously entered name '\(firstName) \(lastName)' or enter a new name?",
                 preferredStyle: .alert
             )
-            
+
             confirmAlert.addAction(UIAlertAction(title: "Use Previous", style: .default) { [weak confirmAlert] _ in
                 confirmAlert?.dismiss(animated: true) {
+                    // Ensure the manager reflects the name actually in use, so callers that
+                    // read SubjectNameManager.shared.getSubjectName() after completion get it right.
+                    nameManager.saveSubjectName(firstName: firstName, lastName: lastName)
                     completion(true)
                 }
             })
-            
+
             confirmAlert.addAction(UIAlertAction(title: "Enter New Name", style: .default) { [weak self, weak confirmAlert] _ in
                 confirmAlert?.dismiss(animated: true) {
-                    self?.showNameEntryAlert(completion: completion)
+                    self?.showNameEntryAlert(message: message, completion: completion)
                 }
             })
-            
+
             confirmAlert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
                 completion(false)
             })
-            
+
             present(confirmAlert, animated: true)
         } else {
             // No stored name, show entry dialog
-            showNameEntryAlert(completion: completion)
+            showNameEntryAlert(message: message, completion: completion)
         }
     }
-    
+
     /// Shows the alert dialog for entering first and last name
-    private func showNameEntryAlert(completion: @escaping (Bool) -> Void) {
+    private func showNameEntryAlert(message: String, completion: @escaping (Bool) -> Void) {
         let alert = UIAlertController(
             title: "Enter Subject Information",
-            message: "Please enter the subject's first and last name for the CSV export.",
+            message: message,
             preferredStyle: .alert
         )
         
@@ -87,16 +99,16 @@ extension UIViewController {
             if !nameManager.validateName(firstName) {
                 alert?.dismiss(animated: true) {
                     self.showValidationError(message: "First name must contain at least one letter.") {
-                        self.showNameEntryAlert(completion: completion)
+                        self.showNameEntryAlert(message: message, completion: completion)
                     }
                 }
                 return
             }
-            
+
             if !nameManager.validateName(lastName) {
                 alert?.dismiss(animated: true) {
                     self.showValidationError(message: "Last name must contain at least one letter.") {
-                        self.showNameEntryAlert(completion: completion)
+                        self.showNameEntryAlert(message: message, completion: completion)
                     }
                 }
                 return

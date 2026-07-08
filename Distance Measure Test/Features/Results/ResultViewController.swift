@@ -502,9 +502,12 @@ class ResultViewController: UIViewController {
     */
     private func initiateCSVExport() {
         print("📊 Initiating CSV export flow")
-        
+
         // Prompt for subject name first
-        promptForSubjectName(allowSkip: true) { [weak self] success in
+        promptForSubjectName(
+            allowSkip: true,
+            message: "Please enter the subject's first and last name for this test's CSV export."
+        ) { [weak self] success in
             guard let self = self else { return }
             guard success else {
                 print("📊 CSV export cancelled - no subject name provided")
@@ -529,14 +532,38 @@ class ResultViewController: UIViewController {
         }
     }
     
+    /* Returns only the progression rows recorded for the test we just saved,
+       scoped to the window between the previous history entry and this one —
+       mirrors the per-test filtering used by TestHistoryViewController.shareTestResult.
+    */
+    private func currentTestProgressionData() -> [TestResponseData] {
+        let allData = TestProgressionDataCollector.shared.getAllStoredProgressionData()
+
+        guard let timestamp = lastSavedTimestamp else { return allData }
+
+        let historyFormatter = DateFormatter()
+        historyFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        guard let saveDate = historyFormatter.date(from: timestamp) else { return allData }
+
+        let sortedAsc = TestDataManager.shared.getAllTests().keys.sorted(by: <)
+        let lowerBound: Date
+        if let idx = sortedAsc.firstIndex(of: timestamp), idx > 0 {
+            lowerBound = historyFormatter.date(from: sortedAsc[idx - 1]) ?? Date.distantPast
+        } else {
+            lowerBound = Date.distantPast
+        }
+
+        return allData.filter { $0.timestamp > lowerBound && $0.timestamp <= saveDate }
+    }
+
     /* Generates CSV and uploads to Dropbox, with email as fallback.
     */
     private func generateAndEmailCSV() {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let progressionDataCollector = TestProgressionDataCollector.shared
+            guard let self = self else { return }
             let nameManager = SubjectNameManager.shared
 
-            let allData = progressionDataCollector.getAllStoredProgressionData()
+            let allData = self.currentTestProgressionData()
 
             guard !allData.isEmpty else {
                 DispatchQueue.main.async { [weak self] in
@@ -581,7 +608,6 @@ class ResultViewController: UIViewController {
             }()
 
             DispatchQueue.main.async {
-                guard let self = self else { return }
                 print("📊 Generated CSV filename: \(fileName)")
                 self.showShareSheet(csvContent: csvContent, fileName: fileName)
             }
@@ -718,7 +744,9 @@ class ResultViewController: UIViewController {
 
                     if completed {
                         print("📤 File shared successfully via \(activityType?.rawValue ?? "unknown")")
-                        TestProgressionDataCollector.shared.clearAllProgressionData()
+                        // Note: progression data is intentionally left intact here so it
+                        // remains available for later per-test / Share All exports from
+                        // Test History. It is only wiped by "Clear All History".
                         VisualAcuitySession.resetResults()
                         finalAcuityScore = -Double.infinity
                         self.resetExportState()

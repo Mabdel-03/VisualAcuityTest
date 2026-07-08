@@ -44,7 +44,7 @@ final class ETDRSWhisperLetterService {
         "UH", "UHH", "UHHH", "UM", "UMM", "UMMM",
         "ER", "ERR", "ERM", "AH", "AHH", "AHHH",
         "EH", "EHH", "HM", "HMM", "HMMM", "MM",
-        "MMM", "MHM", "HUH"
+        "MMM", "MHM", "HUH", "WAIT"
     ]
     private let ignorableNonAnswerPhrases: Set<String> = [
         "BLANK", "BLANK AUDIO", "BLANKAUDIO", "EMPTY",
@@ -91,7 +91,9 @@ final class ETDRSWhisperLetterService {
         "ARE": "R", "AR": "R", "ARR": "R", "OUR": "R", "OR": "R",
         "YOU": "U", "YEW": "U", "YOO": "U",
         "VEE": "V", "VI": "V", "VIE": "V",
-        "ZEE": "Z", "ZED": "Z", "ZI": "Z"
+        "ZEE": "Z", "ZED": "Z", "ZI": "Z",
+        "EXCELLENT":"X", "EGGS":"X","EXCEL":"X","EXACTLY":"X"
+
     ]
 
     private var whisperKit: WhisperKit?

@@ -30,6 +30,17 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     var rightEye: SCNNode!
     
     private var isPaused = false
+    // Set only by the user tapping the Pause/Resume button — kept separate from
+    // `isPaused` (the automatic distance-based pause) so the two can't override
+    // each other, e.g. the distance coming back in range must not silently
+    // re-enable swipes on a test the user deliberately paused.
+    private var isManuallyPaused = false
+    private lazy var pauseBarButtonItem = UIBarButtonItem(
+        title: "Pause",
+        style: .plain,
+        target: self,
+        action: #selector(pauseButtonTapped)
+    )
     private var lowerBound: Double = 0.0
     private var upperBound: Double = 0.0
     
@@ -194,6 +205,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
 
         setupUI()
         setupEndTestButton()
+        setupPauseButton()
         setupGestureRecognizers()
 
         // Initialize acuity level from the selected value
@@ -558,6 +570,45 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         present(alert, animated: true)
     }
 
+    /*
+     * Installs a Pause/Resume button on the navigation bar's leading edge so
+     * the user can manually halt swipe recognition and test progression.
+     */
+    private func setupPauseButton() {
+        navigationItem.leftBarButtonItem = pauseBarButtonItem
+    }
+
+    @objc private func pauseButtonTapped() {
+        isManuallyPaused.toggle()
+        if isManuallyPaused {
+            applyManualPause()
+        } else {
+            applyManualResume()
+        }
+    }
+
+    /* Manually pauses the test: disables swipe recognition immediately. */
+    private func applyManualPause() {
+        pauseBarButtonItem.title = "Resume"
+        view.isUserInteractionEnabled = false
+        instructionLabel.text = "Paused"
+    }
+
+    /* Manually resumes the test. If the user is still out of the acceptable
+       distance range, swipes stay disabled until distance-based auto-resume
+       (checkDistance) brings it back — it will now be free to run again
+       since isManuallyPaused is false.
+    */
+    private func applyManualResume() {
+        pauseBarButtonItem.title = "Pause"
+        if isPaused {
+            instructionLabel.text = "Paused: Adjust your distance"
+        } else {
+            instructionLabel.text = "Please swipe in the direction the C is pointing."
+            view.isUserInteractionEnabled = true
+        }
+    }
+
     // MARK: - Gesture Handling
     /*
      * Handles a user's swipe gesture and determines if it matches the direction of the letter.
@@ -712,6 +763,10 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
        @param liveDistance The current measured distance in centimeters
      */
     private func checkDistance(_ liveDistance: Double) {
+        // Freeze all distance-driven behavior while manually paused so it can't
+        // fight with the pause button (e.g. silently re-enabling swipes).
+        guard !isManuallyPaused else { return }
+
         // Always print extreme values
         let isExtreme = liveDistance < 15 || liveDistance > 100 ||
                        abs(liveDistance - averageDistanceCM) > 30

@@ -399,7 +399,20 @@ class TestHistoryViewController: UIViewController {
 
     @objc private func perTestShareTapped(_ sender: UIButton) {
         guard let entry = testShareData[sender.tag] else { return }
-        promptForSubjectName(allowSkip: true) { [weak self] success in
+
+        // Offer this specific test's already-associated name (not whatever name was
+        // most recently entered elsewhere in the app) as the "previous" option.
+        var existingName: (firstName: String, lastName: String)?
+        if let storedName = entry.testResults["Name"], !storedName.isEmpty {
+            let parts = storedName.split(separator: " ", maxSplits: 1).map(String.init)
+            existingName = (firstName: parts[0], lastName: parts.count > 1 ? parts[1] : "")
+        }
+
+        promptForSubjectName(
+            allowSkip: true,
+            existingName: existingName,
+            message: "Please enter the subject's first and last name for this test's CSV export."
+        ) { [weak self] success in
             guard let self = self, success else { return }
 
             // Persist the name into this test's history entry so Share All can read it later

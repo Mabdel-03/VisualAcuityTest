@@ -21,6 +21,17 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     // MARK: - Properties
 
     private var isPaused = false
+    // Set only by the user tapping the Pause/Resume button — kept separate from
+    // `isPaused` (the automatic distance-based pause) so the two can't override
+    // each other, e.g. the distance coming back in range must not silently
+    // resume a test the user deliberately paused.
+    private var isManuallyPaused = false
+    private lazy var pauseBarButtonItem = UIBarButtonItem(
+        title: "Pause",
+        style: .plain,
+        target: self,
+        action: #selector(pauseButtonTapped)
+    )
     private var lowerBound: Double = 0.0
     private var upperBound: Double = 0.0
     
@@ -253,6 +264,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         view.backgroundColor = .white
         setupUI()
         setupEndTestButton()
+        setupPauseButton()
         print("🔍 ETDRSViewController - UI setup completed")
 
         // Initialize acuity level from the selected value
@@ -376,6 +388,53 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             self?.navigationController?.popViewController(animated: true)
         })
         present(alert, animated: true)
+    }
+
+    /*
+     * Installs a Pause/Resume button on the navigation bar's leading edge so
+     * the user can manually halt speech recognition and test progression.
+     */
+    private func setupPauseButton() {
+        navigationItem.leftBarButtonItem = pauseBarButtonItem
+    }
+
+    @objc private func pauseButtonTapped() {
+        isManuallyPaused.toggle()
+        if isManuallyPaused {
+            applyManualPause()
+        } else {
+            applyManualResume()
+        }
+    }
+
+    /* Manually pauses the test: stops listening immediately and prevents any
+       in-flight or scheduled work from restarting it until resumed.
+    */
+    private func applyManualPause() {
+        pauseBarButtonItem.title = "Resume"
+        stopListening()
+        resumeListeningWorkItem?.cancel()
+        resumeListeningWorkItem = nil
+        listeningStatusWorkItem?.cancel()
+        listeningStatusWorkItem = nil
+        shouldResumeListeningAfterSpeech = false
+        instructionLabel.text = "Paused"
+        transcriptionLabel.isHidden = true
+    }
+
+    /* Manually resumes the test. If the user is still out of the acceptable
+       distance range, listening stays off until distance-based auto-resume
+       (checkDistance) brings it back — it will now be free to run again
+       since isManuallyPaused is false.
+    */
+    private func applyManualResume() {
+        pauseBarButtonItem.title = "Pause"
+        if isPaused {
+            instructionLabel.text = "Paused: Adjust your distance"
+        } else {
+            instructionLabel.text = "Please say the letter you see out loud."
+            startListening()
+        }
     }
 
     /*
@@ -704,7 +763,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
      */
     private func startListening() {
         guard view.window != nil else { return }
-        guard !isPaused else { return }
+        guard !isPaused, !isManuallyPaused else { return }
         guard !SharedAudioManager.shared.isSpeaking else {
             shouldResumeListeningAfterSpeech = true
             microphoneLabel.isHidden = true
@@ -753,7 +812,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     }
 
     private func handleWhisperPrediction(_ prediction: ETDRSWhisperPrediction) {
-        guard isListening, !isPaused else { return }
+        guard isListening, !isPaused, !isManuallyPaused else { return }
         guard !prediction.rawTranscription.isEmpty else { return }
 
         print("[ETDRSWhisper] Heard: '\(prediction.rawTranscription)' normalized: \(prediction.normalizedLetter ?? "<none>") latency: \(String(format: "%.2f", prediction.latency))s")
@@ -1046,6 +1105,10 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
        @param liveDistance The current measured distance in centimeters
      */
     private func checkDistance(_ liveDistance: Double) {
+        // Freeze all distance-driven behavior while manually paused so it can't
+        // fight with the pause button (e.g. silently resuming listening).
+        guard !isManuallyPaused else { return }
+
         // Always print extreme values
         let isExtreme = liveDistance < 15 || liveDistance > 100 ||
                        abs(liveDistance - averageDistanceCM) > 30
