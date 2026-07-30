@@ -29,7 +29,6 @@
 		D14180E62D3049990070FB19 /* Sloan.otf in Resources */ = {isa = PBXBuildFile; fileRef = D14180E52D3049990070FB19 /* Sloan.otf */; };
 		D17FC2C82DAF9FB300B08D03 /* Features/Results/TestHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17FC2C72DAF9FB300B08D03 /* Features/Results/TestHistoryViewController.swift */; };
 		D19933C62A955CCF0050CF92 /* info.txt in Resources */ = {isa = PBXBuildFile; fileRef = D19933C42A955CCF0050CF92 /* info.txt */; };
-		D1A000100001000100010001 /* Resources/WhisperModels in Resources */ = {isa = PBXBuildFile; fileRef = D1A0000F0001000100010001 /* Resources/WhisperModels */; };
 		D1B67B5B2ECB1C3700BFAEF4 /* Shared/Styling/UIStyle+Text.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B67B5A2ECB1C3700BFAEF4 /* Shared/Styling/UIStyle+Text.swift */; };
 		D1BCC4A52BF32D710023E4B9 /* Features/TestSetup/SelectAcuity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BCC4A42BF32D710023E4B9 /* Features/TestSetup/SelectAcuity.swift */; };
 		D1E7D0012FE6100000ED7A01 /* Features/ETDRS/ETDRSWhisperLetterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E7D0002FE6100000ED7A01 /* Features/ETDRS/ETDRSWhisperLetterService.swift */; };
@@ -66,7 +65,6 @@
 		D17FC2C72DAF9FB300B08D03 /* Features/Results/TestHistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Results/TestHistoryViewController.swift; sourceTree = "<group>"; };
 		D19933C42A955CCF0050CF92 /* info.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = info.txt; sourceTree = "<group>"; };
 		D19933C72A955CE60050CF92 /* Distance-Measure-Test-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Distance-Measure-Test-Info.plist"; sourceTree = SOURCE_ROOT; };
-		D1A0000F0001000100010001 /* Resources/WhisperModels */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources/WhisperModels; sourceTree = "<group>"; };
 		D1B67B5A2ECB1C3700BFAEF4 /* Shared/Styling/UIStyle+Text.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Shared/Styling/UIStyle+Text.swift"; sourceTree = "<group>"; };
 		D1B67B5C2ECB1C3700BFAEF4 /* Shared/Views/DaisyFlowerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shared/Views/DaisyFlowerView.swift; sourceTree = "<group>"; };
 		D1BCC4A42BF32D710023E4B9 /* Features/TestSetup/SelectAcuity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/TestSetup/SelectAcuity.swift; sourceTree = "<group>"; };
@@ -259,7 +257,6 @@
 				C0CDD62F2A687790002A58BA /* Main.storyboard */,
 				C0CDD6342A687792002A58BA /* LaunchScreen.storyboard */,
 				C0CDD6322A687792002A58BA /* Assets.xcassets */,
-				D1A0000F0001000100010001 /* Resources/WhisperModels */,
 				D12072E82A9F132000B92792 /* art.scnassets */,
 				D12072E52A9F12BA00B92792 /* ship.scn */,
 				D12072E42A9F12BA00B92792 /* texture.png */,
@@ -339,7 +336,6 @@
 				C0CDD6332A687792002A58BA /* Assets.xcassets in Resources */,
 				C0CDD6312A687790002A58BA /* Main.storyboard in Resources */,
 				D19933C62A955CCF0050CF92 /* info.txt in Resources */,
-				D1A000100001000100010001 /* Resources/WhisperModels in Resources */,
 				D12072E72A9F12BA00B92792 /* ship.scn in Resources */,
 				D14180E62D3049990070FB19 /* Sloan.otf in Resources */,
 			);
@@ -522,6 +518,7 @@
 				DEVELOPMENT_TEAM = L4924K5F8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Visinear;
 				INFOPLIST_KEY_NSCameraUsageDescription = "The camera is used to measure and maintain the correct visual acuity testing distance.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to recognize spoken visual acuity test letters.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -531,7 +528,6 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_CFBundleDisplayName = Visinear;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -556,6 +552,7 @@
 				DEVELOPMENT_TEAM = L4924K5F8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Visinear;
 				INFOPLIST_KEY_NSCameraUsageDescription = "The camera is used to measure and maintain the correct visual acuity testing distance.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to recognize spoken visual acuity test letters.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -565,7 +562,6 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_CFBundleDisplayName = Visinear;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
