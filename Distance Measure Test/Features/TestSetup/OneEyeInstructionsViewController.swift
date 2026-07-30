@@ -9,6 +9,28 @@ import Foundation
 import UIKit
 import AVFoundation
 
+struct OneEyeInstructionContent: Equatable {
+    let title: String
+    let visibleInstruction: String
+    let spokenInstruction: String
+
+    static func make(for eyeNumber: Int) -> OneEyeInstructionContent {
+        if eyeNumber == 2 {
+            return OneEyeInstructionContent(
+                title: "Right Eye Test",
+                visibleInstruction: "Shut left eye. Tap \"Begin\" when ready to start the test.",
+                spokenInstruction: "Shut your left eye, test with right eye."
+            )
+        }
+
+        return OneEyeInstructionContent(
+            title: "Left Eye Test",
+            visibleInstruction: "Shut right eye. Tap \"Begin\" when ready to start the test.",
+            spokenInstruction: "Shut your right eye, test with left eye."
+        )
+    }
+}
+
 /* OneEyeInstruc class is designed to display the instructions scene for just one eye.
     On this page, the user is given instructions on how to perform the test for either the
     left or right eye.
@@ -86,26 +108,25 @@ class OneEyeInstruc: UIViewController {
     /* Plays audio instructions to the user.
     */
     private func playAudioInstructions() {
-        let eyeName = VisualAcuitySession.currentEyeNumber == 2 ? "right" : "left"
-        let coverEye = VisualAcuitySession.currentEyeNumber == 2 ? "left" : "right"
-        
-        let instructionText = "Cover your \(coverEye) eye, test with \(eyeName) eye."
-        
-        SharedAudioManager.shared.playText(instructionText, source: "Eye Instructions")
+        let content = OneEyeInstructionContent.make(
+            for: VisualAcuitySession.currentEyeNumber
+        )
+        SharedAudioManager.shared.playText(
+            content.spokenInstruction,
+            source: "Eye Instructions"
+        )
     }
     
     /* Updates the text on the one eye instructions scene.
     */
     private func updateText() {
         let testType = isETDRSTest ? "ETDRS" : "Landolt C"
-        
-        if VisualAcuitySession.currentEyeNumber == 2 {
-            oneEyeInstructions.text = "Right Eye Test"
-            instructionText.text = "Cover left eye. Tap \"Begin\" when ready to start the test."
-        } else {
-            oneEyeInstructions.text = "Left Eye Test"
-            instructionText.text = "Cover right eye. Tap \"Begin\" when ready to start the test."
-        }
+        let content = OneEyeInstructionContent.make(
+            for: VisualAcuitySession.currentEyeNumber
+        )
+
+        oneEyeInstructions.text = content.title
+        instructionText.text = content.visibleInstruction
         
         testTypeLabel?.applyTestTypeTitle(testType, color: AppThemeColors.teal)
     }

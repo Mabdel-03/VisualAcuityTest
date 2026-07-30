@@ -591,22 +591,14 @@ class ResultViewController: UIViewController {
                 participantName = "Unknown"
             }
 
-            let responseFormatter = DateFormatter()
-            responseFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-
-            var csvContent = "Name,Timestamp,Eye,Test_Type,Acuity_Level,Letter_Displayed,Distance_CM,Response_Time_MS,User_Response,Is_Correct,Trial_Number,Session_ID\n"
+            var csvContent = TestProgressionCSVFormatter.header(
+                includeParticipantName: true
+            ) + "\n"
             for r in allData.sorted(by: { $0.timestamp < $1.timestamp }) {
-                let row = (["\"\(participantName)\""] + [
-                    responseFormatter.string(from: r.timestamp),
-                    r.eye, r.testType, r.acuityLevel, r.letterDisplayed,
-                    String(format: "%.1f", r.distanceCM),
-                    String(r.responseTimeMS),
-                    r.userResponse,
-                    r.isCorrect ? "TRUE" : "FALSE",
-                    String(r.trialNumber),
-                    r.sessionId
-                ]).joined(separator: ",")
-                csvContent += row + "\n"
+                csvContent += TestProgressionCSVFormatter.row(
+                    for: r,
+                    participantName: participantName
+                ) + "\n"
             }
 
             let fileName = nameManager.generateCSVFilename() ?? {

@@ -6,8 +6,6 @@
 //
 
 import UIKit
-import DevicePpi
-import ARKit
 import AVFoundation
 
 /// Final acuity score calculated at the end of the test
@@ -17,17 +15,8 @@ var finalAcuityScore = -Double.infinity
    The test displays a rotated "C" letter at various sizes, and the user must swipe in the
    direction the C is pointing. The test maintains a fixed testing distance using AR face tracking.
  */
-class TumblingEViewController: UIViewController, ARSCNViewDelegate {
+class TumblingEViewController: UIViewController {
     // MARK: - Properties
-    
-    /// AR scene view for face tracking
-    var sceneView: ARSCNView!
-    
-    /// 3D node for left eye tracking
-    var leftEye: SCNNode!
-    
-    /// 3D node for right eye tracking
-    var rightEye: SCNNode!
     
     private var isPaused = false
     // Set only by the user tapping the Pause/Resume button — kept separate from
@@ -145,11 +134,8 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     // Available rotation angles for the letter (right, down, left,  up)
     private let possibleRotations = [0.0, 90.0, 180.0, 270.0]
     
-    // Last distance used for letter scaling to prevent unnecessary updates
-    private var lastScalingDistance: Double = 0.0
-    
-    // Minimum distance change required to trigger letter rescaling (in cm)
-    private let scalingDistanceThreshold: Double = 2.0
+    private var currentRenderSpec: OptotypeRenderSpec?
+    private var currentSizingProvenance: SizingProvenance?
     
     // Last audio instruction played to avoid repetition
     private var lastAudioInstruction: String = ""
@@ -159,18 +145,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     
     // Display link for smooth distance monitoring
     private var displayLink: CADisplayLink?
-    
-    // Base font size for scaling calculations
-    private let baseFontSize: CGFloat = 100.0
-    
-    // Last scale factor applied to prevent unnecessary transforms
-    private var lastScaleFactor: CGFloat = 1.0
-    
-    // Last AR update time for throttling updates
-    private var lastARUpdateTime: CFTimeInterval?
-    
-    // New private flag to ensure AR setup and distance monitoring only starts once
-    private var didStartAR = false
     
     // MARK: - Data Collection Properties
     
@@ -214,19 +188,10 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         // Set up distance tracking and monitoring
         initializeDistanceTracking()
         
-        // Removed calls to setupARTracking() and startDistanceMonitoring() here to defer start
-        
-        // Size the test letter for the current acuity level
-        _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER)
-        print("Initial letter size set for acuity: \(acuityList[currentAcuityIndex])")
-        
-        // Initialize scaling factors (but preserve the font size calculated above)
-        lastScaleFactor = 1.0
-        lastScalingDistance = 0.0
-        
         // Finish layout and generate the first rotated letter
         view.layoutIfNeeded()
         generateNewE()
+        letterLabel.alpha = 0
         
         // Update eye test label based on current eye number
         updateEyeTestLabel()
@@ -239,6 +204,9 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
+        setupARTracking()
+        startDistanceMonitoring()
+
         // Prevent the system left-edge swipe-back from swallowing the user's
         // rightward swipe answer during the test.
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
@@ -247,13 +215,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        if !didStartAR {
-            didStartAR = true
-            setupARTracking()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                self.startDistanceMonitoring()
-            }
-        }
+        requireCalibrationIfNeeded()
 
         // Play audio instructions for the tumbling C test screen
         playAudioInstructions()
@@ -270,6 +232,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         audioInstructionTimer = nil
         displayLink?.invalidate()
         displayLink = nil
+        EyeDistanceProvider.shared.stop(client: self)
     }
 
     /*
@@ -309,74 +272,27 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      * retrieving saved distances and setting acceptable bounds.
      */
     private func initializeDistanceTracking() {
-        // Get stored target distance
-        averageDistanceCM = DistanceTracker.shared.targetDistanceCM
-        
-        // If no valid distance is stored, try to load from UserDefaults
-        if averageDistanceCM <= 0 {
-            if let savedDistance = UserDefaults.standard.object(forKey: "SavedTargetDistance") as? Double,
-               savedDistance > 0 {
-                print("📏 Loading saved distance from UserDefaults: \(savedDistance) cm")
-                averageDistanceCM = savedDistance
-                DistanceTracker.shared.targetDistanceCM = savedDistance
-            } else {
-                print("⚠️ No valid distance found - using default of 40 cm")
-                averageDistanceCM = 40.0
-                DistanceTracker.shared.targetDistanceCM = 40.0
-            }
-        }
-        
+        averageDistanceCM = DistanceTracker.shared.preferredHoldingDistanceCM ?? 0
         print("Target test distance: \(averageDistanceCM) cm")
         
-        // If current distance is invalid but target is valid, use target as current
-        if averageDistanceCM > 0 && DistanceTracker.shared.currentDistanceCM < 10 {
-            print("⚠️ Current distance invalid - using stored target distance")
-            DistanceTracker.shared.currentDistanceCM = averageDistanceCM
+        if averageDistanceCM > 0 {
+            lowerBound = max(EyeDistanceSample.acceptedRangeCM.lowerBound, 0.8 * averageDistanceCM)
+            upperBound = min(EyeDistanceSample.acceptedRangeCM.upperBound, 1.2 * averageDistanceCM)
+        } else {
+            lowerBound = EyeDistanceSample.acceptedRangeCM.lowerBound
+            upperBound = EyeDistanceSample.acceptedRangeCM.upperBound
         }
-        
-        // Set acceptable distance range (±20% of target)
-        lowerBound = 0.8 * averageDistanceCM  // 20% below target
-        upperBound = 1.2 * averageDistanceCM  // 20% above target
         print("Distance bounds set to: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
     }
     
     /*
-     * Sets up AR face tracking for distance monitoring.
-     * Initializes the AR scene and creates tracking nodes for the eyes.
+     * Starts the shared eye-distance provider used by every test screen.
      */
     private func setupARTracking() {
-        guard ARFaceTrackingConfiguration.isSupported else {
-            print("⚠️ AR Face Tracking is NOT supported on this device.")
-            return
-        }
-
-        sceneView = ARSCNView(frame: view.bounds)
-        sceneView.delegate = self
-        
-        // Create an AR face tracking configuration with maximum tracking capability
-        let configuration = ARFaceTrackingConfiguration()
-        configuration.isLightEstimationEnabled = true
-        configuration.maximumNumberOfTrackedFaces = 1 // Focus on tracking a single face well
-        
-        // Add the scene view but hide it
-        sceneView.isHidden = true
-        view.addSubview(sceneView)
-        
-        // Start a new tracking session with maximum quality
-        sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
-        
-        print("👁️ AR Face Tracking Started")
-
-        // Initialize eye tracking nodes with distinctive colors for debugging
-        let eyeGeometry = SCNSphere(radius: 0.01)
-        eyeGeometry.firstMaterial?.diffuse.contents = UIColor.blue
-        
-        leftEye = SCNNode(geometry: eyeGeometry)
-        rightEye = SCNNode(geometry: eyeGeometry)
-        
-        // Log the target distance for reference
-        print("📏 Target testing distance: \(String(format: "%.1f", averageDistanceCM)) cm")
-        print("📏 Acceptable range: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
+        EyeDistanceProvider.shared.start(
+            eyeNumber: VisualAcuitySession.currentEyeNumber,
+            client: self
+        )
     }
 
     /*
@@ -411,87 +327,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         displayLink?.add(to: .main, forMode: .default)
         
         print("🎯 Distance monitoring started with CADisplayLink at 10fps")
-    }
-
-    /*
-     * Called when a new AR anchor is added to the scene.
-     * Used to attach eye nodes to detected face anchors.
-     */
-    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard anchor is ARFaceAnchor else { return }
-        
-        // Add eye nodes to the face node
-        node.addChildNode(leftEye)
-        node.addChildNode(rightEye)
-        
-        print("👁️ Face detected and tracking started")
-    }
-    
-    /*
-     * Called when an AR anchor is updated in the scene.
-     * Updates eye positions and calculates distance from the device.
-     * Optimized to reduce unnecessary calculations.
-     */
-    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
-        
-        // Update eye transforms
-        leftEye.simdTransform = faceAnchor.leftEyeTransform
-        rightEye.simdTransform = faceAnchor.rightEyeTransform
-
-        // Only process every few frames to reduce computational load
-        let currentTime = CACurrentMediaTime()
-        if let lastUpdateTime = lastARUpdateTime, currentTime - lastUpdateTime < 0.1 {
-            return // Skip this update if less than 100ms since last update
-        }
-        lastARUpdateTime = currentTime
-
-        // Get camera position
-        guard let frame = sceneView.session.currentFrame else { return }
-        let cameraTransform = frame.camera.transform
-        
-        // Batch distance calculations off main thread for better performance
-        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
-            guard let self = self else { return }
-            
-            let cameraPosition = SCNVector3(cameraTransform.columns.3.x,
-                                            cameraTransform.columns.3.y,
-                                            cameraTransform.columns.3.z)
-            
-            let leftEyePos = self.leftEye.worldPosition
-            let rightEyePos = self.rightEye.worldPosition
-
-            // Only calculate distance if eyes are valid positions
-            if leftEyePos.length() > 0 && rightEyePos.length() > 0 {
-                // Calculate distance from camera to eyes
-                let leftEyeDistance = self.SCNVector3Distance(leftEyePos, cameraPosition)
-                let rightEyeDistance = self.SCNVector3Distance(rightEyePos, cameraPosition)
-                
-                // Use only the relevant eye's distance based on which eye is being tested
-                let rawDistance = (VisualAcuitySession.currentEyeNumber == 1) ? leftEyeDistance : rightEyeDistance
-                let rawAverageDistance = rawDistance * 100  // Convert to cm
-                
-                // Validate and update distance tracker
-                if rawAverageDistance > 5 && rawAverageDistance < 200 {
-                    DistanceTracker.shared.addReading(Double(rawAverageDistance))
-                }
-            }
-        }
-    }
-
-    /*
-     * Calculates Euclidean distance between two 3D points.
-     *
-     * @param a First point
-     * @param b Second point
-     * @return Distance between the points in ARKit units
-     */
-    func SCNVector3Distance(_ a: SCNVector3, _ b: SCNVector3) -> Float {
-        return sqrtf(
-            powf(a.x - b.x, 2) +
-            powf(a.y - b.y, 2) +
-            powf(a.z - b.z, 2)
-        )
     }
 
     /*
@@ -624,6 +459,14 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
      * @param gesture The UISwipeGestureRecognizer that triggered this action
      */
     @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
+        guard !isPaused, !isManuallyPaused else { return }
+        guard let responseDistance = EyeDistanceProvider.shared.validSample()?.distanceCM,
+              let calibration = ScreenCalibrationProvider.shared.currentCalibration,
+              let sizingProvenance = currentSizingProvenance,
+              sizingProvenance.matches(calibration) else {
+            pauseForInvalidDistance()
+            return
+        }
         var isCorrect = 0
         
         switch (gesture.direction, currentRotation) {
@@ -659,11 +502,12 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
             testType: "Landolt_C",
             acuityLevel: acuityString,
             letterDisplayed: orientationDisplayed,
-            distanceCM: DistanceTracker.shared.currentDistanceCM,
+            distanceCM: responseDistance,
             responseTimeMS: responseTime,
             userResponse: userSwipeDirection,
             isCorrect: isCorrect == 1,
-            trialNumber: trial - 1 // trial was already incremented, so subtract 1 for the actual trial number
+            trialNumber: trial - 1, // trial was already incremented, so subtract 1 for the actual trial number
+            sizingProvenance: sizingProvenance
         )
         
         print("🎯 C Orientation: \(orientationDisplayed), Swipe: \(userSwipeDirection), Correct: \(isCorrect == 1), Time: \(responseTime)ms")
@@ -747,7 +591,8 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         letterLabel.transform = CGAffineTransform(rotationAngle: CGFloat(currentRotation) * .pi / 180)
         
         // Make the letter visible now that the new rotation is applied
-        letterLabel.alpha = 1
+        letterLabel.alpha = EyeDistanceProvider.shared.validSample() != nil
+            && ScreenCalibrationProvider.shared.currentCalibration != nil ? 1 : 0
         
         // Record the time when this letter is displayed for response time calculation
         letterDisplayTime = Date()
@@ -785,7 +630,7 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         }
         
         // Add hysteresis to prevent frequent toggling at the boundary
-        let outOfRangeTolerance = 3.0 // 3cm buffer when already paused (reduced for tighter range)
+        let outOfRangeTolerance = min(3.0, max(0, (upperBound - lowerBound) * 0.25))
         
         // Determine user's position relative to acceptable range
         let tooClose = liveDistance < lowerBound
@@ -793,7 +638,8 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
 
         if isPaused {
             // When already paused, require a more definitive return to range
-            if liveDistance > (lowerBound + outOfRangeTolerance) && liveDistance < (upperBound - outOfRangeTolerance) {
+            if liveDistance >= (lowerBound + outOfRangeTolerance)
+                && liveDistance <= (upperBound - outOfRangeTolerance) {
                 isPaused = false
                 distanceGuidanceView.hideAll()
                 distanceGuidanceView.showOK()
@@ -843,8 +689,6 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         letterLabel.numberOfLines = 0
         _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: LETTER)
         letterLabel.transform = CGAffineTransform(rotationAngle: CGFloat(currentRotation) * .pi / 180)
-        lastScaleFactor = 1.0
-        lastScalingDistance = 0.0
     }
 
     /* Plays audio instruction only if it's different from the last one played or enough time has passed.
@@ -881,48 +725,22 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
         distanceGuidanceView.hideAll()
     }
     
-    /* Updates the letter size based on current distance if the change is significant enough.
-       This provides live scaling while the user is within acceptable distance bounds.
-       Uses efficient CALayer transforms instead of font changes for better performance.
+    /* Updates the letter size when the expected change reaches half a physical pixel.
        @param currentDistance The current measured distance in centimeters
      */
     private func updateLetterSizeForDistance(_ currentDistance: Double) {
-        // Only update if the distance change is significant enough to warrant rescaling
-        let distanceChange = abs(currentDistance - lastScalingDistance)
-        
-        if distanceChange >= scalingDistanceThreshold || lastScalingDistance == 0.0 {
-            // Calculate the scale factor based on distance ratio
-            // When user moves closer (smaller distance), letters should be smaller
-            // When user moves farther (larger distance), letters should be larger
-            let targetDistance = averageDistanceCM
-            let scaleFactor = CGFloat(currentDistance / targetDistance)
-            
-            // Only apply transform if scale factor changed significantly
-            let scaleChange = abs(scaleFactor - lastScaleFactor)
-            if scaleChange > 0.05 || lastScaleFactor == 1.0 {
-                // Use transform for efficient scaling without layout changes
-                UIView.performWithoutAnimation {
-                    self.letterLabel.transform = self.letterLabel.transform.scaledBy(x: scaleFactor / self.lastScaleFactor, y: scaleFactor / self.lastScaleFactor)
-                }
-                
-                lastScaleFactor = scaleFactor
-                lastScalingDistance = currentDistance
-                
-                print("📏 Letter rescaled for distance: \(String(format: "%.1f", currentDistance)) cm (scale: \(String(format: "%.2f", scaleFactor)))")
-            }
-        }
+        renderCurrentOptotype(distanceCM: currentDistance, force: false)
     }
     
     /* Resets the letter scaling factors when acuity changes.
        This ensures clean scaling for the new acuity level while preserving the calculated font size.
      */
     private func resetLetterScaling() {
-        // Reset transform to identity (but preserve the font size set by set_Size_E)
-        letterLabel.transform = CGAffineTransform.identity
-        lastScaleFactor = 1.0
-        lastScalingDistance = 0.0
-        
-        print("🔄 Letter scaling reset for acuity change (preserving font size)")
+        currentRenderSpec = nil
+        currentSizingProvenance = nil
+        letterLabel.transform = CGAffineTransform(
+            rotationAngle: CGFloat(currentRotation) * .pi / 180
+        )
     }
 
     /* Pauses the visual acuity test when the user is not at the proper distance.
@@ -947,113 +765,105 @@ class TumblingEViewController: UIViewController, ARSCNViewDelegate {
        Includes validation and fallback mechanisms for invalid distance readings.
      */
     @objc private func updateLiveDistance() {
-        let liveDistance = DistanceTracker.shared.currentDistanceCM  // Get latest live distance
-        
-        // Validate distance readings
-        guard liveDistance > 0 else {
-            return // Skip invalid readings
-        }
-        
-        // Only log occasionally to reduce console spam
-        let shouldLog = Int(Date().timeIntervalSince1970 * 2) % 20 == 0 // Log every 10 seconds at 2Hz
-        
-        // CRITICAL FIX: If distance is suspiciously small, use the target distance
-        if liveDistance < 10 && averageDistanceCM > 10 {
-            if shouldLog {
-                print("⚠️ Very close distance detected: \(String(format: "%.1f", liveDistance)) cm (expected ~\(String(format: "%.1f", averageDistanceCM)) cm)")
-            }
-            
-            // For testing purposes, DON'T override with target distance to see if extreme values are detected
-            #if DEBUG
-            let debugStrictDistanceTesting = ProcessInfo.processInfo.environment["LANDOLT_STRICT_DISTANCE_TESTING"] != "0"
-            if debugStrictDistanceTesting {
-                if shouldLog {
-                    print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
-                }
-                checkDistance(liveDistance)
-                return
-            }
-            #endif
-            
-            // Use the target/stored distance instead of the current faulty reading
-            DistanceTracker.shared.currentDistanceCM = averageDistanceCM
+        guard let sample = EyeDistanceProvider.shared.validSample(),
+              ScreenCalibrationProvider.shared.currentCalibration != nil else {
+            pauseForInvalidDistance()
             return
         }
-        
-        // Check for very large distances too
-        if liveDistance > 100 && averageDistanceCM < 100 {
-            if shouldLog {
-                print("⚠️ Very far distance detected: \(String(format: "%.1f", liveDistance)) cm (expected ~\(String(format: "%.1f", averageDistanceCM)) cm)")
-            }
-            
-            #if DEBUG
-            let debugStrictDistanceTesting = ProcessInfo.processInfo.environment["LANDOLT_STRICT_DISTANCE_TESTING"] != "0"
-            if debugStrictDistanceTesting {
-                if shouldLog {
-                    print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
-                }
-                checkDistance(liveDistance)
-                return
-            }
-            #endif
-        }
-
-        // Process distance check on main thread efficiently
-        checkDistance(liveDistance)
+        DistanceTracker.shared.currentDistanceCM = sample.distanceCM
+        letterLabel.alpha = 1
+        checkDistance(sample.distanceCM)
     }
 
-    // MARK: - Public Methods
-    
-    /* Sets the size of the letter based on the visual acuity level and viewing distance.
-       Implements the standard ETDRS calculation for optotype sizing.
-       This version uses the stored target distance for initial sizing.
+    // MARK: - Optotype Rendering
+
+    /* Sets the size of the letter from the current live eye-distance sample.
        @param oneLetter The UILabel to be sized
        @param desired_acuity The target acuity in 20/x notation
        @param letterText The letter to display
      * @return The text that was displayed or nil if the operation failed
      */
-    func set_Size_E(_ oneLetter: UILabel?, desired_acuity: Int, letterText: String?) -> String? {
-        return set_Size_E_WithDistance(oneLetter, desired_acuity: desired_acuity, letterText: letterText, distance: averageDistanceCM)
-    }
-    
-    /* Sets the size of the letter based on the visual acuity level and a specific viewing distance.
-       Implements the standard ETDRS calculation for optotype sizing.
-       This version allows for live distance-based scaling.
-       @param oneLetter The UILabel to be sized
-       @param desired_acuity The target acuity in 20/x notation
-       @param letterText The letter to display
-       @param distance The current viewing distance in centimeters
-       @return The text that was displayed or nil if the operation failed
-     */
-    func set_Size_E_WithDistance(_ oneLetter: UILabel?, desired_acuity: Int, letterText: String?, distance: Double) -> String? {
-        // Standard ETDRS calculation: 5 arcminutes at 20/20 vision at designated testing distance
-        // Visual angle in radians = (size in arcmin / 60) * (pi/180)
-        let arcmin_per_letter = 5.0 // Standard size for 20/20 optotype is 5 arcmin
-        let visual_angle = ((Double(desired_acuity) / 20.0) * arcmin_per_letter / 60.0) * Double.pi / 180.0
-        let scaling_correction_factor = 1.0 / 2.54  // Conversion from inches to cm
-        
-        // Calculate size at viewing distance using the provided distance
-        let scale_factor = distance * tan(visual_angle) * scaling_correction_factor
-        
-        if let nonNilLetterText = letterText, let oneLetter = oneLetter {
-            oneLetter.text = nonNilLetterText
-            
-            // Adjust size based on scale factor with standard 5:1 width to height ratio
-            let labelHeight = scale_factor * VisualAcuitySession.devicePPI
-            oneLetter.frame.size = CGSize(width: (labelHeight * 5), height: labelHeight)
-            
-            // Adjusted font size - reducing by factor of 2 to match physical acuity cards
-            // The 0.3 factor (instead of 0.6) accounts for font rendering differences
-            let fontSize = 0.3 * oneLetter.frame.height
-            oneLetter.font = oneLetter.font.withSize(fontSize)
-            
-            // Debug output to verify scaling
-            print("Test Letter - Acuity: \(desired_acuity), Distance: \(String(format: "%.1f", distance))cm, Visual angle: \(visual_angle), Scale factor: \(scale_factor), Label height: \(labelHeight)px, Font size: \(fontSize)pt")
-            
-            return nonNilLetterText
+    private func set_Size_E(
+        _ oneLetter: UILabel?,
+        desired_acuity: Int,
+        letterText: String?
+    ) -> String? {
+        guard let sample = EyeDistanceProvider.shared.validSample() else {
+            oneLetter?.alpha = 0
+            return nil
         }
-        
-        return nil
+        return renderOptotype(
+            oneLetter,
+            desired_acuity: desired_acuity,
+            letterText: letterText,
+            distanceCM: sample.distanceCM,
+            force: true
+        )
+    }
+
+    private func renderOptotype(
+        _ oneLetter: UILabel?,
+        desired_acuity: Int,
+        letterText: String?,
+        distanceCM: Double,
+        force: Bool
+    ) -> String? {
+        guard let text = letterText,
+              let label = oneLetter,
+              let calibration = ScreenCalibrationProvider.shared.currentCalibration else {
+            oneLetter?.alpha = 0
+            return nil
+        }
+        do {
+            let update = try OptotypeRenderer.update(
+                label: label,
+                text: text,
+                distanceCM: distanceCM,
+                snellenDenominator: desired_acuity,
+                calibration: calibration,
+                previousSpec: currentRenderSpec,
+                force: force
+            )
+            currentRenderSpec = update.spec
+            currentSizingProvenance = update.spec.provenance
+            label.transform = CGAffineTransform(
+                rotationAngle: CGFloat(currentRotation) * .pi / 180
+            )
+            label.alpha = 1
+            return text
+        } catch {
+            label.alpha = 0
+            print("Unable to size Landolt-C optotype: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    private func renderCurrentOptotype(distanceCM: Double, force: Bool) {
+        guard renderOptotype(
+            letterLabel,
+            desired_acuity: acuityList[currentAcuityIndex],
+            letterText: LETTER,
+            distanceCM: distanceCM,
+            force: force
+        ) != nil else {
+            pauseForInvalidDistance()
+            return
+        }
+    }
+
+    private func pauseForInvalidDistance() {
+        letterLabel.alpha = 0
+        isPaused = true
+        guard !isManuallyPaused else { return }
+        distanceGuidanceView.showWarning()
+        pauseTest()
+        instructionLabel.text = "Paused: Face tracking unavailable"
+    }
+
+    private func requireCalibrationIfNeeded() {
+        guard ScreenCalibrationProvider.shared.currentCalibration == nil,
+              presentedViewController == nil else { return }
+        present(ScreenCalibrationViewController(), animated: true)
     }
     
     /* Find the index of a value in a list.

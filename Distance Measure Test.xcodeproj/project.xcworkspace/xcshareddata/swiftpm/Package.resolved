@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Clafou/DevicePpi",
       "state" : {
-        "revision" : "cacd00be51b2b0f1fe8df67f0411d24f72910b21",
-        "version" : "1.2.18"
+        "revision" : "3026cef926269f1757e9432c34666067c55974d8",
+        "version" : "1.2.25"
       }
     },
     {

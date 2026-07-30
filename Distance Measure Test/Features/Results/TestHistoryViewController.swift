@@ -334,26 +334,18 @@ class TestHistoryViewController: UIViewController {
             return (lower: lower, upper: saveDate, name: name)
         }
 
-        let responseFormatter = DateFormatter()
-        responseFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-
-        var csv = "Name,Timestamp,Eye,Test_Type,Acuity_Level,Letter_Displayed,Distance_CM,Response_Time_MS,User_Response,Is_Correct,Trial_Number,Session_ID\n"
+        var csv = TestProgressionCSVFormatter.header(
+            includeParticipantName: true
+        ) + "\n"
         for r in allProgressionData.sorted(by: { $0.timestamp < $1.timestamp }) {
             let participantName = windows.first(where: {
                 r.timestamp > $0.lower && r.timestamp <= $0.upper
             })?.name ?? "Unknown"
 
-            let row = (["\"\(participantName)\""] + [
-                responseFormatter.string(from: r.timestamp),
-                r.eye, r.testType, r.acuityLevel, r.letterDisplayed,
-                String(format: "%.1f", r.distanceCM),
-                String(r.responseTimeMS),
-                r.userResponse,
-                r.isCorrect ? "TRUE" : "FALSE",
-                String(r.trialNumber),
-                r.sessionId
-            ]).joined(separator: ",")
-            csv += row + "\n"
+            csv += TestProgressionCSVFormatter.row(
+                for: r,
+                participantName: participantName
+            ) + "\n"
         }
 
         let dateFormatter = DateFormatter()
@@ -467,21 +459,14 @@ class TestHistoryViewController: UIViewController {
             let left  = isDefaultValue(testResults["Left Eye"]  ?? "") ? "Not Tested" : (testResults["Left Eye"]  ?? "Not Tested")
             csvContent = "Name,Test_Date,Right_Eye_Result,Left_Eye_Result\n\"\(participantName)\",\"\(timestamp)\",\"\(right)\",\"\(left)\"\n"
         } else {
-            let responseFormatter = DateFormatter()
-            responseFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-            var csv = "Name,Timestamp,Eye,Test_Type,Acuity_Level,Letter_Displayed,Distance_CM,Response_Time_MS,User_Response,Is_Correct,Trial_Number,Session_ID\n"
+            var csv = TestProgressionCSVFormatter.header(
+                includeParticipantName: true
+            ) + "\n"
             for r in sessionData {
-                let row = (["\"\(participantName)\""] + [
-                    responseFormatter.string(from: r.timestamp),
-                    r.eye, r.testType, r.acuityLevel, r.letterDisplayed,
-                    String(format: "%.1f", r.distanceCM),
-                    String(r.responseTimeMS),
-                    r.userResponse,
-                    r.isCorrect ? "TRUE" : "FALSE",
-                    String(r.trialNumber),
-                    r.sessionId
-                ]).joined(separator: ",")
-                csv += row + "\n"
+                csv += TestProgressionCSVFormatter.row(
+                    for: r,
+                    participantName: participantName
+                ) + "\n"
             }
             csvContent = csv
         }

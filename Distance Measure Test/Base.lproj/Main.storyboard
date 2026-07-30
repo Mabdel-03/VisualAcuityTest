@@ -193,7 +193,7 @@
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Instruction Text" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="18" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ert-7t-use">
                                 <rect key="frame" x="16" y="300" width="361" height="250"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="22"/>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleTitle3"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
@@ -250,7 +250,7 @@
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Instruction Text" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="18" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sc9-43-YfN">
                                 <rect key="frame" x="16" y="300" width="361" height="250"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="22"/>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleTitle3"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
@@ -414,17 +414,11 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="eJv-kA-lL1">
-                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
-                                <subviews>
-                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="Zgg-gm-L5e">
-                                        <rect key="frame" x="0.0" y="0.0" width="393" height="750"/>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="Zgg-gm-L5e">
+                                <rect key="frame" x="0.0" y="59" width="393" height="759"/>
                                         <subviews>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="b8R-Hp-Jzj">
                                                 <rect key="frame" x="0.0" y="0.0" width="393" height="150"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="150" id="fBJ-VB-CxN"/>
-                                                </constraints>
                                                 <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
                                                 <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
@@ -442,9 +436,6 @@
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hft-Mq-dAO">
                                                 <rect key="frame" x="0.0" y="150" width="393" height="150"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="150" id="WAi-IJ-Fh1"/>
-                                                </constraints>
                                                 <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
                                                 <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
@@ -462,9 +453,6 @@
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tmq-GW-PHJ">
                                                 <rect key="frame" x="0.0" y="300" width="393" height="150"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="150" id="O2S-m5-4Wt"/>
-                                                </constraints>
                                                 <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
                                                 <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
@@ -482,9 +470,6 @@
                                             </button>
                                             <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AXf-Fr-moD">
                                                 <rect key="frame" x="0.0" y="450" width="393" height="150"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="150" id="Aat-jk-bB1"/>
-                                                </constraints>
                                                 <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
                                                 <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
@@ -502,9 +487,6 @@
                                             </button>
                                             <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cGy-Yd-Tp5" userLabel="B20">
                                                 <rect key="frame" x="0.0" y="600" width="393" height="150"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="150" id="KxV-SW-KuU"/>
-                                                </constraints>
                                                 <fontDescription key="fontDescription" name="OpticianSans-Regular" family="Optician Sans" pointSize="18"/>
                                                 <color key="tintColor" systemColor="labelColor"/>
                                                 <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
@@ -521,30 +503,15 @@
                                                 </connections>
                                             </button>
                                         </subviews>
-                                        <constraints>
-                                            <constraint firstAttribute="trailing" secondItem="b8R-Hp-Jzj" secondAttribute="trailing" id="Nr6-z8-Nr9"/>
-                                            <constraint firstItem="b8R-Hp-Jzj" firstAttribute="leading" secondItem="Zgg-gm-L5e" secondAttribute="leading" id="lUQ-6h-B19"/>
-                                        </constraints>
-                                    </stackView>
-                                </subviews>
-                                <constraints>
-                                    <constraint firstItem="Zgg-gm-L5e" firstAttribute="width" secondItem="eJv-kA-lL1" secondAttribute="width" id="DrU-Mq-avj"/>
-                                    <constraint firstItem="Zgg-gm-L5e" firstAttribute="leading" secondItem="eJv-kA-lL1" secondAttribute="leading" id="UZc-gQ-NL0"/>
-                                    <constraint firstAttribute="trailing" secondItem="Zgg-gm-L5e" secondAttribute="trailing" id="ZxF-jS-obl"/>
-                                    <constraint firstItem="Zgg-gm-L5e" firstAttribute="top" secondItem="eJv-kA-lL1" secondAttribute="top" id="gge-N3-XCg"/>
-                                    <constraint firstAttribute="bottom" secondItem="Zgg-gm-L5e" secondAttribute="bottom" id="i9K-qK-ej6"/>
-                                </constraints>
-                                <viewLayoutGuide key="contentLayoutGuide" id="1no-6W-4bn"/>
-                                <viewLayoutGuide key="frameLayoutGuide" id="q0R-NJ-Emr"/>
-                            </scrollView>
+                            </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="llb-mg-yUc"/>
                         <color key="backgroundColor" red="0.224" green="0.42399999999999999" blue="0.42699999999999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="eJv-kA-lL1" firstAttribute="leading" secondItem="llb-mg-yUc" secondAttribute="leading" id="40Y-sJ-Gqy"/>
-                            <constraint firstAttribute="bottom" secondItem="eJv-kA-lL1" secondAttribute="bottom" id="SHa-aB-2Rb"/>
-                            <constraint firstItem="eJv-kA-lL1" firstAttribute="top" secondItem="Ofq-kr-fW5" secondAttribute="top" id="aoQ-mX-CBw"/>
-                            <constraint firstItem="eJv-kA-lL1" firstAttribute="trailing" secondItem="llb-mg-yUc" secondAttribute="trailing" id="bW7-q7-wY3"/>
+                            <constraint firstItem="Zgg-gm-L5e" firstAttribute="leading" secondItem="llb-mg-yUc" secondAttribute="leading" id="fsA-cu-ld1"/>
+                            <constraint firstItem="llb-mg-yUc" firstAttribute="bottom" secondItem="Zgg-gm-L5e" secondAttribute="bottom" id="fsA-cu-bt1"/>
+                            <constraint firstItem="Zgg-gm-L5e" firstAttribute="top" secondItem="llb-mg-yUc" secondAttribute="top" id="fsA-cu-tp1"/>
+                            <constraint firstItem="llb-mg-yUc" firstAttribute="trailing" secondItem="Zgg-gm-L5e" secondAttribute="trailing" id="fsA-cu-tr1"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="Bd8-4p-3rn"/>

@@ -9,15 +9,13 @@
 //  This file is kept for reference and potential future use.
 
 import UIKit
-import DevicePpi
-import ARKit
 import AVFoundation
 
 /* ETDRSViewController class implements a visual acuity test using ETDRS letters.
    The test displays ETDRS letters at various sizes, and the user must speak the
    letter they see. The test maintains a fixed testing distance using AR face tracking.
  */
-class ETDRSViewController: UIViewController, ARSCNViewDelegate {
+class ETDRSViewController: UIViewController {
     // MARK: - Properties
 
     private var isPaused = false
@@ -35,44 +33,19 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     private var lowerBound: Double = 0.0
     private var upperBound: Double = 0.0
     
-    /// AR scene view for face tracking
-    var sceneView: ARSCNView!
-    
-    /// 3D node for left eye tracking
-    var leftEye: SCNNode!
-    
-    /// 3D node for right eye tracking
-    var rightEye: SCNNode!
-    
     /// List of acuity levels to test in 20/x format (from largest to smallest)
     let acuityList = [200, 160, 125, 100, 80, 63, 50, 40, 32, 20, 16]
-    
-    /// Current index in the acuity list
-    var currentAcuityIndex = 0
-    
-    /// Current trial number within the current acuity level
-    var trial = 1
-    
-    /// Flag to track if the test has actually started (user has provided input)
-    private var testStarted = false
+
+    private let etdrsProtocol = ETDRSProtocolConfiguration.fiveLetterV1
+    private var progressionEngine: ETDRSProgressionEngine!
+
+    /// Current index in the acuity list, owned by the progression engine.
+    var currentAcuityIndex: Int {
+        progressionEngine.currentAcuityIndex
+    }
     
     /// Timer to restart speech recognition if it gets stuck
     private var speechTimeoutTimer: Timer?
-    
-    /// Number of correct answers in the current set of trials
-    var correctAnswersInSet = 0
-    
-    /// Dictionary tracking correct answers across all acuity levels
-    var correctAnswersAcrossAcuityLevels: [Int: Int] = [:]
-    
-    /// Counter for tracking trial sequence
-    var counter = 0
-    
-    /// Number of trials to skip if user gets all correct
-    var SKIP = 5
-    
-    /// Maximum number of correct answers needed to advance
-    var MAX_CORRECT = 10
     
     /// Conversion table from US foot notation (20/x) to LogMAR values
     let usFootToLogMAR: [Int: Double] = [
@@ -205,10 +178,8 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     private var totalAttempts = 0
     
     // Last distance used for letter scaling to prevent unnecessary updates
-    private var lastScalingDistance: Double = 0.0
-    
-    // Minimum distance change required to trigger letter rescaling (in cm)
-    private let scalingDistanceThreshold: Double = 2.0
+    private var currentRenderSpec: OptotypeRenderSpec?
+    private var currentSizingProvenance: SizingProvenance?
     
     // Last audio instruction played to avoid repetition
     private var lastAudioInstruction: String = ""
@@ -218,15 +189,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     
     // Display link for smooth distance monitoring
     private var displayLink: CADisplayLink?
-    
-    // Base font size for scaling calculations
-    private let baseFontSize: CGFloat = 100.0
-    
-    // Last scale factor applied to prevent unnecessary transforms
-    private var lastScaleFactor: CGFloat = 1.0
-    
-    // Last AR update time for throttling updates
-    private var lastARUpdateTime: CFTimeInterval?
     
     // MARK: - Data Collection Properties
     
@@ -275,10 +237,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         initializeDistanceTracking()
         print("🔍 ETDRSViewController - distance tracking initialized")
         
-        // Set up AR face tracking for distance monitoring
-        setupARTracking()
-        print("🔍 ETDRSViewController - AR tracking setup completed")
-        
         // Set up speech recognition
         setupSpeechRecognition()
         print("🔍 ETDRSViewController - speech recognition setup completed")
@@ -287,18 +245,12 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         startDistanceMonitoring()
         print("🔍 ETDRSViewController - distance monitoring started")
 
-        // Initialize scaling factors
-        lastScaleFactor = 1.0
-        lastScalingDistance = 0.0
-        
         // Finish layout and generate the first letter
         view.layoutIfNeeded()
         generateNewLetter()
         print("🔍 ETDRSViewController - first letter generated: \(currentLetter)")
         
-        // Size the test letter for the current acuity level (after letter is generated)
-        _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter)
-        print("🔍 ETDRSViewController - initial letter size set for acuity: \(acuityList[currentAcuityIndex])")
+        letterLabel.alpha = 0
         
         // Update eye test label based on current eye number
         updateEyeTestLabel()
@@ -311,6 +263,11 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+
+        EyeDistanceProvider.shared.start(
+            eyeNumber: VisualAcuitySession.currentEyeNumber,
+            client: self
+        )
 
         // Prevent the edge-swipe back gesture from interrupting the ETDRS test.
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
@@ -330,6 +287,8 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+
+        requireCalibrationIfNeeded()
         
         print("🔍 ETDRSViewController - viewDidAppear started")
         
@@ -364,9 +323,7 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         listeningStatusWorkItem = nil
         NotificationCenter.default.removeObserver(self)
 
-        // Pause AR when leaving this eye test so the next screen can safely
-        // take over camera resources without the previous session lingering.
-        sceneView?.session.pause()
+        EyeDistanceProvider.shared.stop(client: self)
     }
 
     /*
@@ -460,20 +417,34 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
     private func initializeAcuityLevel() {
         // Debug: Print selected acuity at start
         print("Initial selectedAcuity value: \(String(describing: VisualAcuitySession.selectedAcuity))")
-        
+
+        let startingAcuityIndex: Int
         if let selectedAcuity = VisualAcuitySession.selectedAcuity {
             // Find the index of the selected acuity in our acuity list
-            currentAcuityIndex = getIndex(numList: acuityList, value: selectedAcuity)
-            print("The index of \(selectedAcuity) is \(currentAcuityIndex).")
+            let selectedIndex = getIndex(numList: acuityList, value: selectedAcuity)
+            print("The index of \(selectedAcuity) is \(selectedIndex).")
             
             // If the acuity wasn't found in our list, default to the largest size
-            if currentAcuityIndex == -1 {
+            if selectedIndex == -1 {
                 print("Selected acuity not found in acuity list, defaulting to first entry")
-                currentAcuityIndex = 0
+                startingAcuityIndex = 0
+            } else {
+                startingAcuityIndex = selectedIndex
             }
         } else {
             print("Selected acuity is nil, defaulting to largest size")
-            currentAcuityIndex = 0
+            startingAcuityIndex = 0
+        }
+
+        do {
+            progressionEngine = try ETDRSProgressionEngine(
+                configuration: etdrsProtocol,
+                acuityLevels: acuityList,
+                startingAcuityIndex: startingAcuityIndex,
+                baseLogMARByAcuity: usFootToLogMAR
+            )
+        } catch {
+            preconditionFailure("Unable to initialize ETDRS progression: \(error)")
         }
     }
     
@@ -482,75 +453,19 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
      * retrieving saved distances and setting acceptable bounds.
      */
     private func initializeDistanceTracking() {
-        // Get stored target distance
-        averageDistanceCM = DistanceTracker.shared.targetDistanceCM
-        
-        // If no valid distance is stored, try to load from UserDefaults
-        if averageDistanceCM <= 0 {
-            if let savedDistance = UserDefaults.standard.object(forKey: "SavedTargetDistance") as? Double,
-               savedDistance > 0 {
-                print("📏 Loading saved distance from UserDefaults: \(savedDistance) cm")
-                averageDistanceCM = savedDistance
-                DistanceTracker.shared.targetDistanceCM = savedDistance
-            } else {
-                print("⚠️ No valid distance found - using default of 40 cm")
-                averageDistanceCM = 40.0
-                DistanceTracker.shared.targetDistanceCM = 40.0
-            }
-        }
-        
+        averageDistanceCM = DistanceTracker.shared.preferredHoldingDistanceCM ?? 0
         print("📏 ETDRS Target test distance: \(averageDistanceCM) cm")
         
-        // Reset current distance to target distance to avoid immediate out-of-range warnings
-        // This helps when switching between test types
-        DistanceTracker.shared.currentDistanceCM = averageDistanceCM
-        print("📏 ETDRS Reset current distance to target: \(averageDistanceCM) cm")
-        
-        // Set acceptable distance range (±20% of target)
-        lowerBound = 0.8 * averageDistanceCM  // 20% below target
-        upperBound = 1.2 * averageDistanceCM  // 20% above target
+        if averageDistanceCM > 0 {
+            lowerBound = max(EyeDistanceSample.acceptedRangeCM.lowerBound, 0.8 * averageDistanceCM)
+            upperBound = min(EyeDistanceSample.acceptedRangeCM.upperBound, 1.2 * averageDistanceCM)
+        } else {
+            lowerBound = EyeDistanceSample.acceptedRangeCM.lowerBound
+            upperBound = EyeDistanceSample.acceptedRangeCM.upperBound
+        }
         print("📏 ETDRS Distance bounds set to: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
     }
     
-    /*
-     * Sets up AR face tracking for distance monitoring.
-     * Initializes the AR scene and creates tracking nodes for the eyes.
-     */
-    private func setupARTracking() {
-        guard ARFaceTrackingConfiguration.isSupported else {
-            print("⚠️ AR Face Tracking is NOT supported on this device.")
-            return
-        }
-
-        sceneView = ARSCNView(frame: view.bounds)
-        sceneView.delegate = self
-        
-        // Create an AR face tracking configuration with maximum tracking capability
-        let configuration = ARFaceTrackingConfiguration()
-        configuration.isLightEstimationEnabled = true
-        configuration.maximumNumberOfTrackedFaces = 1 // Focus on tracking a single face well
-        
-        // Add the scene view but hide it
-        sceneView.isHidden = true
-        view.addSubview(sceneView)
-        
-        // Start a new tracking session with maximum quality
-        sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
-        
-        print("👁️ AR Face Tracking Started")
-
-        // Initialize eye tracking nodes with distinctive colors for debugging
-        let eyeGeometry = SCNSphere(radius: 0.01)
-        eyeGeometry.firstMaterial?.diffuse.contents = UIColor.blue
-        
-        leftEye = SCNNode(geometry: eyeGeometry)
-        rightEye = SCNNode(geometry: eyeGeometry)
-        
-        // Log the target distance for reference
-        print("📏 Target testing distance: \(String(format: "%.1f", averageDistanceCM)) cm")
-        print("📏 Acceptable range: \(String(format: "%.1f", lowerBound)) - \(String(format: "%.1f", upperBound)) cm")
-    }
-
     /*
      * Initiates distance monitoring with CADisplayLink for better performance.
      * Can be configured to bypass distance checking for testing purposes.
@@ -581,87 +496,6 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         displayLink?.add(to: .main, forMode: .default)
         
         print("🎯 Distance monitoring started with CADisplayLink at 10fps")
-    }
-
-    /*
-     * Called when a new AR anchor is added to the scene.
-     * Used to attach eye nodes to detected face anchors.
-     */
-    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard anchor is ARFaceAnchor else { return }
-        
-        // Add eye nodes to the face node
-        node.addChildNode(leftEye)
-        node.addChildNode(rightEye)
-        
-        print("👁️ Face detected and tracking started")
-    }
-    
-    /*
-     * Called when an AR anchor is updated in the scene.
-     * Updates eye positions and calculates distance from the device.
-     * Optimized to reduce unnecessary calculations.
-     */
-    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
-        
-        // Update eye transforms
-        leftEye.simdTransform = faceAnchor.leftEyeTransform
-        rightEye.simdTransform = faceAnchor.rightEyeTransform
-
-        // Only process every few frames to reduce computational load
-        let currentTime = CACurrentMediaTime()
-        if let lastUpdateTime = lastARUpdateTime, currentTime - lastUpdateTime < 0.1 {
-            return // Skip this update if less than 100ms since last update
-        }
-        lastARUpdateTime = currentTime
-
-        // Get camera position
-        guard let frame = sceneView.session.currentFrame else { return }
-        let cameraTransform = frame.camera.transform
-        
-        // Batch distance calculations off main thread for better performance
-        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
-            guard let self = self else { return }
-            
-            let cameraPosition = SCNVector3(cameraTransform.columns.3.x,
-                                            cameraTransform.columns.3.y,
-                                            cameraTransform.columns.3.z)
-            
-            let leftEyePos = self.leftEye.worldPosition
-            let rightEyePos = self.rightEye.worldPosition
-
-            // Only calculate distance if eyes are valid positions
-            if leftEyePos.length() > 0 && rightEyePos.length() > 0 {
-                // Calculate distance from camera to eyes
-                let leftEyeDistance = self.SCNVector3Distance(leftEyePos, cameraPosition)
-                let rightEyeDistance = self.SCNVector3Distance(rightEyePos, cameraPosition)
-                
-                // Use only the relevant eye's distance based on which eye is being tested
-                let rawDistance = (VisualAcuitySession.currentEyeNumber == 1) ? leftEyeDistance : rightEyeDistance
-                let rawAverageDistance = rawDistance * 100  // Convert to cm
-                
-                // Validate and update distance tracker
-                if rawAverageDistance > 5 && rawAverageDistance < 200 {
-                    DistanceTracker.shared.addReading(Double(rawAverageDistance))
-                }
-            }
-        }
-    }
-
-    /*
-     * Calculates Euclidean distance between two 3D points.
-     *
-     * @param a First point
-     * @param b Second point
-     * @return Distance between the points in ARKit units
-     */
-    func SCNVector3Distance(_ a: SCNVector3, _ b: SCNVector3) -> Float {
-        return sqrtf(
-            powf(a.x - b.x, 2) +
-            powf(a.y - b.y, 2) +
-            powf(a.z - b.z, 2)
-        )
     }
 
     /*
@@ -962,21 +796,22 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
      * @param inputLetter The letter recognized from speech
      */
     private func handleLetterInput(_ inputLetter: String) {
-        // Mark test as started on first input
-        testStarted = true
-        
-        var isCorrect = 0
-        
-        if inputLetter == currentLetter {
-            isCorrect = 1
-            score += 1
-            correctAnswersInSet += 1 // Track correct answers in the current set of 10
-        } else {
-            isCorrect = 0
+        guard !isPaused, !isManuallyPaused else { return }
+        guard let responseDistance = EyeDistanceProvider.shared.validSample()?.distanceCM,
+              let calibration = ScreenCalibrationProvider.shared.currentCalibration,
+              let sizingProvenance = currentSizingProvenance,
+              sizingProvenance.matches(calibration) else {
+            pauseForInvalidDistance()
+            return
         }
-        
+
+        let isCorrect = inputLetter == currentLetter
+        if isCorrect {
+            score += 1
+        }
+
         totalAttempts += 1
-        trial += 1 // Increment the trial count within this set
+        let trialNumber = progressionEngine.nextTrialNumber
         
         // Calculate response time
         let responseTime: Int64
@@ -995,18 +830,20 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
             testType: "ETDRS",
             acuityLevel: acuityString,
             letterDisplayed: currentLetter,
-            distanceCM: DistanceTracker.shared.currentDistanceCM,
+            distanceCM: responseDistance,
             responseTimeMS: responseTime,
             userResponse: inputLetter,
-            isCorrect: isCorrect == 1,
-            trialNumber: trial - 1 // trial was already incremented, so subtract 1 for the actual trial number
+            isCorrect: isCorrect,
+            trialNumber: trialNumber,
+            sizingProvenance: sizingProvenance,
+            protocolMetadata: etdrsProtocol.metadata
         )
         
-        print("🎯 Letter: \(currentLetter), Input: \(inputLetter), Correct: \(isCorrect == 1)), Time: \(responseTime)ms")
+        print("🎯 Letter: \(currentLetter), Input: \(inputLetter), Correct: \(isCorrect), Time: \(responseTime)ms")
         
         // Animate the letter flying off screen before processing next trial
         animateLetterFlyOff { [weak self] in
-            self?.processNextTrial()
+            self?.processNextTrial(isCorrect: isCorrect)
         }
     }
     
@@ -1014,63 +851,38 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
        This method is called after each user response and handles tracking correct answers,
        determining acuity level changes, calculating final scores, and resetting trial counters.
      */
-    private func processNextTrial() {
-        print("🔍 ETDRS processNextTrial called - trial:", trial, "correctAnswersInSet:",correctAnswersInSet, "testStarted:", testStarted)
-        
-        // Don't process trials until the test has actually started with user input
-        guard testStarted else {
-            print("🔍 ETDRS: Test not started yet, skipping processNextTrial")
+    private func processNextTrial(isCorrect: Bool) {
+        let completedAcuity = progressionEngine.currentAcuity
+        let outcome = progressionEngine.recordResponse(isCorrect: isCorrect)
+        print(
+            "🔍 ETDRS progression:",
+            "acuity:", completedAcuity,
+            "attempts:", progressionEngine.attemptsInCurrentAcuity,
+            "correct:", progressionEngine.resultsByAcuity[
+                completedAcuity
+            ]?.progressionCorrect ?? progressionEngine.correctInCurrentAcuity,
+            "outcome:", String(describing: outcome)
+        )
+
+        switch outcome {
+        case .continueCurrentAcuity:
+            generateNewLetter()
+
+        case let .changeAcuity(acuity):
+            print("🔍 ETDRS: Moving to 20/\(acuity)")
+            resetLetterScaling()
+            generateNewLetter()
+            _ = set_Size_E(
+                letterLabel,
+                desired_acuity: acuity,
+                letterText: currentLetter
+            )
+
+        case let .finish(result):
+            completeTest(with: result)
             return
         }
-        
-        let acuity = acuityList[currentAcuityIndex]
-        correctAnswersAcrossAcuityLevels[acuity] = correctAnswersInSet
-        print("correctAnswersAcrossAcuityLevels:", correctAnswersAcrossAcuityLevels)
-        print("currentAcuityIndex:", currentAcuityIndex, "acuity:", acuity)
-        
-        // Check if trial count has reached 10 or if the user has first 5 correct
-        if (trial > 10) || ((trial == SKIP + 1) && (correctAnswersInSet == SKIP)) {
-            print("🔍 ETDRS: Ending acuity level - trial > 10 or skip condition met")
-            if (trial == SKIP + 1) && (correctAnswersInSet == SKIP){
-                print("skip")
-                correctAnswersAcrossAcuityLevels[acuity] = MAX_CORRECT
-                correctAnswersInSet = MAX_CORRECT
-            }
-            if currentAcuityIndex == acuityList.count - 1 { // Successfully completed the smallest size
-                calculateScore(finishAcuity1: acuity, amtCorrect1: correctAnswersAcrossAcuityLevels[acuity] ?? 0, finishAcuity2: acuityList[currentAcuityIndex-1], amtCorrect2: correctAnswersAcrossAcuityLevels[acuityList[currentAcuityIndex-1]] ?? 0)
-                return
-            }
-            if correctAnswersInSet < 6 { // If the user cannot get at least 6 letters correct
-                if currentAcuityIndex <= 0 { // At largest letter size
-                    print("You are BLIND! We cannot assess you.")
-                    calculateScore(finishAcuity1: acuityList[currentAcuityIndex+1], amtCorrect1: correctAnswersAcrossAcuityLevels[acuityList[currentAcuityIndex+1]] ?? 0, finishAcuity2: acuity, amtCorrect2: correctAnswersAcrossAcuityLevels[acuity] ?? 0)
-                } else { // Move back to previous acuity if incorrect
-                    let previousAcuity = acuityList[currentAcuityIndex-1]
-                    if correctAnswersAcrossAcuityLevels[previousAcuity] != nil {
-                        calculateScore(finishAcuity1: acuity, amtCorrect1: correctAnswersInSet, finishAcuity2: previousAcuity, amtCorrect2: correctAnswersAcrossAcuityLevels[previousAcuity] ?? 0)
-                    } else {
-                        print("Going back to larger acuity...")
-                        currentAcuityIndex -= 1
-                        resetLetterScaling() // Reset scaling for new acuity level
-                        _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
-                    }
-                }
-            } else { // User gets at least 6 letters correct, advance to next level
-                let nextAcuity = acuityList[currentAcuityIndex+1]
-                if correctAnswersAcrossAcuityLevels[nextAcuity] != nil {
-                    calculateScore(finishAcuity1: nextAcuity, amtCorrect1: correctAnswersAcrossAcuityLevels[nextAcuity] ?? 0, finishAcuity2: acuity, amtCorrect2: correctAnswersInSet)
-                } else {
-                    print("Advancing to smaller acuity...")
-                    currentAcuityIndex += 1
-                    resetLetterScaling() // Reset scaling for new acuity level
-                    _ = set_Size_E(letterLabel, desired_acuity: acuityList[currentAcuityIndex], letterText: currentLetter) // Update the letter size
-                }
-            }
-            // Reset trial counter and correct answers count
-            trial = 1
-            correctAnswersInSet = 0
-        }
-        generateNewLetter() // Generate the next letter with updated size or same size
+
         DispatchQueue.main.async { [weak self] in
             guard let self, !self.isPaused else { return }
             self.startListening()
@@ -1085,8 +897,9 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         resetPendingRecognition()
         letterLabel.text = currentLetter
         
-        // Make the letter visible now that the new letter is set
-        letterLabel.alpha = 1
+        // Keep the stimulus hidden if tracking or calibration expired between trials.
+        letterLabel.alpha = EyeDistanceProvider.shared.validSample() != nil
+            && ScreenCalibrationProvider.shared.currentCalibration != nil ? 1 : 0
         transcriptionLabel.text = "Listening for one spoken letter"
         
         // Record the time when this letter is displayed for response time calculation
@@ -1127,14 +940,15 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         }
         
         // Add hysteresis to prevent frequent toggling at the boundary
-        let outOfRangeTolerance = 3.0 // 3cm buffer when already paused (reduced for tighter range)
+        let outOfRangeTolerance = min(3.0, max(0, (upperBound - lowerBound) * 0.25))
         
         // Determine user's position relative to acceptable range
         let tooClose = liveDistance < lowerBound
         let tooFar = liveDistance > upperBound
         if isPaused {
             // When already paused, require a more definitive return to range
-            if liveDistance > (lowerBound + outOfRangeTolerance) && liveDistance < (upperBound - outOfRangeTolerance) {
+            if liveDistance >= (lowerBound + outOfRangeTolerance)
+                && liveDistance <= (upperBound - outOfRangeTolerance) {
                 isPaused = false
                 hideAllDistanceIndicators()
                 showDistanceOK()
@@ -1217,48 +1031,20 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         distanceGuidanceView.hideAll()
     }
     
-    /* Updates the letter size based on current distance if the change is significant enough.
-       This provides live scaling while the user is within acceptable distance bounds.
-       Uses efficient CALayer transforms instead of font changes for better performance.
+    /* Updates the letter size when the expected change reaches half a physical pixel.
        @param currentDistance The current measured distance in centimeters
      */
     private func updateLetterSizeForDistance(_ currentDistance: Double) {
-        // Only update if the distance change is significant enough to warrant rescaling
-        let distanceChange = abs(currentDistance - lastScalingDistance)
-        
-        if distanceChange >= scalingDistanceThreshold || lastScalingDistance == 0.0 {
-            // Calculate the scale factor based on distance ratio
-            // When user moves closer (smaller distance), letters should be smaller
-            // When user moves farther (larger distance), letters should be larger
-            let targetDistance = averageDistanceCM
-            let scaleFactor = CGFloat(currentDistance / targetDistance)
-            
-            // Only apply transform if scale factor changed significantly
-            let scaleChange = abs(scaleFactor - lastScaleFactor)
-            if scaleChange > 0.05 || lastScaleFactor == 1.0 {
-                // Use transform for efficient scaling without layout changes
-                UIView.performWithoutAnimation {
-                    self.letterLabel.transform = self.letterLabel.transform.scaledBy(x: scaleFactor / self.lastScaleFactor, y: scaleFactor / self.lastScaleFactor)
-                }
-                
-                lastScaleFactor = scaleFactor
-                lastScalingDistance = currentDistance
-                
-                print("📏 Letter rescaled for distance: \(String(format: "%.1f", currentDistance)) cm (scale: \(String(format: "%.2f", scaleFactor)))")
-            }
-        }
+        renderCurrentOptotype(distanceCM: currentDistance, force: false)
     }
     
     /* Resets the letter scaling factors when acuity changes.
        This ensures clean scaling for the new acuity level while preserving the calculated font size.
      */
     private func resetLetterScaling() {
-        // Reset transform to identity (but preserve the font size set by set_Size_E)
-        letterLabel.transform = CGAffineTransform.identity
-        lastScaleFactor = 1.0
-        lastScalingDistance = 0.0
-        
-        print("🔄 Letter scaling reset for acuity change (preserving font size)")
+        currentRenderSpec = nil
+        currentSizingProvenance = nil
+        letterLabel.transform = .identity
     }
 
     /* Pauses the visual acuity test when the user is not at the proper distance.
@@ -1282,113 +1068,105 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
        Includes validation and fallback mechanisms for invalid distance readings.
      */
     @objc private func updateLiveDistance() {
-        let liveDistance = DistanceTracker.shared.currentDistanceCM  // Get latest live distance
-        
-        // Validate distance readings
-        guard liveDistance > 0 else {
-            return // Skip invalid readings
-        }
-        
-        // Only log occasionally to reduce console spam
-        let shouldLog = Int(Date().timeIntervalSince1970 * 2) % 20 == 0 // Log every 10 seconds at 2Hz
-        
-        // CRITICAL FIX: If distance is suspiciously small, use the target distance
-        if liveDistance < 10 && averageDistanceCM > 10 {
-            if shouldLog {
-                print("⚠️ Very close distance detected: \(String(format: "%.1f", liveDistance)) cm (expected ~\(String(format: "%.1f", averageDistanceCM)) cm)")
-            }
-            
-            // For testing purposes, DON'T override with target distance to see if extreme values are detected
-            #if DEBUG
-            let debugStrictDistanceTesting = ProcessInfo.processInfo.environment["ETDRS_STRICT_DISTANCE_TESTING"] == "1"
-            if debugStrictDistanceTesting {
-                if shouldLog {
-                    print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
-                }
-                checkDistance(liveDistance)
-                return
-            }
-            #endif
-            
-            // Use the target/stored distance instead of the current faulty reading
-            DistanceTracker.shared.currentDistanceCM = averageDistanceCM
+        guard let sample = EyeDistanceProvider.shared.validSample(),
+              ScreenCalibrationProvider.shared.currentCalibration != nil else {
+            pauseForInvalidDistance()
             return
         }
-        
-        // Check for very large distances too
-        if liveDistance > 100 && averageDistanceCM < 100 {
-            if shouldLog {
-                print("⚠️ Very far distance detected: \(String(format: "%.1f", liveDistance)) cm (expected ~\(String(format: "%.1f", averageDistanceCM)) cm)")
-            }
-            
-            #if DEBUG
-            let debugStrictDistanceTesting = ProcessInfo.processInfo.environment["ETDRS_STRICT_DISTANCE_TESTING"] == "1"
-            if debugStrictDistanceTesting {
-                if shouldLog {
-                    print("🔧 DEBUG: Testing with extreme distance value: \(String(format: "%.1f", liveDistance)) cm")
-                }
-                checkDistance(liveDistance)
-                return
-            }
-            #endif
-        }
-
-        // Process distance check on main thread efficiently
-        checkDistance(liveDistance)
+        DistanceTracker.shared.currentDistanceCM = sample.distanceCM
+        letterLabel.alpha = EyeDistanceProvider.shared.validSample() != nil
+            && ScreenCalibrationProvider.shared.currentCalibration != nil ? 1 : 0
+        checkDistance(sample.distanceCM)
     }
 
-    // MARK: - Public Methods
-    
-    /* Sets the size of the letter based on the visual acuity level and viewing distance.
-       Implements the standard ETDRS calculation for optotype sizing.
-       This version uses the stored target distance for initial sizing.
+    // MARK: - Optotype Rendering
+
+    /* Sets the size of the letter from the current live eye-distance sample.
        @param oneLetter The UILabel to be sized
        @param desired_acuity The target acuity in 20/x notation
        @param letterText The letter to display
      * @return The text that was displayed or nil if the operation failed
      */
-    func set_Size_E(_ oneLetter: UILabel?, desired_acuity: Int, letterText: String?) -> String? {
-        return set_Size_E_WithDistance(oneLetter, desired_acuity: desired_acuity, letterText: letterText, distance: averageDistanceCM)
-    }
-    
-    /* Sets the size of the letter based on the visual acuity level and a specific viewing distance.
-       Implements the standard ETDRS calculation for optotype sizing.
-       This version allows for live distance-based scaling.
-       @param oneLetter The UILabel to be sized
-       @param desired_acuity The target acuity in 20/x notation
-       @param letterText The letter to display
-       @param distance The current viewing distance in centimeters
-       @return The text that was displayed or nil if the operation failed
-     */
-    func set_Size_E_WithDistance(_ oneLetter: UILabel?, desired_acuity: Int, letterText: String?, distance: Double) -> String? {
-        // Standard ETDRS calculation: 5 arcminutes at 20/20 vision at designated testing distance
-        // Visual angle in radians = (size in arcmin / 60) * (pi/180)
-        let arcmin_per_letter = 5.0 // Standard size for 20/20 optotype is 5 arcmin
-        let visual_angle = ((Double(desired_acuity) / 20.0) * arcmin_per_letter / 60.0) * Double.pi / 180.0
-        let scaling_correction_factor = 1.0 / 2.54  // Conversion from inches to cm
-        
-        // Calculate size at viewing distance using the provided distance
-        let scale_factor = distance * tan(visual_angle) * scaling_correction_factor
-        
-        if let nonNilLetterText = letterText, let oneLetter = oneLetter {
-            oneLetter.text = nonNilLetterText
-            
-            // Adjust size based on scale factor with standard 5:1 width to height ratio
-            let labelHeight = scale_factor * VisualAcuitySession.devicePPI
-            oneLetter.frame.size = CGSize(width: (labelHeight * 5), height: labelHeight)
-            
-            // Adjusted font size - reducing by factor of 2 to match physical acuity cards
-            // The 0.3 factor (instead of 0.6) accounts for font rendering differences
-            let fontSize = 0.3 * oneLetter.frame.height
-            oneLetter.font = oneLetter.font.withSize(fontSize)
-            
-            // Debug output to verify scaling
-            print("Test Letter - Acuity: \(desired_acuity), Distance: \(String(format: "%.1f", distance))cm, Visual angle: \(visual_angle), Scale factor: \(scale_factor), Label height: \(labelHeight)px, Font size: \(fontSize)pt")
-            
-            return nonNilLetterText
+    private func set_Size_E(
+        _ oneLetter: UILabel?,
+        desired_acuity: Int,
+        letterText: String?
+    ) -> String? {
+        guard let sample = EyeDistanceProvider.shared.validSample() else {
+            oneLetter?.alpha = 0
+            return nil
         }
-        
-        return nil
+        return renderOptotype(
+            oneLetter,
+            desired_acuity: desired_acuity,
+            letterText: letterText,
+            distanceCM: sample.distanceCM,
+            force: true
+        )
+    }
+
+    private func renderOptotype(
+        _ oneLetter: UILabel?,
+        desired_acuity: Int,
+        letterText: String?,
+        distanceCM: Double,
+        force: Bool
+    ) -> String? {
+        guard let text = letterText,
+              let label = oneLetter,
+              let calibration = ScreenCalibrationProvider.shared.currentCalibration else {
+            oneLetter?.alpha = 0
+            return nil
+        }
+        do {
+            let update = try OptotypeRenderer.update(
+                label: label,
+                text: text,
+                distanceCM: distanceCM,
+                snellenDenominator: desired_acuity,
+                calibration: calibration,
+                previousSpec: currentRenderSpec,
+                force: force
+            )
+            currentRenderSpec = update.spec
+            currentSizingProvenance = update.spec.provenance
+            label.alpha = 1
+            return text
+        } catch {
+            label.alpha = 0
+            print("Unable to size ETDRS optotype: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    private func renderCurrentOptotype(distanceCM: Double, force: Bool) {
+        guard renderOptotype(
+            letterLabel,
+            desired_acuity: acuityList[currentAcuityIndex],
+            letterText: currentLetter,
+            distanceCM: distanceCM,
+            force: force
+        ) != nil else {
+            pauseForInvalidDistance()
+            return
+        }
+    }
+
+    private func pauseForInvalidDistance() {
+        letterLabel.alpha = 0
+        isPaused = true
+        guard !isManuallyPaused else { return }
+        if isListening {
+            stopListening()
+        }
+        instructionLabel.text = "Paused: Face tracking unavailable"
+        distanceGuidanceView.showWarning()
+    }
+
+    private func requireCalibrationIfNeeded() {
+        guard ScreenCalibrationProvider.shared.currentCalibration == nil,
+              presentedViewController == nil else { return }
+        present(ScreenCalibrationViewController(), animated: true)
     }
     
     /* Find the index of a value in a list.
@@ -1405,37 +1183,23 @@ class ETDRSViewController: UIViewController, ARSCNViewDelegate {
         return -1
     }
     
-    /* Calculates the final acuity score based on performance at two acuity levels.
-       Uses the number of correct/incorrect responses to refine the score.
-       Navigates to the results screen with the final score.
-       @param finishAcuity1 The first acuity level (20/x notation)
-       @param amtCorrect1 Number of correct responses at first acuity level
-       @param finishAcuity2 The second acuity level (20/x notation)
-       @param amtCorrect2 Number of correct responses at second acuity level
-       @param totalLetters Total number of letters shown at each acuity level
+    /* Completes the current eye after the progression engine calculates the
+       terminal acuity levels and letter-level LogMAR score.
      */
-    func calculateScore(finishAcuity1: Int, amtCorrect1: Int, finishAcuity2: Int, amtCorrect2: Int, totalLetters: Int = 10) {
-        print("🔍 ETDRS calculateScore called - this should only happen at the end of the test!")
-        print("finishAcuity1", finishAcuity1)
-        let amtWrongCurrent1 = Double(totalLetters - amtCorrect1)
-        let amtWrongCurrent2 = Double(totalLetters - amtCorrect2)
-        print("You have an acuity of", finishAcuity1, "with", amtWrongCurrent1, "letters wrong on that line.")
-        print("You have an acuity of", finishAcuity2, "with", amtWrongCurrent2, "letters wrong on that line.")
-        
-        // Convert to LogMAR scale and adjust based on errors
-        var acuityScore = usFootToLogMAR[finishAcuity1] ?? 0.0
-        acuityScore += amtWrongCurrent1 / 100.0
-        acuityScore += amtWrongCurrent2 / 100.0
-        
-        // Pass this score to the results page via the prepare method
-        print("Test completed with final acuity level: \(acuityScore)")
+    private func completeTest(with result: ETDRSFinalResult) {
+        print(
+            "🔍 ETDRS test completed:",
+            "20/\(result.primaryAcuity) \(result.primaryCorrect)/\(etdrsProtocol.trialsPerAcuity),",
+            "20/\(result.secondaryAcuity) \(result.secondaryCorrect)/\(etdrsProtocol.trialsPerAcuity),",
+            "LogMAR \(result.logMAR)"
+        )
         
         // End the data collection session
         dataCollector.endCurrentSession()
         
         // Navigate to the results screen
         
-        finalAcuityScore = acuityScore
+        finalAcuityScore = result.logMAR
         VisualAcuitySession.logMARValue = finalAcuityScore
         VisualAcuitySession.snellenValue = 20 * pow(10, VisualAcuitySession.logMARValue)
         

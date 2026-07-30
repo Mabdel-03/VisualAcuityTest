@@ -58,7 +58,7 @@ class SettingsViewController: UIViewController {
 
     private lazy var testTypeSegmentedControl: UISegmentedControl = {
         let control = UISegmentedControl(items: ["Landolt C", "ETDRS"])
-        control.selectedSegmentIndex = 0
+        control.selectedSegmentIndex = TestTypePreferences.isEnabled() ? 1 : 0
         control.addTarget(self, action: #selector(testTypeChanged(_:)), for: .valueChanged)
         control.translatesAutoresizingMaskIntoConstraints = false
         return control
@@ -107,6 +107,32 @@ class SettingsViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
+
+    private lazy var calibrationLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Screen Calibration"
+        label.drawHeader2()
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private lazy var calibrationStatusLabel: UILabel = {
+        let label = UILabel()
+        label.drawSmallText()
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private lazy var calibrationButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.drawStandardButton()
+        button.addTarget(self, action: #selector(calibrationButtonTapped), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
     
     // Navigation
     private lazy var doneButton: UIButton = {
@@ -125,6 +151,7 @@ class SettingsViewController: UIViewController {
         setupUI()
         updateAudioSwitch()
         updateTestTypeUI()
+        updateCalibrationUI()
         
         // Play audio instructions for the settings screen
         if isAudioEnabled() {
@@ -135,6 +162,7 @@ class SettingsViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         animateDecorativeDaisies()
+        updateCalibrationUI()
     }
     
     // MARK: - UI Setup
@@ -157,6 +185,9 @@ class SettingsViewController: UIViewController {
         contentView.addSubview(audioLabel)
         contentView.addSubview(audioDescriptionLabel)
         contentView.addSubview(audioContainer)
+        contentView.addSubview(calibrationLabel)
+        contentView.addSubview(calibrationStatusLabel)
+        contentView.addSubview(calibrationButton)
         contentView.addSubview(doneButton)
         
         // Add audio controls to container
@@ -223,9 +254,22 @@ class SettingsViewController: UIViewController {
             audioSwitch.centerYAnchor.constraint(equalTo: audioContainer.centerYAnchor),
             audioTitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: audioSwitch.leadingAnchor, constant: -10),
             
+            calibrationLabel.topAnchor.constraint(equalTo: audioContainer.bottomAnchor, constant: 30),
+            calibrationLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            calibrationLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+
+            calibrationStatusLabel.topAnchor.constraint(equalTo: calibrationLabel.bottomAnchor, constant: 5),
+            calibrationStatusLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            calibrationStatusLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+
+            calibrationButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            calibrationButton.topAnchor.constraint(equalTo: calibrationStatusLabel.bottomAnchor, constant: 15),
+            calibrationButton.widthAnchor.constraint(equalToConstant: 242),
+            calibrationButton.heightAnchor.constraint(equalToConstant: 52),
+
             // Done Button
             doneButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            doneButton.topAnchor.constraint(equalTo: audioContainer.bottomAnchor, constant: 30),
+            doneButton.topAnchor.constraint(equalTo: calibrationButton.bottomAnchor, constant: 30),
             doneButton.widthAnchor.constraint(equalToConstant: 242),
             doneButton.heightAnchor.constraint(equalToConstant: 60),
             doneButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
@@ -262,6 +306,12 @@ class SettingsViewController: UIViewController {
         
         navigationController?.popViewController(animated: true)
     }
+
+    @objc private func calibrationButtonTapped() {
+        let controller = ScreenCalibrationViewController()
+        controller.completion = { [weak self] _ in self?.updateCalibrationUI() }
+        present(controller, animated: true)
+    }
     
     // MARK: - Helper Methods
     
@@ -275,6 +325,26 @@ class SettingsViewController: UIViewController {
         testTypeDescriptionLabel.text = isETDRS
             ? "ETDRS letters with spoken letter responses"
             : "C-shaped letters with swipe gestures"
+    }
+
+    private func updateCalibrationUI() {
+        switch ScreenCalibrationProvider.shared.currentCalibration?.source {
+        case .deviceDatabase:
+            calibrationStatusLabel.text = "Validated automatically for this display"
+            calibrationButton.setTitle("Automatic Calibration", for: .normal)
+            calibrationButton.isEnabled = false
+            calibrationButton.alpha = 0.55
+        case .manual:
+            calibrationStatusLabel.text = "Validated with the 50 mm ruler"
+            calibrationButton.setTitle("Recalibrate Screen", for: .normal)
+            calibrationButton.isEnabled = true
+            calibrationButton.alpha = 1
+        case .legacyUnknown, nil:
+            calibrationStatusLabel.text = "Calibration required before testing"
+            calibrationButton.setTitle("Calibrate Screen", for: .normal)
+            calibrationButton.isEnabled = true
+            calibrationButton.alpha = 1
+        }
     }
     
     // MARK: - Settings Management

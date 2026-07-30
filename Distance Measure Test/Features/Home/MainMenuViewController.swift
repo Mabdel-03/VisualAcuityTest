@@ -8,6 +8,46 @@
 import UIKit
 import AVFoundation
 
+enum AudioInstructionPreferences {
+    static let enabledKey = "audio_enabled"
+    static let defaultEnabled = false
+
+    static func registerDefaults(in defaults: UserDefaults = .standard) {
+        defaults.register(defaults: [enabledKey: defaultEnabled])
+    }
+
+    static func isEnabled(in defaults: UserDefaults = .standard) -> Bool {
+        defaults.bool(forKey: enabledKey)
+    }
+
+    static func setEnabled(
+        _ enabled: Bool,
+        in defaults: UserDefaults = .standard
+    ) {
+        defaults.set(enabled, forKey: enabledKey)
+    }
+}
+
+enum TestTypePreferences {
+    static let enabledKey = "etdrs_test_enabled"
+    static let defaultEnabled = true
+
+    static func registerDefaults(in defaults: UserDefaults = .standard) {
+        defaults.register(defaults: [enabledKey: defaultEnabled])
+    }
+
+    static func isEnabled(in defaults: UserDefaults = .standard) -> Bool {
+        defaults.bool(forKey: enabledKey)
+    }
+
+    static func setEnabled(
+        _ enabled: Bool,
+        in defaults: UserDefaults = .standard
+    ) {
+        defaults.set(enabled, forKey: enabledKey)
+    }
+}
+
 /* SharedAudioManager class is designed to manage the audio instructions on the
     visual acuity app. It is a singleton class that is used to play audio instructions
     to the user.
@@ -94,11 +134,11 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
     }
     
     func isAudioEnabled() -> Bool {
-        return UserDefaults.standard.bool(forKey: "audio_enabled")
+        return AudioInstructionPreferences.isEnabled()
     }
     
     func setAudioEnabled(_ enabled: Bool) {
-        UserDefaults.standard.set(enabled, forKey: "audio_enabled")
+        AudioInstructionPreferences.setEnabled(enabled)
         print("🔊 Shared Audio Manager - Audio set to: \(enabled)")
         
         // Stop any current speech when disabled
@@ -108,11 +148,11 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
     }
     
     func isETDRSTestEnabled() -> Bool {
-        return UserDefaults.standard.bool(forKey: "etdrs_test_enabled")
+        return TestTypePreferences.isEnabled()
     }
-    
+
     func setETDRSTestEnabled(_ enabled: Bool) {
-        UserDefaults.standard.set(enabled, forKey: "etdrs_test_enabled")
+        TestTypePreferences.setEnabled(enabled)
         print("🔧 Shared Audio Manager - Test type set to: \(enabled ? "ETDRS" : "Landolt C")")
     }
 
@@ -198,12 +238,6 @@ class SharedAudioManager: NSObject, @unchecked Sendable {
             print("🔊 Shared Audio Manager - Stopping paused speech")
             speechSynthesizer.stopSpeaking(at: .immediate)
         }
-    }
-    
-    func initializeDefaultSettings() {
-        // Always set audio enabled by default on app launch
-        UserDefaults.standard.set(true, forKey: "audio_enabled")
-        print("🔊 Shared Audio Manager - Audio initialized as enabled")
     }
 }
 
@@ -310,13 +344,13 @@ class MainMenu: UIViewController {
     /* Initializes the audio settings for the user.
     */
     private func initializeAudioSettings() {
-        UserDefaults.standard.register(defaults: ["audio_enabled": true])
+        AudioInstructionPreferences.registerDefaults()
     }
     
     /* Initializes the test type settings for the user.
     */
     private func initializeTestTypeSettings() {
-        UserDefaults.standard.register(defaults: ["etdrs_test_enabled": false])
+        TestTypePreferences.registerDefaults()
     }
     
     /* Checks if the audio is enabled for the user.

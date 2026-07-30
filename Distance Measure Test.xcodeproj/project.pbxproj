@@ -9,6 +9,14 @@
 /* Begin PBXBuildFile section */
 		A1B2C3D42E5F6E780089CD23 /* Core/SubjectNameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D32E5F6E780089CD23 /* Core/SubjectNameManager.swift */; };
 		A1B2C3D62E5F6E890089CD23 /* Shared/Extensions/UIViewController+NamePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D52E5F6E890089CD23 /* Shared/Extensions/UIViewController+NamePrompt.swift */; };
+		A20000010000000000000001 /* Core/OptotypeSizing.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000011 /* Core/OptotypeSizing.swift */; };
+		A20000010000000000000002 /* Core/ScreenCalibrationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000012 /* Core/ScreenCalibrationProvider.swift */; };
+		A20000010000000000000003 /* Core/EyeDistanceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000013 /* Core/EyeDistanceProvider.swift */; };
+		A20000010000000000000004 /* Features/Settings/ScreenCalibrationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000010000000000000014 /* Features/Settings/ScreenCalibrationViewController.swift */; };
+		A30000010000000000000001 /* OptotypeSizingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000010000000000000011 /* OptotypeSizingTests.swift */; };
+		A30000010000000000000002 /* CalibrationAndDistanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000010000000000000012 /* CalibrationAndDistanceTests.swift */; };
+		A30000010000000000000003 /* PersistenceAndArchitectureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000010000000000000013 /* PersistenceAndArchitectureTests.swift */; };
+		A30000010000000000000004 /* ETDRSProgressionEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000010000000000000015 /* ETDRSProgressionEngineTests.swift */; };
 		B2C3D4E62F6G7H890089DE34 /* Core/DropboxUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E52F6G7H890089DE34 /* Core/DropboxUploadManager.swift */; };
 		C0C987052CC9F141003EEEFF /* Features/LandoltC/TumblingEViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987042CC9F139003EEEFF /* Features/LandoltC/TumblingEViewController.swift */; };
 		C0C9870A2CC9F413003EEEFF /* Features/Results/ResultViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987092CC9F413003EEEFF /* Features/Results/ResultViewController.swift */; };
@@ -25,6 +33,7 @@
 		D12072E92A9F132000B92792 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = D12072E82A9F132000B92792 /* art.scnassets */; };
 		D126CEEB2FE27F6700951C38 /* Features/TestSetup/DistanceGuidanceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D126CEEA2FE27F6700951C38 /* Features/TestSetup/DistanceGuidanceController.swift */; };
 		D126CEED2FE2850000951C38 /* Features/TestSetup/DistanceGuidanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D126CEEC2FE2850000951C38 /* Features/TestSetup/DistanceGuidanceView.swift */; };
+		D126CEEF2FE2C1A600951C38 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D126CEEE2FE2C1A600951C38 /* PrivacyInfo.xcprivacy */; };
 		D13F546D2ACA7C2A00673C13 /* DevicePpi in Frameworks */ = {isa = PBXBuildFile; productRef = D13F546C2ACA7C2A00673C13 /* DevicePpi */; };
 		D14180E62D3049990070FB19 /* Sloan.otf in Resources */ = {isa = PBXBuildFile; fileRef = D14180E52D3049990070FB19 /* Sloan.otf */; };
 		D17FC2C82DAF9FB300B08D03 /* Features/Results/TestHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17FC2C72DAF9FB300B08D03 /* Features/Results/TestHistoryViewController.swift */; };
@@ -37,12 +46,32 @@
 		DC123ABC2CC9F141003EEEFF /* Features/Results/DataCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC123ABD2CC9F139003EEEFF /* Features/Results/DataCollectionViewController.swift */; };
 		E0E987052CC9F141003EEEFF /* Features/ETDRS/ETDRSViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E987042CC9F139003EEEFF /* Features/ETDRS/ETDRSViewController.swift */; };
 		E0F987052CC9F141003EEEFF /* Features/Settings/SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F987042CC9F139003EEEFF /* Features/Settings/SettingsViewController.swift */; };
+		E7D250010000000000000001 /* Features/ETDRS/ETDRSProgressionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D250010000000000000011 /* Features/ETDRS/ETDRSProgressionEngine.swift */; };
 		F1A2B3C42E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C32E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A30000010000000000000028 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C0CDD61E2A687790002A58BA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C0CDD6252A687790002A58BA;
+			remoteInfo = "Distance Measure Test";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		A1B2C3D32E5F6E780089CD23 /* Core/SubjectNameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/SubjectNameManager.swift; sourceTree = "<group>"; };
 		A1B2C3D52E5F6E890089CD23 /* Shared/Extensions/UIViewController+NamePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Shared/Extensions/UIViewController+NamePrompt.swift"; sourceTree = "<group>"; };
+		A20000010000000000000011 /* Core/OptotypeSizing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/OptotypeSizing.swift; sourceTree = "<group>"; };
+		A20000010000000000000012 /* Core/ScreenCalibrationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/ScreenCalibrationProvider.swift; sourceTree = "<group>"; };
+		A20000010000000000000013 /* Core/EyeDistanceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/EyeDistanceProvider.swift; sourceTree = "<group>"; };
+		A20000010000000000000014 /* Features/Settings/ScreenCalibrationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Settings/ScreenCalibrationViewController.swift; sourceTree = "<group>"; };
+		A30000010000000000000011 /* OptotypeSizingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptotypeSizingTests.swift; sourceTree = "<group>"; };
+		A30000010000000000000012 /* CalibrationAndDistanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationAndDistanceTests.swift; sourceTree = "<group>"; };
+		A30000010000000000000013 /* PersistenceAndArchitectureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceAndArchitectureTests.swift; sourceTree = "<group>"; };
+		A30000010000000000000014 /* Distance Measure TestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Distance Measure TestTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A30000010000000000000015 /* ETDRSProgressionEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETDRSProgressionEngineTests.swift; sourceTree = "<group>"; };
 		B2C3D4E52F6G7H890089DE34 /* Core/DropboxUploadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/DropboxUploadManager.swift; sourceTree = "<group>"; };
 		C0C987042CC9F139003EEEFF /* Features/LandoltC/TumblingEViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/LandoltC/TumblingEViewController.swift; sourceTree = "<group>"; };
 		C0C987092CC9F413003EEEFF /* Features/Results/ResultViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Results/ResultViewController.swift; sourceTree = "<group>"; };
@@ -73,10 +102,18 @@
 		DC123ABD2CC9F139003EEEFF /* Features/Results/DataCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Results/DataCollectionViewController.swift; sourceTree = "<group>"; };
 		E0E987042CC9F139003EEEFF /* Features/ETDRS/ETDRSViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ETDRS/ETDRSViewController.swift; sourceTree = "<group>"; };
 		E0F987042CC9F139003EEEFF /* Features/Settings/SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Settings/SettingsViewController.swift; sourceTree = "<group>"; };
+		E7D250010000000000000011 /* Features/ETDRS/ETDRSProgressionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ETDRS/ETDRSProgressionEngine.swift; sourceTree = "<group>"; };
 		F1A2B3C32E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/TestProgressionDataCollector.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		A30000010000000000000022 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C0CDD6232A687790002A58BA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -89,10 +126,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A30000010000000000000020 /* Distance Measure TestTests */ = {
+			isa = PBXGroup;
+			children = (
+				A30000010000000000000012 /* CalibrationAndDistanceTests.swift */,
+				A30000010000000000000015 /* ETDRSProgressionEngineTests.swift */,
+				A30000010000000000000011 /* OptotypeSizingTests.swift */,
+				A30000010000000000000013 /* PersistenceAndArchitectureTests.swift */,
+			);
+			path = "Distance Measure TestTests";
+			sourceTree = "<group>";
+		};
 		C0CDD61D2A687790002A58BA = {
 			isa = PBXGroup;
 			children = (
 				C0CDD6282A687790002A58BA /* Distance Measure Test */,
+				A30000010000000000000020 /* Distance Measure TestTests */,
 				C0CDD6272A687790002A58BA /* Products */,
 				D19933C22A955CCF0050CF92 /* optician-sans-font */,
 				D126CEEE2FE2C1A600951C38 /* PrivacyInfo.xcprivacy */,
@@ -103,6 +152,7 @@
 			isa = PBXGroup;
 			children = (
 				C0CDD6262A687790002A58BA /* Distance Measure Test.app */,
+				A30000010000000000000014 /* Distance Measure TestTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -139,6 +189,9 @@
 		D1A000020001000100010001 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				A20000010000000000000013 /* Core/EyeDistanceProvider.swift */,
+				A20000010000000000000011 /* Core/OptotypeSizing.swift */,
+				A20000010000000000000012 /* Core/ScreenCalibrationProvider.swift */,
 				B2C3D4E52F6G7H890089DE34 /* Core/DropboxUploadManager.swift */,
 				A1B2C3D32E5F6E780089CD23 /* Core/SubjectNameManager.swift */,
 				F1A2B3C32E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift */,
@@ -205,6 +258,7 @@
 		D1A000090001000100010001 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				A20000010000000000000014 /* Features/Settings/ScreenCalibrationViewController.swift */,
 				E0F987042CC9F139003EEEFF /* Features/Settings/SettingsViewController.swift */,
 			);
 			name = Settings;
@@ -225,6 +279,7 @@
 		D1A0000B0001000100010001 /* ETDRS */ = {
 			isa = PBXGroup;
 			children = (
+				E7D250010000000000000011 /* Features/ETDRS/ETDRSProgressionEngine.swift */,
 				E0E987042CC9F139003EEEFF /* Features/ETDRS/ETDRSViewController.swift */,
 				D1E7D0052FE6200000ED7A01 /* Features/ETDRS/ETDRSWhisperLoadingViewController.swift */,
 				D1E7D0002FE6100000ED7A01 /* Features/ETDRS/ETDRSWhisperLetterService.swift */,
@@ -267,6 +322,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		A30000010000000000000024 /* Distance Measure TestTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A30000010000000000000027 /* Build configuration list for PBXNativeTarget "Distance Measure TestTests" */;
+			buildPhases = (
+				A30000010000000000000021 /* Sources */,
+				A30000010000000000000022 /* Frameworks */,
+				A30000010000000000000023 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A30000010000000000000029 /* PBXTargetDependency */,
+			);
+			name = "Distance Measure TestTests";
+			productName = "Distance Measure TestTests";
+			productReference = A30000010000000000000014 /* Distance Measure TestTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		C0CDD6252A687790002A58BA /* Distance Measure Test */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C0CDD6392A687792002A58BA /* Build configuration list for PBXNativeTarget "Distance Measure Test" */;
@@ -298,6 +371,10 @@
 				LastSwiftUpdateCheck = 1430;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					A30000010000000000000024 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = C0CDD6252A687790002A58BA;
+					};
 					C0CDD6252A687790002A58BA = {
 						CreatedOnToolsVersion = 14.3.1;
 					};
@@ -321,11 +398,19 @@
 			projectRoot = "";
 			targets = (
 				C0CDD6252A687790002A58BA /* Distance Measure Test */,
+				A30000010000000000000024 /* Distance Measure TestTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		A30000010000000000000023 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C0CDD6242A687790002A58BA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -338,16 +423,32 @@
 				D19933C62A955CCF0050CF92 /* info.txt in Resources */,
 				D12072E72A9F12BA00B92792 /* ship.scn in Resources */,
 				D14180E62D3049990070FB19 /* Sloan.otf in Resources */,
+				D126CEEF2FE2C1A600951C38 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A30000010000000000000021 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A30000010000000000000002 /* CalibrationAndDistanceTests.swift in Sources */,
+				A30000010000000000000004 /* ETDRSProgressionEngineTests.swift in Sources */,
+				A30000010000000000000001 /* OptotypeSizingTests.swift in Sources */,
+				A30000010000000000000003 /* PersistenceAndArchitectureTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C0CDD6222A687790002A58BA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A20000010000000000000003 /* Core/EyeDistanceProvider.swift in Sources */,
+				A20000010000000000000001 /* Core/OptotypeSizing.swift in Sources */,
+				A20000010000000000000002 /* Core/ScreenCalibrationProvider.swift in Sources */,
+				A20000010000000000000004 /* Features/Settings/ScreenCalibrationViewController.swift in Sources */,
 				C94D36EB2A81B87500CAD336 /* Features/Home/MainMenuViewController.swift in Sources */,
 				D11297512DF08938006DB97E /* Features/TestSetup/OneEyeInstructionsViewController.swift in Sources */,
 				C0CDD62E2A687790002A58BA /* Features/TestSetup/DistanceOptimization.swift in Sources */,
@@ -357,6 +458,7 @@
 				C94D36ED2A81B89300CAD336 /* Features/Home/InstructionsViewController.swift in Sources */,
 				C0C987052CC9F141003EEEFF /* Features/LandoltC/TumblingEViewController.swift in Sources */,
 				D126CEEB2FE27F6700951C38 /* Features/TestSetup/DistanceGuidanceController.swift in Sources */,
+				E7D250010000000000000001 /* Features/ETDRS/ETDRSProgressionEngine.swift in Sources */,
 				E0E987052CC9F141003EEEFF /* Features/ETDRS/ETDRSViewController.swift in Sources */,
 				D1E7D0012FE6100000ED7A01 /* Features/ETDRS/ETDRSWhisperLetterService.swift in Sources */,
 				D1E7D0062FE6200000ED7A01 /* Features/ETDRS/ETDRSWhisperLoadingViewController.swift in Sources */,
@@ -373,6 +475,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A30000010000000000000029 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C0CDD6252A687790002A58BA /* Distance Measure Test */;
+			targetProxy = A30000010000000000000028 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C0CDD62F2A687790002A58BA /* Main.storyboard */ = {
@@ -394,6 +504,51 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		A30000010000000000000025 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = HW8LWQ35S9;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mabdel03.visinear.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Distance Measure Test.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Distance Measure Test";
+			};
+			name = Debug;
+		};
+		A30000010000000000000026 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = HW8LWQ35S9;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mabdel03.visinear.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Distance Measure Test.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Distance Measure Test";
+			};
+			name = Release;
+		};
 		C0CDD6372A687792002A58BA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -515,7 +670,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = L4924K5F8S;
+				DEVELOPMENT_TEAM = HW8LWQ35S9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Visinear;
@@ -534,7 +689,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Momo-Acuity-App-Test";
+				PRODUCT_BUNDLE_IDENTIFIER = com.mabdel03.visinear;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -549,7 +704,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = L4924K5F8S;
+				DEVELOPMENT_TEAM = HW8LWQ35S9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Distance-Measure-Test-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Visinear;
@@ -568,7 +723,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Momo-Acuity-App-Test";
+				PRODUCT_BUNDLE_IDENTIFIER = com.mabdel03.visinear;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -579,6 +734,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A30000010000000000000027 /* Build configuration list for PBXNativeTarget "Distance Measure TestTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A30000010000000000000025 /* Debug */,
+				A30000010000000000000026 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C0CDD6212A687790002A58BA /* Build configuration list for PBXProject "Distance Measure Test" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -12,7 +12,7 @@ let LETTER = "C" // Landolt C-- the letter that is displayed on the acuity selec
 
 // Global test type preference
 var isETDRSTest: Bool {
-    return UserDefaults.standard.bool(forKey: "etdrs_test_enabled")
+    return TestTypePreferences.isEnabled()
 }
 
 /* SelectAcuity class is designed to display the acuity selection scene.
@@ -25,6 +25,16 @@ class SelectAcuity: UIViewController {
     @IBOutlet weak var B80: UIButton!
     @IBOutlet weak var B50: UIButton!
     @IBOutlet weak var B10: UIButton!
+
+    private var distanceObserver: NSObjectProtocol?
+    private var calibrationObserver: NSObjectProtocol?
+    private var staleDistanceTimer: Timer?
+    private var isPresentingCalibration = false
+    private var renderSpecs: [ObjectIdentifier: OptotypeRenderSpec] = [:]
+
+    private var acuityButtons: [(button: UIButton, denominator: Int)] {
+        [(B200, 200), (B125, 125), (B80, 80), (B50, 50), (B10, 20)]
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,42 +42,57 @@ class SelectAcuity: UIViewController {
         // Set background to teal
         view.backgroundColor = AppThemeColors.teal
         
-        print("🔍 SelectAcuity averageDistanceCM:", averageDistanceCM)
-        
-        // Ensure we have a valid distance before setting up buttons
-        if averageDistanceCM <= 0 {
-            // Try to load from UserDefaults
-            if let savedDistance = UserDefaults.standard.object(forKey: "SavedTargetDistance") as? Double,
-               savedDistance > 0 {
-                print("🔍 Loading saved distance for acuity selection: \(savedDistance) cm")
-                averageDistanceCM = savedDistance
-                DistanceTracker.shared.targetDistanceCM = savedDistance
-            } else {
-                print("🔍 No valid distance found - using default of 40 cm for acuity selection")
-                averageDistanceCM = 40.0
-                DistanceTracker.shared.targetDistanceCM = 40.0
-            }
-        }
-        
-        print("🔍 Using distance for acuity selection: \(averageDistanceCM) cm")
-        
-        // Choose letter based on test type
-        let displayLetter = isETDRSTest ? "C" : LETTER
-        
-        // Set up all buttons with their appropriate letter sizes
-        Button_ETDRS(B200, dAcuity: 200, letText: displayLetter)
-        Button_ETDRS(B125, dAcuity: 125, letText: displayLetter)
-        Button_ETDRS(B80, dAcuity: 80, letText: displayLetter)
-        Button_ETDRS(B50, dAcuity: 50, letText: displayLetter)
-        Button_ETDRS(B10, dAcuity: 20, letText: displayLetter)
-        
         // Configure the stack view and buttons for dynamic sizing
         configureButtonConstraints()
+        configureButtonAppearance()
+        setChoicesEnabled(false)
+
+        distanceObserver = NotificationCenter.default.addObserver(
+            forName: .eyeDistanceDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.refreshOptotypes()
+        }
+        calibrationObserver = NotificationCenter.default.addObserver(
+            forName: .screenCalibrationDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.isPresentingCalibration = false
+            self?.refreshOptotypes()
+        }
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        EyeDistanceProvider.shared.start(
+            eyeNumber: VisualAcuitySession.currentEyeNumber,
+            client: self
+        )
+        staleDistanceTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) {
+            [weak self] _ in self?.refreshOptotypes()
+        }
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        staleDistanceTimer?.invalidate()
+        staleDistanceTimer = nil
+        EyeDistanceProvider.shared.stop(client: self)
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        requireCalibrationIfNeeded()
+        refreshOptotypes()
         playAudioInstructions()
+    }
+
+    deinit {
+        staleDistanceTimer?.invalidate()
+        if let distanceObserver { NotificationCenter.default.removeObserver(distanceObserver) }
+        if let calibrationObserver { NotificationCenter.default.removeObserver(calibrationObserver) }
     }
     
     /* Plays audio instructions to the user.
@@ -79,86 +104,77 @@ class SelectAcuity: UIViewController {
     
     /* Sets up the button text size and display for the acuity selection scene.
     */
-    func Button_ETDRS(_ button: UIButton, dAcuity: Int, letText: String) {
-        // Standard ETDRS calculation: 5 arcminutes at 20/20 vision at designated testing distance
-        // Visual angle in radians = (size in arcmin / 60) * (pi/180)
-        let arcmin_per_letter = 5.0 // Standard size for 20/20 optotype is 5 arcmin
-        let visual_angle = ((Double(dAcuity) / 20.0) * arcmin_per_letter / 60.0) * Double.pi / 180.0
-        let scaling_correction_factor = 1.0 / 2.54  // Conversion from inches to cm
-        
-        // Calculate size at viewing distance
-        let scale_factor = Double(averageDistanceCM) * tan(visual_angle) * scaling_correction_factor
-        let letterHeight = scale_factor * VisualAcuitySession.devicePPI
-        
-        // Adjusted font size - reducing by factor of 2 to match physical acuity cards
-        // The 0.3 factor (instead of 0.6) accounts for font rendering differences
-        let fontSize = 0.3 * letterHeight 
-        
-        // Calculate appropriate padding based on letter size for full-width buttons
-        let verticalPadding: CGFloat = 12 + (CGFloat(fontSize) * 0.10) // Scale vertical padding with font size
-        let horizontalPadding: CGFloat = 16 // Minimal horizontal padding since button spans full width
-        
-        // Get or create Sloan font at the calculated size
-        let sloanFont = UIFont(name: "Sloan", size: 100) // Start with a base font
-        let buttonFont: UIFont
-        
-        if let sloanFont = sloanFont {
-            // Use withSize() to preserve font family, just like in TumblingEViewController
-            buttonFont = sloanFont.withSize(CGFloat(fontSize))
-        } else {
-            print("⚠️ Sloan font not available, using system font for acuity \(dAcuity)")
-            buttonFont = UIFont.systemFont(ofSize: CGFloat(fontSize))
+    @discardableResult
+    func Button_ETDRS(_ button: UIButton, dAcuity: Int, letText: String) -> Bool {
+        guard let sample = EyeDistanceProvider.shared.validSample(),
+              let calibration = ScreenCalibrationProvider.shared.currentCalibration else {
+            button.setTitle(letText, for: .normal)
+            button.isEnabled = false
+            return false
         }
-        
-        // DON'T use UIButton.Configuration - use direct styling for full control
-        // This matches the approach used in TumblingEViewController which works correctly
-        button.setTitle(letText, for: .normal)
-        
-        button.configuration = nil
-        button.contentEdgeInsets = UIEdgeInsets(
-            top: verticalPadding,
-            left: horizontalPadding,
-            bottom: verticalPadding,
-            right: horizontalPadding
-        )
-        
-        // Set button colors - white background with black text
-        button.backgroundColor = .white
-        button.setTitleColor(.black, for: .normal)
-        
-        // CRITICAL: Set font properties AFTER other button setup to ensure they stick
-        // This must be done after contentEdgeInsets and before layout
-        button.titleLabel?.font = buttonFont
-        button.titleLabel?.adjustsFontSizeToFitWidth = false
-        button.titleLabel?.minimumScaleFactor = 1.0
-        button.titleLabel?.numberOfLines = 1
-        button.titleLabel?.lineBreakMode = .byClipping
-        button.titleLabel?.baselineAdjustment = .alignCenters
-        
-        // Force layout with the new font
-        button.setNeedsLayout()
-        button.layoutIfNeeded()
-        
-        // Configure button appearance for connected buttons
-        button.layer.cornerRadius = 0 // No corner radius for connected buttons
-        button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.lightGray.cgColor
-        
-        // Ensure text is centered in the full-width button
-        button.titleLabel?.textAlignment = .center
-        button.contentHorizontalAlignment = .center
-        button.contentVerticalAlignment = .center
-        
-        // Set content hugging and compression priorities for full-width layout
-        button.setContentHuggingPriority(.defaultLow, for: .horizontal)  // Allow horizontal expansion
-        button.setContentHuggingPriority(.required, for: .vertical)      // Keep tight vertical sizing
-        button.setContentCompressionResistancePriority(.defaultLow, for: .horizontal) // Allow compression if needed
-        button.setContentCompressionResistancePriority(.required, for: .vertical)     // Resist vertical compression
-        
-        // Debug output to verify scaling
-        let intrinsicSize = button.intrinsicContentSize
-        let actualFont = button.titleLabel?.font
-        print("📏 Acuity \(dAcuity): Letter height: \(String(format: "%.2f", letterHeight))px, Font size: \(String(format: "%.2f", fontSize))pt, Actual font: \(actualFont?.pointSize ?? 0)pt, Button size: \(String(format: "%.1f", intrinsicSize.width))x\(String(format: "%.1f", intrinsicSize.height))px, Font: \(buttonFont.fontName), adjustsFontSize: \(button.titleLabel?.adjustsFontSizeToFitWidth ?? false)")
+        do {
+            let identifier = ObjectIdentifier(button)
+            let update = try OptotypeRenderer.update(
+                button: button,
+                text: letText,
+                distanceCM: sample.distanceCM,
+                snellenDenominator: dAcuity,
+                calibration: calibration,
+                previousSpec: renderSpecs[identifier]
+            )
+            renderSpecs[identifier] = update.spec
+            return true
+        } catch {
+            button.isEnabled = false
+            print("Unable to size acuity \(dAcuity): \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    private func configureButtonAppearance() {
+        for (button, _) in acuityButtons {
+            button.configuration = nil
+            button.backgroundColor = .white
+            button.setTitleColor(.black, for: .normal)
+            button.setTitleColor(.gray, for: .disabled)
+            button.titleLabel?.adjustsFontSizeToFitWidth = false
+            button.titleLabel?.numberOfLines = 1
+            button.titleLabel?.lineBreakMode = .byClipping
+            button.titleLabel?.textAlignment = .center
+            button.contentHorizontalAlignment = .center
+            button.contentVerticalAlignment = .center
+            button.layer.borderWidth = 1
+            button.layer.borderColor = UIColor.lightGray.cgColor
+        }
+    }
+
+    private func refreshOptotypes() {
+        guard ScreenCalibrationProvider.shared.currentCalibration != nil,
+              EyeDistanceProvider.shared.validSample() != nil else {
+            setChoicesEnabled(false)
+            return
+        }
+        let displayLetter = isETDRSTest ? "C" : LETTER
+        var renderedEveryChoice = true
+        for (button, denominator) in acuityButtons {
+            renderedEveryChoice = Button_ETDRS(
+                button,
+                dAcuity: denominator,
+                letText: displayLetter
+            ) && renderedEveryChoice
+        }
+        setChoicesEnabled(renderedEveryChoice)
+    }
+
+    private func setChoicesEnabled(_ isEnabled: Bool) {
+        acuityButtons.forEach { $0.button.isEnabled = isEnabled }
+    }
+
+    private func requireCalibrationIfNeeded() {
+        guard ScreenCalibrationProvider.shared.currentCalibration == nil,
+              !isPresentingCalibration else { return }
+        isPresentingCalibration = true
+        present(ScreenCalibrationViewController(), animated: true)
     }
 
     //DIFFERENT ACUITY LEVELS
@@ -233,31 +249,14 @@ class SelectAcuity: UIViewController {
         for button in buttons {
             guard let button = button else { continue }
             
-            // Remove any existing height constraints that were set to 200 in the storyboard
-            button.constraints.forEach { constraint in
-                if constraint.firstAttribute == .height && constraint.constant == 200 {
-                    constraint.isActive = false
-                    print("🔧 Removed 200px height constraint from button")
-                }
-            }
-            
-            // Also check constraints from the superview (stack view)
-            if let stackView = button.superview {
-                stackView.constraints.forEach { constraint in
-                    if (constraint.firstItem as? UIButton) == button && 
-                       constraint.firstAttribute == .height && 
-                       constraint.constant == 200 {
-                        constraint.isActive = false
-                        print("🔧 Removed 200px height constraint from stack view")
-                    }
-                }
-            }
-            
             // Configure button to expand horizontally while maintaining dynamic height
             button.setContentHuggingPriority(.defaultLow, for: .horizontal) // Allow horizontal expansion
-            button.setContentHuggingPriority(.required, for: .vertical)     // Keep tight vertical sizing
+            button.setContentHuggingPriority(.defaultLow, for: .vertical)
             button.setContentCompressionResistancePriority(.defaultLow, for: .horizontal) // Allow compression if needed
-            button.setContentCompressionResistancePriority(.required, for: .vertical)     // Resist vertical compression
+            // Must stay below the stack's fillEqually constraints: the row height is
+            // fixed at 1/5 of the safe area, so an oversized optotype clips rather
+            // than making the layout unsatisfiable.
+            button.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
         }
         
         // Force layout update to apply the new sizing

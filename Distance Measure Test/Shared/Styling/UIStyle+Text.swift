@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import DevicePpi
 
 final class PaddedStatusLabel: UILabel {
     var textInsets = UIEdgeInsets(top: 7, left: 14, bottom: 7, right: 14) {
@@ -94,15 +93,6 @@ enum VisualAcuitySession {
     static var selectedAcuity: Int?
     static var logMARValue: Double = -1.000
     static var snellenValue: Double = -1
-
-    static let devicePPI: Double = {
-        switch Ppi.get() {
-        case .success(let ppi):
-            return ppi
-        case .unknown(let bestGuessPpi, _):
-            return bestGuessPpi
-        }
-    }()
 
     static func eyeName(for eyeNumber: Int) -> String {
         eyeNumber == 2 ? "Right" : "Left"

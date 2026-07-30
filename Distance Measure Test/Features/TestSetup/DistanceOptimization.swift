@@ -24,6 +24,36 @@ class DistanceTracker {
     /* Private initializer enforcing singleton pattern
     */
     private init() {}
+
+    var preferredHoldingDistanceCM: Double? {
+        if let target = Self.validatedHoldingDistance(targetDistanceCM) {
+            return target
+        }
+        let saved = UserDefaults.standard.object(forKey: "SavedTargetDistance") as? Double
+        guard let restored = Self.validatedHoldingDistance(saved) else {
+            targetDistanceCM = 0
+            return nil
+        }
+        targetDistanceCM = restored
+        return restored
+    }
+
+    static func validatedHoldingDistance(_ distanceCM: Double?) -> Double? {
+        guard let distanceCM,
+              distanceCM.isFinite,
+              EyeDistanceSample.acceptedRangeCM.contains(distanceCM) else {
+            return nil
+        }
+        return distanceCM
+    }
+
+    @discardableResult
+    func saveHoldingDistance(_ distanceCM: Double) -> Bool {
+        guard let validated = Self.validatedHoldingDistance(distanceCM) else { return false }
+        targetDistanceCM = validated
+        UserDefaults.standard.set(validated, forKey: "SavedTargetDistance")
+        return true
+    }
     
     /* Adds a new distance reading with smoothing algorithm. 
         Validates input (rejects values ≤ 0), adds reading to buffer, 
@@ -57,19 +87,13 @@ class DistanceTracker {
     taps 'Capture Distance' button to save this distance as the optimal distance for their test.
 */
 
-class DistanceOptimization: UIViewController, ARSCNViewDelegate {
+class DistanceOptimization: UIViewController {
     @IBOutlet var sceneView: ARSCNView!
     @IBOutlet weak var captureDistanceButton: UIButton!
-    var faceNode: SCNNode!
-    var leftEye: SCNNode!
-    var rightEye: SCNNode!
     var lastCapturedDistance: Double = 0.0
+    private var distanceTimer: Timer?
 
-    // leftEye/rightEye are non-nil placeholder nodes from the moment viewDidLoad
-    // runs, with a hardcoded position that has nothing to do with the user's
-    // actual face — so their presence can't tell us whether ARKit has actually
-    // found a face. This flag is the real signal, set only from the
-    // ARSCNViewDelegate face-anchor callbacks below.
+    // This is true only while the shared provider has a current, valid sample.
     private var hasDetectedFace = false {
         didSet {
             guard hasDetectedFace != oldValue else { return }
@@ -169,25 +193,13 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
             statusRowStack.bottomAnchor.constraint(equalTo: captureDistanceButton.topAnchor, constant: -16)
         ])
 
-        // Set the view's delegate
-        sceneView.delegate = self
-        
         // Show statistics such as fps and timing information
-        sceneView.showsStatistics = true
+        sceneView.showsStatistics = false
         // Create a new scene
         let scene = SCNScene(named: "/ship.scn")!
         // Set the scene to the view
         sceneView.scene = scene
 
-        // Set up the face node and eyes
-        let eyeGeometry = SCNSphere(radius: 0.01)
-        eyeGeometry.firstMaterial?.diffuse.contents = UIColor.blue
-        let node = SCNNode(geometry: eyeGeometry)
-        node.eulerAngles.x = -.pi / 2
-        node.position.z = 0.1
-
-        leftEye = node.clone()
-        rightEye = node.clone()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -213,18 +225,21 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         resetStabilityStreak()
         prepareCaptureButtonAwaitingFaceDetection()
 
-        // Create a session configuration
-        let configuration = ARFaceTrackingConfiguration()
-
-        // Run the view's session
-        sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+        EyeDistanceProvider.shared.start(
+            eyeNumber: VisualAcuitySession.currentEyeNumber,
+            client: self
+        )
+        distanceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) {
+            [weak self] _ in self?.refreshDistanceState()
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
 
-        // Pause the view's session
-        sceneView.session.pause()
+        distanceTimer?.invalidate()
+        distanceTimer = nil
+        EyeDistanceProvider.shared.stop(client: self)
     }
 
     /* Puts the capture UI in its "waiting for a face" state: button disabled,
@@ -320,50 +335,17 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
     user taps the 'Capture Distance' button.
     */
     @IBAction func capDistanceTransition(_ sender: Any) {
-        // The button is disabled until hasDetectedFace is true, so this should
-        // only trip in a race (e.g. tracking lost right as the tap lands).
-        // leftEye/rightEye are never nil — they exist from viewDidLoad with a
-        // placeholder position — so checking them can't tell us this.
-        guard let frame = sceneView.session.currentFrame, hasDetectedFace else {
-            print("⚠️ Cannot capture distance: Face not detected")
-            return
-        }
-        
-        let cameraTransform = frame.camera.transform
-        let cameraPosition = SCNVector3(cameraTransform.columns.3.x,
-                                        cameraTransform.columns.3.y,
-                                        cameraTransform.columns.3.z)                       
-        let leftEyePos = leftEye.worldPosition
-        let rightEyePos = rightEye.worldPosition
-        
-        // Validate that eye positions are valid
-        if leftEyePos.length() < 0.001 || rightEyePos.length() < 0.001 {
-            print("⚠️ Eye positions not valid yet - cannot capture distance")
-            return
-        }
-        
-        // Calculate distance from camera to eyes
-        let leftEyeDistance = SCNVector3Distance(leftEyePos, cameraPosition) * 100  // Convert to cm
-        let rightEyeDistance = SCNVector3Distance(rightEyePos, cameraPosition) * 100  // Convert to cm
-        let averageDistance: Float
-        if VisualAcuitySession.currentEyeNumber == 1 {
-            print("Left eye tracking enabled")
-            averageDistance = leftEyeDistance
-        } else {
-            print("Right eye tracking enabled")
-            averageDistance = rightEyeDistance
-        }
-
-        // Validate the measured distance is reasonable
-        if averageDistance < 10 || averageDistance > 100 {
-            print("⚠️ Distance measurement out of expected range: \(averageDistance) cm")
+        guard hasDetectedFace,
+              isDistanceStable,
+              let sample = EyeDistanceProvider.shared.validSample() else {
+            print("⚠️ Cannot capture distance: current eye distance is unavailable")
             return
         }
 
         // Store the target distance
-        let distanceValue = Double(averageDistance)
+        let distanceValue = sample.distanceCM
         averageDistanceCM = distanceValue
-        DistanceTracker.shared.targetDistanceCM = distanceValue
+        guard DistanceTracker.shared.saveHoldingDistance(distanceValue) else { return }
         
         // Reset the recent readings with the new target
         DistanceTracker.shared.addReading(distanceValue)
@@ -374,62 +356,21 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         print("🎯 Target Distance Captured: \(String(format: "%.1f", averageDistanceCM)) cm")
         lastCapturedDistance = distanceValue
         
-        // Save to UserDefaults for persistence across app launches
-        UserDefaults.standard.set(distanceValue, forKey: "SavedTargetDistance")
     }
     
-    /* Called when ARKit first detects a face and creates the initial face 
-        node. Sets up the initial face tracking structure, called only once per 
-        face detection session.
-    */
-    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard anchor is ARFaceAnchor else { return }
-        faceNode = node
-        faceNode.addChildNode(leftEye)
-        faceNode.addChildNode(rightEye)
-        faceNode.transform = node.transform
-
-        // ARSCNViewDelegate callbacks fire on the render thread, not main —
-        // resetStabilityStreak()/hasDetectedFace drive UIKit updates
-        // (countdownLabel, captureDistanceButton), which must happen on main.
-        // Without this hop, those updates are undefined-behavior-flaky: they
-        // can silently fail to land, which is what left the screen stuck on
-        // "3 s" until the view reloaded.
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            // Start the stability streak fresh for this detection — don't let
-            // an earlier, since-lost detection count toward it.
-            self.resetStabilityStreak()
-            self.hasDetectedFace = true
-            self.trackDistance()
+    private func refreshDistanceState() {
+        guard let sample = EyeDistanceProvider.shared.validSample() else {
+            if hasDetectedFace {
+                hasDetectedFace = false
+                resetStabilityStreak()
+            }
+            return
         }
-    }
-
-    /* Called every frame(60 times per second on most devices) while the
-        face is being tracked. Continuously updates face and eye positions as
-        the user moves.
-    */
-    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-        faceNode.transform = node.transform
-        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
-        leftEye.simdTransform = faceAnchor.leftEyeTransform
-        rightEye.simdTransform = faceAnchor.rightEyeTransform
-        trackDistance()
-    }
-
-    /* Called when ARKit loses the face anchor (e.g. the user moves out of
-       frame). Without this, hasDetectedFace would stay true from an earlier
-       detection even though the eye nodes are no longer being updated —
-       disabling the button again keeps it honest about current tracking.
-    */
-    func renderer(_ renderer: SCNSceneRenderer, didRemove node: SCNNode, for anchor: ARAnchor) {
-        guard anchor is ARFaceAnchor else { return }
-        // See the didAdd comment above — this must run on main too.
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.hasDetectedFace = false
-            self.resetStabilityStreak()
+        if !hasDetectedFace {
+            resetStabilityStreak()
+            hasDetectedFace = true
         }
+        recordDistanceSample(sample.distanceCM)
     }
 
     /* Records a distance reading and updates the stability streak: as long as
@@ -472,52 +413,6 @@ class DistanceOptimization: UIViewController, ARSCNViewDelegate {
         isDistanceStable = false
     }
 
-    /* Tracks the distance between the camera and the eyes.
-    */
-    func trackDistance() {
-        DispatchQueue.main.async {
-            guard let frame = self.sceneView.session.currentFrame else { return }
-            
-            let cameraTransform = frame.camera.transform
-            let cameraPosition = SCNVector3(cameraTransform.columns.3.x,
-                                           cameraTransform.columns.3.y,
-                                           cameraTransform.columns.3.z)
-            
-            let leftEyePos = self.leftEye.worldPosition
-            let rightEyePos = self.rightEye.worldPosition
-            
-            // Skip if positions are invalid
-            if leftEyePos.length() < 0.001 || rightEyePos.length() < 0.001 {
-                return
-            }
-            
-            // Calculate distance from camera to eyes
-            let leftEyeDistance = SCNVector3Distance(leftEyePos, cameraPosition)
-            let rightEyeDistance = SCNVector3Distance(rightEyePos, cameraPosition)
-            let averageDistance = (leftEyeDistance + rightEyeDistance) / 2 * 100  // Convert to cm
-            
-            // Validate measurement before saving
-            if averageDistance > 5 && averageDistance < 100 {
-                // Add the reading to our tracker with built-in smoothing
-                DistanceTracker.shared.addReading(Double(averageDistance))
-                self.recordDistanceSample(Double(averageDistance))
-
-                // Only print occasionally to reduce console spam
-                if Int(Date().timeIntervalSince1970 * 10) % 20 == 0 {
-                    print("📏 Distance Tracked: \(String(format: "%.1f", Double(averageDistance))) cm")
-                }
-            }
-        }
-    }
-}
-
-//------------------------------
-// MARK: - SCNVector3 Extensions
-//------------------------------
-
-extension SCNVector3 {
-    func length() -> Float { return sqrtf(x * x + y * y + z * z) }
-    static func - (l: SCNVector3, r: SCNVector3) -> SCNVector3 { return SCNVector3Make(l.x - r.x, l.y - r.y, l.z - r.z)     }
 }
 
 extension DistanceOptimization {

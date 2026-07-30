@@ -6,26 +6,17 @@
 //
 
 import UIKit
-import DevicePpi
-import ARKit
 import AVFoundation
 import Speech
 import MessageUI
 
 /* DataCollectionViewController implements a data collection system for optimizing
-   voice recognition mapping algorithms. Shows extremely large letters (20/200 at 40cm)
+   voice recognition mapping algorithms. Shows a live-distance-sized 20/200 letter
    and records user responses, transcriptions, and mapping results.
  */
-class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeechRecognizerDelegate, MFMailComposeViewControllerDelegate {
+class DataCollectionViewController: UIViewController, SFSpeechRecognizerDelegate, MFMailComposeViewControllerDelegate {
     
     // MARK: - Properties
-    
-    /// AR scene view for distance tracking
-    var sceneView: ARSCNView!
-    
-    /// 3D nodes for eye tracking
-    var leftEye: SCNNode!
-    var rightEye: SCNNode!
     
     /// ETDRS letters for testing
     let etdrsLetters = ["C", "D", "F", "H", "K", "N", "P", "R", "U", "V", "Z"]
@@ -40,13 +31,18 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     private let totalLetters = 25
     
     /// Data collection array
-    private var collectedData: [(letter: String, transcription: String, mapping: String)] = []
-    
-    /// Fixed distance for data collection (40cm)
-    private let fixedDistance: Double = 40.0
+    private var collectedData: [(
+        letter: String,
+        transcription: String,
+        mapping: String,
+        sizing: SizingProvenance
+    )] = []
     
     /// Fixed acuity level for large letters (20/200)
     private let fixedAcuity: Int = 200
+    private var distanceTimer: Timer?
+    private var currentRenderSpec: OptotypeRenderSpec?
+    private var currentSizingProvenance: SizingProvenance?
     
     // MARK: - Speech Recognition Properties
     
@@ -68,11 +64,15 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     /// Timer to restart speech recognition if it gets stuck
     private var speechTimeoutTimer: Timer?
     
-    /// Cloud upload URL (configured for Google Drive upload server)
-    private let cloudUploadURL = "http://localhost:5000/upload" // Change to your deployed server URL
-    
-    /// Google Drive folder ID for data collection
-    private let googleDriveFolderID = "1gQNIG23hqthx7XncvycEDuJPaf8yV012"
+    /// Optional cloud upload endpoint. Leave CloudUploadURL empty or absent for manual export.
+    private var configuredCloudUploadURL: URL? {
+        guard let value = Bundle.main.object(forInfoDictionaryKey: "CloudUploadURL") as? String else {
+            return nil
+        }
+        let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedValue.isEmpty else { return nil }
+        return URL(string: trimmedValue)
+    }
     
     // MARK: - UI Elements
     
@@ -80,7 +80,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     private lazy var letterLabel: UILabel = {
         let label = UILabel()
         label.text = "C"
-        label.font = UIFont(name: "Sloan", size: 200) // Very large for 20/200 at 40cm
+        label.font = UIFont(name: "Sloan", size: 200) // Replaced by the first calibrated live render.
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -153,7 +153,6 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         
         view.backgroundColor = .white
         setupUI()
-        setupARTracking()
         setupSpeechRecognition()
         
         // Generate first letter
@@ -170,8 +169,8 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         // Play audio instructions
         playAudioInstructions()
         
-        // Start speech recognition
-        startListening()
+        requireCalibrationIfNeeded()
+        refreshStimulusForLiveDistance()
         
         print("🔬 DataCollectionViewController - viewDidAppear completed")
     }
@@ -182,6 +181,18 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         // Clean up speech recognition
         stopListening()
         stopSpeechTimeoutTimer()
+        distanceTimer?.invalidate()
+        distanceTimer = nil
+        EyeDistanceProvider.shared.stop(client: self)
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        setupARTracking()
+        distanceTimer?.invalidate()
+        distanceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) {
+            [weak self] _ in self?.refreshStimulusForLiveDistance()
+        }
     }
     
     // MARK: - UI Setup
@@ -231,41 +242,16 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
             instructionLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
         
-        // Set the letter size for 20/200 at 40cm
-        setLetterSizeForDataCollection()
-        
         print("🔬 DataCollectionViewController - UI setup completed")
     }
     
     // MARK: - AR Setup
     
     private func setupARTracking() {
-        guard ARFaceTrackingConfiguration.isSupported else {
-            print("⚠️ AR Face Tracking is NOT supported on this device.")
-            return
-        }
-
-        sceneView = ARSCNView(frame: view.bounds)
-        sceneView.delegate = self
-        
-        let configuration = ARFaceTrackingConfiguration()
-        configuration.isLightEstimationEnabled = true
-        configuration.maximumNumberOfTrackedFaces = 1
-        
-        // Add the scene view but hide it (we don't need visual AR for data collection)
-        sceneView.isHidden = true
-        view.addSubview(sceneView)
-        
-        sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
-        
-        // Initialize eye tracking nodes
-        let eyeGeometry = SCNSphere(radius: 0.01)
-        eyeGeometry.firstMaterial?.diffuse.contents = UIColor.blue
-        
-        leftEye = SCNNode(geometry: eyeGeometry)
-        rightEye = SCNNode(geometry: eyeGeometry)
-        
-        print("🔬 AR Face Tracking Started for data collection")
+        EyeDistanceProvider.shared.start(
+            eyeNumber: VisualAcuitySession.currentEyeNumber,
+            client: self
+        )
     }
     
     // MARK: - Speech Recognition Setup
@@ -449,6 +435,13 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     // MARK: - Data Collection Processing
     
     private func processSpokenInputForDataCollection(_ spokenText: String) {
+        guard EyeDistanceProvider.shared.validSample() != nil,
+              let calibration = ScreenCalibrationProvider.shared.currentCalibration,
+              let sizingProvenance = currentSizingProvenance,
+              sizingProvenance.matches(calibration) else {
+            refreshStimulusForLiveDistance()
+            return
+        }
         print("🔬 Processing data collection input: '\(spokenText)' for letter: '\(currentLetter)'")
         
         // Get the mapping result using the existing algorithm
@@ -459,7 +452,8 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         let dataPoint = (
             letter: currentLetter,
             transcription: spokenText,
-            mapping: mappingResult
+            mapping: mappingResult,
+            sizing: sizingProvenance
         )
         
         collectedData.append(dataPoint)
@@ -550,7 +544,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
             transcriptionLabel.text = ""
             
             // Start listening for the next letter
-            startListening()
+            refreshStimulusForLiveDistance()
         }
     }
     
@@ -561,12 +555,12 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         stopListening()
         
         // Update UI
-        instructionLabel.text = "Data collection complete! Generating report..."
+        instructionLabel.text = "Data collection complete. Generating report..."
         progressLabel.text = "Complete: \(collectedData.count) letters collected"
-        letterLabel.text = "✓"
+        letterLabel.text = "Done"
         transcriptionLabel.text = ""
         
-        // Generate and upload CSV (with cloud backup option)
+        // Generate CSV and export manually unless a cloud endpoint is explicitly configured.
         generateAndUploadCSV()
     }
     
@@ -599,11 +593,24 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         }()
         
         // Generate CSV content
-        var csvContent = "Letter_Displayed,Transcribed_Text,Mapped_Result\n"
+        var csvContent = "Letter_Displayed,Transcribed_Text,Mapped_Result,Sizing_Version,Calibration_Source,Points_Per_MM,Screen_Signature,Target_Height_MM,Rendered_Height_Points\n"
         
         for dataPoint in collectedData {
             let escapedTranscription = dataPoint.transcription.replacingOccurrences(of: "\"", with: "\"\"")
-            csvContent += "\(dataPoint.letter),\"\(escapedTranscription)\",\(dataPoint.mapping)\n"
+            let sizing = dataPoint.sizing
+            let sizingColumns = [
+                String(sizing.sizingVersion),
+                sizing.calibrationSource.rawValue,
+                SizingMetadataFormat.decimal(sizing.pointsPerMillimeter, places: 6),
+                sizing.screenSignature,
+                SizingMetadataFormat.decimal(sizing.targetHeightMillimeters, places: 6),
+                SizingMetadataFormat.decimal(sizing.renderedHeightPoints, places: 6)
+            ]
+            csvContent += ([
+                dataPoint.letter,
+                "\"\(escapedTranscription)\"",
+                dataPoint.mapping
+            ] + sizingColumns).joined(separator: ",") + "\n"
         }
         
         // Create temporary file
@@ -613,16 +620,62 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         do {
             try csvContent.write(to: tempFileURL, atomically: true, encoding: .utf8)
             print("🔬 CSV file created: \(fileName)")
-            
-            // Try cloud upload first, fallback to email
-            Task {
-                await uploadToCloudWithEmailFallback(fileURL: tempFileURL, fileName: fileName, csvContent: csvContent)
+
+            if let cloudURL = configuredCloudUploadURL {
+                Task {
+                    await uploadToCloudWithManualFallback(
+                        fileURL: tempFileURL,
+                        fileName: fileName,
+                        csvContent: csvContent,
+                        cloudURL: cloudURL
+                    )
+                }
+            } else {
+                instructionLabel.text = "Choose an export destination."
+                showShareSheet(fileURL: tempFileURL, fileName: fileName)
             }
             
         } catch {
             print("🔬 Error creating CSV file: \(error)")
             showErrorAlert(message: "Failed to create CSV file: \(error.localizedDescription)")
         }
+    }
+
+    private func showShareSheet(fileURL: URL, fileName: String) {
+        let activityVC = UIActivityViewController(
+            activityItems: [fileURL],
+            applicationActivities: nil
+        )
+
+        if let popoverController = activityVC.popoverPresentationController {
+            popoverController.sourceView = view
+            popoverController.sourceRect = CGRect(
+                x: view.bounds.midX,
+                y: view.bounds.midY,
+                width: 0,
+                height: 0
+            )
+            popoverController.permittedArrowDirections = []
+        }
+
+        activityVC.completionWithItemsHandler = { [weak self] _, completed, _, error in
+            try? FileManager.default.removeItem(at: fileURL)
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if completed {
+                    print("🔬 CSV exported manually: \(fileName)")
+                    self.showSuccessAlert()
+                } else if let error {
+                    print("🔬 Manual export failed: \(error.localizedDescription)")
+                    self.showErrorAlert(message: "Failed to export CSV file: \(error.localizedDescription)")
+                } else {
+                    print("🔬 Manual export cancelled")
+                    self.showCancelledAlert()
+                }
+            }
+        }
+
+        present(activityVC, animated: true)
     }
     
     private func emailCSV(fileURL: URL, fileName: String) {
@@ -657,10 +710,18 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
         }
     }
     
-    private func uploadToCloudWithEmailFallback(fileURL: URL, fileName: String, csvContent: String) async {
-        // Try cloud upload first
+    private func uploadToCloudWithManualFallback(
+        fileURL: URL,
+        fileName: String,
+        csvContent: String,
+        cloudURL: URL
+    ) async {
         do {
-            let success = try await uploadToSimpleCloud(csvContent: csvContent, fileName: fileName)
+            let success = try await uploadToSimpleCloud(
+                csvContent: csvContent,
+                fileName: fileName,
+                cloudURL: cloudURL
+            )
             
             if success {
                 print("☁️ Cloud upload successful: \(fileName)")
@@ -677,23 +738,16 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
             print("☁️ Cloud upload failed: \(error)")
         }
         
-        // Fallback to email
+        // Fallback to manual export if the configured cloud service is unavailable.
         DispatchQueue.main.async {
-            self.instructionLabel.text = "Cloud unavailable, using email..."
-            self.emailCSV(fileURL: fileURL, fileName: fileName)
+            self.instructionLabel.text = "Cloud upload unavailable. Choose an export destination."
+            self.showShareSheet(fileURL: fileURL, fileName: fileName)
         }
     }
     
-    private func uploadToSimpleCloud(csvContent: String, fileName: String) async throws -> Bool {
-        // Simple HTTP upload to a basic server endpoint
-        // This can be replaced with any cloud storage service
-        
-        guard let url = URL(string: cloudUploadURL) else {
-            throw CloudUploadError.invalidURL
-        }
-        
+    private func uploadToSimpleCloud(csvContent: String, fileName: String, cloudURL: URL) async throws -> Bool {
         // Create request
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: cloudURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
@@ -703,7 +757,6 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
             "content": csvContent,
             "timestamp": ISO8601DateFormatter().string(from: Date()),
             "source": "visual_acuity_ios_app",
-            "google_drive_folder_id": googleDriveFolderID,
             "email_recipient": "mabdel03@mit.edu"
         ]
         
@@ -778,7 +831,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     private func showCloudSuccessAlert(fileName: String) {
         let alert = UIAlertController(
             title: "Data Uploaded to Cloud",
-            message: "Your data collection file '\(fileName)' has been successfully uploaded to cloud storage. Thank you for contributing to algorithm optimization!",
+            message: "The data collection file '\(fileName)' was uploaded to the configured cloud endpoint.",
             preferredStyle: .alert
         )
         
@@ -792,7 +845,7 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     private func showSuccessAlert() {
         let alert = UIAlertController(
             title: "Data Collection Complete",
-            message: "Your data has been successfully collected and emailed. Thank you for contributing to algorithm optimization!",
+            message: "The data collection file was exported.",
             preferredStyle: .alert
         )
         
@@ -805,8 +858,8 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     
     private func showCancelledAlert() {
         let alert = UIAlertController(
-            title: "Email Cancelled",
-            message: "The data has been collected but not emailed. You can try again later.",
+            title: "Export Not Completed",
+            message: "The data has been collected but not exported. You can try again.",
             preferredStyle: .alert
         )
         
@@ -837,23 +890,48 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     
     // MARK: - Helper Methods
     
-    private func setLetterSizeForDataCollection() {
-        // Calculate size for 20/200 at 40cm distance
-        let arcmin_per_letter = 5.0
-        let visual_angle = ((Double(fixedAcuity) / 20.0) * arcmin_per_letter / 60.0) * Double.pi / 180.0
-        let scaling_correction_factor = 1.0 / 2.54  // Conversion from inches to cm
-        
-        let scale_factor = fixedDistance * tan(visual_angle) * scaling_correction_factor
-        let labelHeight = scale_factor * VisualAcuitySession.devicePPI
-        
-        // Set the letter size
-        letterLabel.frame.size = CGSize(width: (labelHeight * 5), height: labelHeight)
-        
-        // Set font size
-        let fontSize = 0.3 * letterLabel.frame.height
-        letterLabel.font = letterLabel.font?.withSize(fontSize)
-        
-        print("🔬 Letter sized for data collection - Acuity: 20/\(fixedAcuity), Distance: \(fixedDistance)cm, Font size: \(fontSize)pt")
+    private func refreshStimulusForLiveDistance() {
+        guard let sample = EyeDistanceProvider.shared.validSample(),
+              let calibration = ScreenCalibrationProvider.shared.currentCalibration else {
+            pauseForInvalidStimulus()
+            return
+        }
+        do {
+            let update = try OptotypeRenderer.update(
+                label: letterLabel,
+                text: currentLetter,
+                distanceCM: sample.distanceCM,
+                snellenDenominator: fixedAcuity,
+                calibration: calibration,
+                previousSpec: currentRenderSpec
+            )
+            currentRenderSpec = update.spec
+            currentSizingProvenance = update.spec.provenance
+        } catch {
+            print("Unable to size data-collection optotype: \(error.localizedDescription)")
+            pauseForInvalidStimulus()
+            return
+        }
+        guard currentSizingProvenance != nil else { return }
+        letterLabel.alpha = 1
+        instructionLabel.text = "Say the letter you see out loud."
+        if !isListening, currentLetterIndex < totalLetters {
+            startListening()
+        }
+    }
+
+    private func pauseForInvalidStimulus() {
+        letterLabel.alpha = 0
+        currentRenderSpec = nil
+        currentSizingProvenance = nil
+        instructionLabel.text = "Paused: Face tracking unavailable"
+        if isListening { stopListening() }
+    }
+
+    private func requireCalibrationIfNeeded() {
+        guard ScreenCalibrationProvider.shared.currentCalibration == nil,
+              presentedViewController == nil else { return }
+        present(ScreenCalibrationViewController(), animated: true)
     }
     
     private func playAudioInstructions() {
@@ -884,27 +962,6 @@ class DataCollectionViewController: UIViewController, ARSCNViewDelegate, SFSpeec
     private func stopSpeechTimeoutTimer() {
         speechTimeoutTimer?.invalidate()
         speechTimeoutTimer = nil
-    }
-    
-    // MARK: - ARSCNViewDelegate (minimal implementation for distance tracking)
-    
-    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard anchor is ARFaceAnchor else { return }
-        
-        node.addChildNode(leftEye)
-        node.addChildNode(rightEye)
-        
-        print("👁️ Face detected for data collection")
-    }
-    
-    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-        guard let faceAnchor = anchor as? ARFaceAnchor else { return }
-        
-        leftEye.simdTransform = faceAnchor.leftEyeTransform
-        rightEye.simdTransform = faceAnchor.rightEyeTransform
-        
-        // We don't need to actively track distance for data collection,
-        // but we keep this for potential future use
     }
     
     // MARK: - SFSpeechRecognizerDelegate
