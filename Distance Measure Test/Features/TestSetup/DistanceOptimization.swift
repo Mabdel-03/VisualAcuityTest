@@ -6,8 +6,8 @@ import AVFoundation
 var averageDistanceCM = 0.0
 
 /*
- The DistanceTracker class is designed to manage distance measurements. 
- It provides real-time distance tracking with smoothing algorithms and persistent 
+ The DistanceTracker class is designed to manage distance measurements.
+ It provides real-time distance tracking with smoothing algorithms and persistent
  storage capabilities.
  */
 
@@ -16,7 +16,7 @@ class DistanceTracker {
 
     var currentDistanceCM: Double = 0.0  // Live tracking distance
     var targetDistanceCM: Double = 0.0   // Captured optimal distance
-    
+
     // Buffer for smoothing distance readings
     private var recentReadings: [Double] = []
     private let maxReadings = 5
@@ -54,10 +54,10 @@ class DistanceTracker {
         UserDefaults.standard.set(validated, forKey: "SavedTargetDistance")
         return true
     }
-    
-    /* Adds a new distance reading with smoothing algorithm. 
-        Validates input (rejects values ≤ 0), adds reading to buffer, 
-        maintains buffer size limit, and updates currentDistanceCM with 
+
+    /* Adds a new distance reading with smoothing algorithm.
+        Validates input (rejects values ≤ 0), adds reading to buffer,
+        maintains buffer size limit, and updates currentDistanceCM with
         smoothed average.
         @param distance: Distance value in centimeters
     */
@@ -84,7 +84,9 @@ class DistanceTracker {
 /* DistanceOptimization class is designed to manage the distance optimization scene on the
     visual acuity app. On this page, the user is asked to hold their phone at a distance where
     they can clearly see the flower image. When the image appears the most clear, the user
-    taps 'Capture Distance' button to save this distance as the optimal distance for their test.
+    taps the 'Capture Distance' button and holds the phone still through a short countdown;
+    the distance measured across that steady window is then saved as the optimal distance
+    for their test.
 */
 
 class DistanceOptimization: UIViewController {
@@ -93,38 +95,52 @@ class DistanceOptimization: UIViewController {
     var lastCapturedDistance: Double = 0.0
     private var distanceTimer: Timer?
 
-    // This is true only while the shared provider has a current, valid sample.
-    private var hasDetectedFace = false {
+    // The push to acuity selection hangs off this view controller rather than
+    // off the button, so the transition can wait for the hold countdown to
+    // finish instead of firing the instant the button is tapped.
+    private static let acuitySelectionSegueIdentifier = "ShowAcuitySelection"
+
+    // MARK: - Capture Flow
+    // The user decides when the distance is right: they tap Capture Distance,
+    // then hold the phone still for holdDurationSeconds. Only readings taken
+    // inside that window feed the captured value, so a reading grabbed
+    // mid-movement can never become the test distance. Drifting further than
+    // holdToleranceCM from where the hold started — or losing face tracking —
+    // voids the countdown and asks the user to try again.
+    private enum CaptureState {
+        case awaitingFace   // no usable ARKit reading yet, so nothing to capture
+        case ready          // face tracked; waiting on the user to tap Capture
+        case holding        // countdown running; the phone has to stay put
+        case captured       // distance saved; transitioning to acuity selection
+    }
+
+    private var captureState: CaptureState = .awaitingFace {
         didSet {
-            guard hasDetectedFace != oldValue else { return }
-            updateCaptureAvailability()
+            guard captureState != oldValue else { return }
+            applyCaptureState()
         }
     }
 
-    // MARK: - Stability Detection
-    // The button should only become available once the measured distance has
-    // held roughly steady for a continuous window, not just at the first
-    // instant a face is detected (a face detected mid-movement produces a
-    // meaningless reading). Tracked as a streak anchored to the first reading
-    // of the current run: as long as later readings stay within tolerance of
-    // it, the streak (and its elapsed time) keeps growing; a reading outside
-    // tolerance restarts the streak from that new reading.
-    private let stabilityWindowSeconds: TimeInterval = 3.0
-    private let stabilityToleranceCM: Double = 4.0
-    private var stabilityAnchorDistanceCM: Double?
-    private var stabilityStreakStartedAt: Date?
-    private var isDistanceStable = false {
-        didSet {
-            guard isDistanceStable != oldValue else { return }
-            updateCaptureAvailability()
-        }
-    }
+    private let holdDurationSeconds: TimeInterval = 2.0
+    private let holdToleranceCM: Double = 4.0
 
-    // Tracks what the countdown label is currently showing, so repeated
-    // samples with the same remaining-second value don't re-trigger the
-    // change animation on every frame.
+    // How long a "that didn't work" message stays up before the status row goes
+    // back to describing the current state.
+    private let retryNoticeSeconds: TimeInterval = 2.5
+
+    private var holdStartedAt: Date?
+    private var holdAnchorDistanceCM: Double?
+    private var holdReadings: [Double] = []
+    private var lastRecordedSampleTimestamp: Date?
+
+    // Tracks what the countdown label is currently showing, so repeated samples
+    // with the same remaining-second value don't re-trigger the change
+    // animation on every tick.
     private var lastDisplayedCountdown: Int?
-    
+
+    private var retryNotice: String?
+    private var retryNoticeTimer: Timer?
+
     // Header label
     private lazy var headerLabel: UILabel = {
         let label = UILabel()
@@ -135,12 +151,15 @@ class DistanceOptimization: UIViewController {
         return label
     }()
 
-    private lazy var holdSteadyLabel: UILabel = {
+    // Describes whatever the capture flow is waiting on right now — a face, a
+    // tap, a steady hold — or why the last attempt didn't take.
+    private lazy var statusLabel: UILabel = {
         let label = UILabel()
-        label.text = "Hold camera steady for"
         label.drawInstruction()
         label.textAlignment = .center
         label.numberOfLines = 1
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.6
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -154,13 +173,13 @@ class DistanceOptimization: UIViewController {
         return stack
     }()
 
-    // Shows the whole seconds remaining until the distance has held steady
-    // for stabilityWindowSeconds, e.g. "3 s" -> "2 s" -> "1 s".
+    // Shows the whole seconds left in the hold countdown, e.g. "2 s" -> "1 s".
     private lazy var countdownLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.monospacedDigitSystemFont(ofSize: 22, weight: .bold)
+        label.font = UIFont.monospacedDigitSystemFont(ofSize: 30, weight: .bold)
         label.textColor = AppThemeColors.black
         label.textAlignment = .center
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
         label.translatesAutoresizingMaskIntoConstraints = false
         label.isHidden = true
         return label
@@ -168,19 +187,23 @@ class DistanceOptimization: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         // Add decorative daisies
         addDecorativeDaisies()
-        
+
         // Add header label
         view.addSubview(headerLabel)
         view.bringSubviewToFront(headerLabel)
 
         view.addSubview(statusRowStack)
         view.bringSubviewToFront(statusRowStack)
-        statusRowStack.addArrangedSubview(holdSteadyLabel)
+        statusRowStack.addArrangedSubview(statusLabel)
         statusRowStack.addArrangedSubview(countdownLabel)
-        
+
+        // The button's visible title has to stay short enough to fit, but
+        // VoiceOver has room for the control's full name.
+        captureDistanceButton.accessibilityLabel = "Capture Distance"
+
         // Set up header constraints
         NSLayoutConstraint.activate([
             headerLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
@@ -201,7 +224,7 @@ class DistanceOptimization: UIViewController {
         sceneView.scene = scene
 
     }
-    
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         playAudioInstructions()
@@ -211,26 +234,21 @@ class DistanceOptimization: UIViewController {
     /* Plays audio instructions to the user.
     */
     private func playAudioInstructions() {
-        let instructionText = "Position phone for clear flower view, then tap Capture Distance."
+        let instructionText = "Position phone for clear flower view, then tap Capture Distance and hold still."
         SharedAudioManager.shared.playText(instructionText, source: "Distance Optimization")
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
-        // hasDetectedFace/isDistanceStable's didSet only react to changes, so
-        // force the waiting UI back on for this fresh session even if they
-        // were left true from a previous appearance.
-        hasDetectedFace = false
-        resetStabilityStreak()
-        prepareCaptureButtonAwaitingFaceDetection()
+        resetCaptureFlow()
 
         EyeDistanceProvider.shared.start(
             eyeNumber: VisualAcuitySession.currentEyeNumber,
             client: self
         )
         distanceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) {
-            [weak self] _ in self?.refreshDistanceState()
+            [weak self] _ in self?.refreshCaptureFlow()
         }
     }
 
@@ -239,39 +257,74 @@ class DistanceOptimization: UIViewController {
 
         distanceTimer?.invalidate()
         distanceTimer = nil
+        retryNoticeTimer?.invalidate()
+        retryNoticeTimer = nil
         EyeDistanceProvider.shared.stop(client: self)
     }
 
-    /* Puts the capture UI in its "waiting for a face" state: button disabled,
-       "Hold camera steady" status row with animated dots visible. Called up
-       front, and again on every fresh appearance — actual enabling happens in
-       updateCaptureAvailability() once a face has been detected AND held
-       steady for stabilityWindowSeconds.
-    */
-    private func prepareCaptureButtonAwaitingFaceDetection() {
-        statusRowStack.isHidden = false
-        holdSteadyLabel.isHidden = false
-        captureDistanceButton.isEnabled = false
-        captureDistanceButton.alpha = 0.45
-        animateStatusRowEntranceIfNeeded()
-        resetCountdownDisplay()
+    deinit {
+        distanceTimer?.invalidate()
+        retryNoticeTimer?.invalidate()
     }
 
-    /* Reflects hasDetectedFace + isDistanceStable in the UI: only enable
-       Capture Distance once ARKit has found a face AND the measured distance
-       has held steady for stabilityWindowSeconds. Disables it again the
-       moment either condition stops holding, so the user can't capture a
-       stale/placeholder or mid-movement reading.
+    /* Returns the capture flow to its starting point for a fresh appearance:
+       any half-finished hold discarded, any stale retry message cleared, and
+       the UI back to waiting on a face. captureState's didSet only reacts to
+       changes, so the UI is applied directly rather than relying on it.
     */
-    private func updateCaptureAvailability() {
-        if hasDetectedFace && isDistanceStable {
-            statusRowStack.isHidden = true
-            captureDistanceButton.isEnabled = true
-            UIView.animate(withDuration: 0.2) {
-                self.captureDistanceButton.alpha = 1.0
+    private func resetCaptureFlow() {
+        clearHold()
+        clearRetryNotice()
+        captureState = .awaitingFace
+        applyCaptureState()
+    }
+
+    // MARK: - Capture UI
+
+    /* The one place the capture UI is derived from captureState: what the
+       status row says, whether the countdown is on screen, and whether Capture
+       Distance can be tapped. The button is live only in .ready — never while
+       ARKit has no reading to give, never during the hold countdown, and never
+       after a capture has already been committed.
+    */
+    private func applyCaptureState() {
+        let acceptsTap = captureState == .ready
+        captureDistanceButton.isEnabled = acceptsTap
+        UIView.animate(withDuration: 0.2) {
+            self.captureDistanceButton.alpha = acceptsTap ? 1.0 : 0.45
+        }
+
+        countdownLabel.isHidden = captureState != .holding
+
+        if let text = statusText() {
+            let wasHidden = statusRowStack.isHidden
+            statusLabel.text = text
+            statusRowStack.isHidden = false
+            if wasHidden {
+                animateStatusRowEntranceIfNeeded()
             }
         } else {
-            prepareCaptureButtonAwaitingFaceDetection()
+            statusRowStack.isHidden = true
+        }
+    }
+
+    /* The status row's copy for the current state, or nil when there's nothing
+       worth saying — in .ready with no retry message pending, an enabled
+       Capture Distance button speaks for itself.
+    */
+    private func statusText() -> String? {
+        if let retryNotice {
+            return retryNotice
+        }
+        switch captureState {
+        case .awaitingFace:
+            return "Finding your face…"
+        case .ready:
+            return nil
+        case .holding:
+            return "Hold still for"
+        case .captured:
+            return "Distance captured"
         }
     }
 
@@ -290,34 +343,17 @@ class DistanceOptimization: UIViewController {
         )
     }
 
-    /* Resets the countdown label back to its starting value ("3 s") —
-       called whenever the stability streak resets (see resetStabilityStreak).
-    */
-    private func resetCountdownDisplay() {
-        let startingValue = Int(stabilityWindowSeconds)
-        lastDisplayedCountdown = startingValue
-        countdownLabel.isHidden = false
-        countdownLabel.alpha = 1
-        countdownLabel.transform = .identity
-        countdownLabel.text = "\(startingValue) s"
-    }
-
-    /* Shows the whole seconds remaining until the current stability streak
-       reaches stabilityWindowSeconds — "3 s", then "2 s", then "1 s" — updating
+    /* Shows the whole seconds left in the hold — "2 s", then "1 s" — updating
        only when the displayed number actually changes.
     */
     private func updateCountdownDisplay(elapsedSeconds: TimeInterval) {
-        let remaining = max(0, Int((stabilityWindowSeconds - elapsedSeconds).rounded(.up)))
+        let remaining = max(0, Int((holdDurationSeconds - elapsedSeconds).rounded(.up)))
         guard remaining != lastDisplayedCountdown else { return }
         lastDisplayedCountdown = remaining
 
-        guard remaining > 0 else {
-            // Fully stable — updateCaptureAvailability hides the whole row.
-            return
-        }
+        guard remaining > 0 else { return }
 
         countdownLabel.text = "\(remaining) s"
-        countdownLabel.isHidden = false
         countdownLabel.alpha = 0
         countdownLabel.transform = CGAffineTransform(scaleX: 1.25, y: 1.25)
         UIView.animate(
@@ -331,86 +367,170 @@ class DistanceOptimization: UIViewController {
         )
     }
 
-    /* Captures the distance and immediately transitions to the next scene when the 
-    user taps the 'Capture Distance' button.
+    /* Puts a short "that didn't work, try again" message in the status row and
+       schedules it to clear itself, so a voided hold explains itself without
+       leaving the screen stuck on an error.
     */
-    @IBAction func capDistanceTransition(_ sender: Any) {
-        guard hasDetectedFace,
-              isDistanceStable,
+    private func showRetryNotice(_ notice: String) {
+        retryNotice = notice
+        retryNoticeTimer?.invalidate()
+        retryNoticeTimer = Timer.scheduledTimer(
+            withTimeInterval: retryNoticeSeconds,
+            repeats: false
+        ) { [weak self] _ in
+            self?.clearRetryNotice()
+        }
+        applyCaptureState()
+    }
+
+    private func clearRetryNotice() {
+        retryNoticeTimer?.invalidate()
+        retryNoticeTimer = nil
+        guard retryNotice != nil else { return }
+        retryNotice = nil
+        applyCaptureState()
+    }
+
+    // MARK: - Hold & Capture
+
+    /* Starts the hold countdown when the user taps Capture Distance. The
+       reading at the moment of the tap becomes the anchor the rest of the hold
+       is judged against — that's the distance the user just decided was right.
+    */
+    @IBAction func captureDistanceTapped(_ sender: Any) {
+        // The button is disabled outside .ready, but a tap landing in the same
+        // run loop turn as a tracking loss would still get here.
+        guard captureState == .ready,
               let sample = EyeDistanceProvider.shared.validSample() else {
-            print("⚠️ Cannot capture distance: current eye distance is unavailable")
+            print("⚠️ Cannot start capture: current eye distance is unavailable")
+            return
+        }
+
+        clearRetryNotice()
+        holdStartedAt = Date()
+        holdAnchorDistanceCM = sample.distanceCM
+        holdReadings = [sample.distanceCM]
+        lastRecordedSampleTimestamp = sample.timestamp
+        lastDisplayedCountdown = nil
+        captureState = .holding
+        updateCountdownDisplay(elapsedSeconds: 0)
+        announceForVoiceOver("Hold still.", source: "Distance Optimization")
+    }
+
+    /* Drives the whole flow off the 10 Hz timer: promotes the screen to .ready
+       as soon as ARKit has a usable reading, drops it back when tracking is
+       lost, and advances (or voids) an in-progress hold.
+    */
+    private func refreshCaptureFlow() {
+        let sample = EyeDistanceProvider.shared.validSample()
+
+        switch captureState {
+        case .awaitingFace:
+            if sample != nil {
+                captureState = .ready
+            }
+        case .ready:
+            if sample == nil {
+                captureState = .awaitingFace
+            }
+        case .holding:
+            guard let sample else {
+                voidHold(notice: "Lost your face — try again", spoken: "Lost your face. Please try again.")
+                return
+            }
+            advanceHold(with: sample)
+        case .captured:
+            // The distance is already committed and the push to acuity
+            // selection is underway — nothing left to track.
+            break
+        }
+    }
+
+    /* Checks one sample against the hold: too far from the anchor voids it,
+       otherwise the reading is banked and the countdown moves on, finishing the
+       capture once the phone has been steady for holdDurationSeconds.
+    */
+    private func advanceHold(with sample: EyeDistanceSample) {
+        guard let startedAt = holdStartedAt, let anchor = holdAnchorDistanceCM else {
+            voidHold(notice: "Couldn't capture — try again", spoken: "Could not capture the distance. Please try again.")
+            return
+        }
+
+        guard abs(sample.distanceCM - anchor) <= holdToleranceCM else {
+            voidHold(notice: "Moved too much — try again", spoken: "Moved too much. Please try again.")
+            return
+        }
+
+        // ARKit normally produces samples faster than this timer polls, but a
+        // repeat of the same sample would otherwise be averaged in twice.
+        if sample.timestamp != lastRecordedSampleTimestamp {
+            lastRecordedSampleTimestamp = sample.timestamp
+            holdReadings.append(sample.distanceCM)
+        }
+
+        let elapsed = Date().timeIntervalSince(startedAt)
+        guard elapsed >= holdDurationSeconds else {
+            updateCountdownDisplay(elapsedSeconds: elapsed)
+            return
+        }
+
+        completeCapture()
+    }
+
+    /* Commits the held distance — the mean of every reading taken across the
+       steady window — and moves on to acuity selection.
+    */
+    private func completeCapture() {
+        let readings = holdReadings
+        guard !readings.isEmpty else {
+            voidHold(notice: "Couldn't capture — try again", spoken: "Could not capture the distance. Please try again.")
+            return
+        }
+
+        let distanceValue = readings.reduce(0, +) / Double(readings.count)
+        guard DistanceTracker.shared.saveHoldingDistance(distanceValue) else {
+            voidHold(notice: "Couldn't capture — try again", spoken: "Could not capture the distance. Please try again.")
             return
         }
 
         // Store the target distance
-        let distanceValue = sample.distanceCM
         averageDistanceCM = distanceValue
-        guard DistanceTracker.shared.saveHoldingDistance(distanceValue) else { return }
-        
+
         // Reset the recent readings with the new target
         DistanceTracker.shared.addReading(distanceValue)
-        
+
         // Set current distance to match target
         DistanceTracker.shared.currentDistanceCM = distanceValue
 
-        print("🎯 Target Distance Captured: \(String(format: "%.1f", averageDistanceCM)) cm")
         lastCapturedDistance = distanceValue
-        
-    }
-    
-    private func refreshDistanceState() {
-        guard let sample = EyeDistanceProvider.shared.validSample() else {
-            if hasDetectedFace {
-                hasDetectedFace = false
-                resetStabilityStreak()
-            }
-            return
-        }
-        if !hasDetectedFace {
-            resetStabilityStreak()
-            hasDetectedFace = true
-        }
-        recordDistanceSample(sample.distanceCM)
+        clearHold()
+        captureState = .captured
+
+        print("🎯 Target Distance Captured: \(String(format: "%.1f", averageDistanceCM)) cm " +
+              "(mean of \(readings.count) readings held steady for \(String(format: "%.0f", holdDurationSeconds)) s)")
+
+        performSegue(withIdentifier: Self.acuitySelectionSegueIdentifier, sender: self)
     }
 
-    /* Records a distance reading and updates the stability streak: as long as
-       each new reading stays within stabilityToleranceCM of the reading that
-       started the current streak, the streak's elapsed time keeps growing and
-       drives both the waiting dots and (once it reaches stabilityWindowSeconds)
-       isDistanceStable, which the capture button waits on.
+    /* Cancels an in-progress hold without capturing anything, says why, and
+       hands the screen back to the user to try again.
     */
-    private func recordDistanceSample(_ distanceCM: Double) {
-        guard hasDetectedFace else {
-            resetStabilityStreak()
-            return
-        }
-
-        let now = Date()
-
-        if let anchor = stabilityAnchorDistanceCM, abs(distanceCM - anchor) <= stabilityToleranceCM {
-            // Still within tolerance of the reading that started this streak —
-            // let it keep running.
-        } else {
-            // First reading of a new streak, or this one drifted too far from
-            // the anchor — restart the clock from here.
-            stabilityAnchorDistanceCM = distanceCM
-            stabilityStreakStartedAt = now
-        }
-
-        let elapsed = stabilityStreakStartedAt.map { now.timeIntervalSince($0) } ?? 0
-        updateCountdownDisplay(elapsedSeconds: elapsed)
-        isDistanceStable = elapsed >= stabilityWindowSeconds
+    private func voidHold(notice: String, spoken: String) {
+        clearHold()
+        captureState = EyeDistanceProvider.shared.validSample() == nil ? .awaitingFace : .ready
+        showRetryNotice(notice)
+        announceForVoiceOver(spoken, source: "Distance Optimization")
     }
 
-    /* Clears the stability streak and its on-screen countdown — called
-       whenever tracking is lost or restarted, so stale progress never carries
-       over into a new attempt.
+    /* Drops all hold bookkeeping so nothing from an abandoned attempt can leak
+       into the next one.
     */
-    private func resetStabilityStreak() {
-        stabilityAnchorDistanceCM = nil
-        stabilityStreakStartedAt = nil
-        resetCountdownDisplay()
-        isDistanceStable = false
+    private func clearHold() {
+        holdStartedAt = nil
+        holdAnchorDistanceCM = nil
+        holdReadings.removeAll()
+        lastRecordedSampleTimestamp = nil
+        lastDisplayedCountdown = nil
     }
 
 }
@@ -428,7 +548,7 @@ extension DistanceOptimization {
             trailingOffset: 25,
             topOffset: 150
         )
-        
+
         // Decorative daisy 2 - bottom left (teal)
         addDecorativeDaisy(
             size: 85,

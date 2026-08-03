@@ -263,6 +263,57 @@ final class PersistenceAndArchitectureTests: XCTestCase {
         }
     }
 
+    /* The distance capture button must not carry its own storyboard segue: the
+       tap only starts the hold countdown, and the push to acuity selection has
+       to wait until the phone has been held steady long enough to trust the
+       reading. Re-attaching a segue to the button in Interface Builder would
+       silently restore the old capture-on-tap behavior, so this pins the
+       wiring the countdown depends on — the button's action selector and the
+       view controller's identified segue both existing as the code expects.
+    */
+    func testDistanceCaptureTapStartsTheHoldInsteadOfSeguingImmediately() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let storyboard = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Distance Measure Test/Base.lproj/Main.storyboard"
+            ),
+            encoding: .utf8
+        )
+        let controller = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Distance Measure Test/Features/TestSetup/DistanceOptimization.swift"
+            ),
+            encoding: .utf8
+        )
+
+        // The capture button's connection is the action that begins the hold.
+        XCTAssertTrue(
+            storyboard.contains(
+                #"<action selector="captureDistanceTapped:" destination="BV1-FR-VrT" eventType="touchUpInside""#
+            )
+        )
+        XCTAssertTrue(controller.contains("@IBAction func captureDistanceTapped(_ sender: Any)"))
+
+        // The transition itself hangs off the view controller and is performed
+        // in code, only once the held reading has been captured — so acuity
+        // selection is reachable from this scene by exactly one segue, the
+        // identified one, and never by an unidentified button-triggered push.
+        let acuitySegues = storyboard
+            .components(separatedBy: "<segue ")
+            .dropFirst()
+            .filter { $0.hasPrefix(#"destination="yoH-g8-Akd""#) }
+        XCTAssertEqual(acuitySegues.count, 1)
+        XCTAssertTrue(
+            storyboard.contains(
+                #"<segue destination="yoH-g8-Akd" kind="show" identifier="ShowAcuitySelection""#
+            )
+        )
+        XCTAssertTrue(controller.contains(#"acuitySelectionSegueIdentifier = "ShowAcuitySelection""#))
+        XCTAssertTrue(controller.contains("performSegue(withIdentifier: Self.acuitySelectionSegueIdentifier"))
+    }
+
     func testEveryCSVPathIncludesSizingVersionTwoProvenanceColumns() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
