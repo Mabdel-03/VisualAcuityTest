@@ -2,9 +2,15 @@
 
 ## Overview
 
-This repository contains an iOS research application for near visual acuity testing. The application supports ETDRS-style letter recognition with speech input and Landolt C testing with gesture input. It uses ARKit face tracking to estimate viewing distance and applies optotype scaling from the measured or selected test distance.
+This repository contains the test-ready build of the OHSU COOL Lab iOS near visual acuity application.
 
-The project is intended for controlled research and development use. It should not be described or used as a validated clinical diagnostic device without the appropriate validation, regulatory review, and study-specific approval.
+**ETDRS letter recognition with speech input is the primary test.** It is the default pipeline, the flow intended for participant sessions, and the configuration this branch is prepared to run.
+
+**Landolt C with swipe input is an optional alternate test.** It remains fully implemented and selectable in Settings for studies or participants where a non-verbal, orientation-based optotype is preferable, but it is not the default path.
+
+Both flows share the same ARKit face-tracking distance estimation, optotype scaling from the measured or selected test distance, results presentation, and CSV export.
+
+"Test-ready" here means the ETDRS pipeline is feature-complete and ready to run participant testing sessions on supported hardware, subject to the device-level checks in the [Verification Checklist](#verification-checklist). It does not mean the application is a validated clinical diagnostic device. It should not be described or used as one without the appropriate validation, regulatory review, and study-specific approval.
 
 Developers: Mahmoud Abdelmoneum, Maggie Bao, and Anderson Men  
 Supervision: Dr. David Huang and Dr. Hiroshi Ishikawa  
@@ -13,13 +19,26 @@ Primary contacts: Mahmoud Abdelmoneum, mabdel03@mit.edu; Maggie Bao, mbao202@mit
 ## Current Implementation
 
 - Native iOS application implemented in Swift and UIKit.
-- ETDRS-style test flow with WhisperKit-based speech recognition support.
-- Landolt C test flow with swipe input.
-- ARKit-based distance calibration and monitoring.
+- ETDRS-style test flow with WhisperKit-based speech recognition. Default pipeline and the intended flow for participant sessions.
+- Landolt C test flow with swipe input. Optional alternate pipeline, selected in Settings.
+- ARKit-based distance calibration and monitoring, shared by both flows.
 - Local test history using `UserDefaults`.
 - Manual CSV export through the iOS share sheet.
 - Optional training-data cloud upload through a separately configured upload endpoint.
 - Legacy Dropbox upload code remains in the repository. The tracked Dropbox token is intentionally retained for this controlled repository configuration. Public redistribution requires a separate credential policy.
+
+## Test Modes
+
+The application ships with two optotype pipelines. The active one is chosen under **Settings → Test Type**, which presents a `Landolt C` / `ETDRS` segmented control.
+
+| | ETDRS (default) | Landolt C (optional) |
+|---|---|---|
+| Optotype | 11-letter set (`C D F H K N P R X J Z`) rendered in the Sloan typeface | Landolt C at four orientations (0°, 90°, 180°, 270°) |
+| Participant response | Spoken letter, recognized by WhisperKit | Swipe in the direction the C points |
+| Requires microphone | Yes | No |
+| Intended use | Standard participant sessions | Non-verbal participants, or protocols calling for an orientation task |
+
+The selection is persisted in `UserDefaults` under the `etdrs_test_enabled` key, defined by `TestTypePreferences` in [MainMenuViewController.swift](Distance%20Measure%20Test/Features/Home/MainMenuViewController.swift). The registered default is `true`, so a fresh install starts in ETDRS mode. The choice changes only the optotype presentation and response capture; distance calibration, acuity selection, scoring, results, and export are identical in both modes.
 
 ## Repository Layout
 
@@ -29,9 +48,9 @@ VisualAcuityTest/
 │   ├── App/                         App lifecycle
 │   ├── Core/                        Shared data, subject, and upload managers
 │   ├── Features/
-│   │   ├── ETDRS/                   ETDRS test and WhisperKit support
-│   │   ├── Home/                    Main menu and instructions
-│   │   ├── LandoltC/                Landolt C test controller
+│   │   ├── ETDRS/                   Primary ETDRS test and WhisperKit support
+│   │   ├── Home/                    Main menu, instructions, test-type preference
+│   │   ├── LandoltC/                Optional Landolt C test controller
 │   │   ├── Results/                 Results, history, and data collection views
 │   │   ├── Settings/                User-facing preferences
 │   │   └── TestSetup/               Distance guidance and acuity selection
@@ -51,8 +70,8 @@ VisualAcuityTest/
 
 - macOS 14 or later with Xcode 16 or later.
 - iOS device with ARKit face tracking support for full distance-tracking behavior.
-- Camera permission for distance estimation.
-- Microphone and speech-recognition permission for ETDRS speech input.
+- Camera permission for distance estimation, in both test modes.
+- Microphone and speech-recognition permission for ETDRS speech input. Not required when running the optional Landolt C mode, which takes swipe input only.
 - Internet access on the Mac while Xcode resolves Swift Package Manager dependencies.
 - Internet access on the iOS device while WhisperKit downloads its model on first launch.
 
@@ -98,7 +117,7 @@ xcodebuild \
 
 ## Application Workflow
 
-The primary participant workflow is:
+The primary participant workflow runs the ETDRS test, which is active by default and requires no configuration:
 
 1. Launch the application from the main menu.
 2. Review test instructions.
@@ -108,7 +127,9 @@ The primary participant workflow is:
 6. Review LogMAR and Snellen-formatted results.
 7. Export CSV data manually through the iOS share sheet if data sharing is required.
 
-The ETDRS flow displays letter optotypes and records recognized spoken responses. The Landolt C flow displays rotated optotypes and records swipe-direction responses. Both flows record per-response metadata when progression data collection is active.
+In this default mode the app displays letter optotypes and records recognized spoken responses through WhisperKit.
+
+To run the optional Landolt C test instead, switch **Settings → Test Type** to `Landolt C` before starting a session. The surrounding workflow is unchanged: the app then displays rotated Landolt rings and records swipe-direction responses in place of step 5's spoken input. Both flows record per-response metadata when progression data collection is active, and both write the same CSV schema.
 
 ## Data Collection and Export
 
@@ -157,14 +178,17 @@ The application requests camera and microphone permissions for test execution. T
 
 ## Verification Checklist
 
-Recommended checks before research use:
+The application is test-ready at the code level, but each deployment should confirm the following on the actual study hardware before participant sessions:
 
 1. Build the iOS target with Xcode or `xcodebuild`.
-2. Confirm AR distance calibration on the intended device model.
-3. Confirm speech-recognition behavior in the intended testing environment.
-4. Confirm CSV export with a test participant record.
-5. If cloud upload is enabled, confirm the endpoint is reachable from the device and that uploaded files are stored in the expected location.
-6. Confirm `PrivacyInfo.xcprivacy` appears in the built application bundle.
+2. Run the unit test suite in `Distance Measure TestTests` (optotype sizing, calibration and distance, ETDRS progression engine, persistence).
+3. Confirm AR distance calibration on the intended device model.
+4. Confirm **Settings → Test Type** reads `ETDRS` on a fresh install, and that the intended mode is selected for the session.
+5. Confirm WhisperKit reaches `WhisperKit ready.` and speech recognition behaves acceptably in the intended testing environment, including its ambient noise level.
+6. If the optional Landolt C mode will be used, confirm swipe capture and orientation scoring separately.
+7. Confirm CSV export with a test participant record.
+8. If cloud upload is enabled, confirm the endpoint is reachable from the device and that uploaded files are stored in the expected location.
+9. Confirm `PrivacyInfo.xcprivacy` appears in the built application bundle.
 
 ## Repository Hygiene
 
