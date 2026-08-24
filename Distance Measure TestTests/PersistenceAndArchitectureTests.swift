@@ -429,4 +429,105 @@ final class PersistenceAndArchitectureTests: XCTestCase {
         XCTAssertFalse(leftEyeTest.visibleInstruction.localizedCaseInsensitiveContains("cover"))
         XCTAssertFalse(leftEyeTest.spokenInstruction.localizedCaseInsensitiveContains("cover"))
     }
+
+    // MARK: - ETDRS letter sequencing
+
+    /// The letter pool the ETDRS test draws from, mirrored from
+    /// ETDRSViewController.etdrsLetters so a silent edit there shows up here.
+    private let etdrsPool = ["C", "D", "F", "H", "K", "N", "P", "R", "X", "J", "Z"]
+
+    /* The no-repeat rule works by filtering the just-shown letter out of the
+       pool, so it can only fail to return a letter if the pool holds nothing
+       but that letter. Pinning the pool at two-or-more distinct entries is what
+       makes that branch unreachable, and rules out a duplicated glyph slipping
+       past the filter as two different array elements.
+     */
+    func testETDRSLetterPoolSupportsTheNoRepeatRule() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Distance Measure Test/Features/ETDRS/ETDRSViewController.swift"
+            ),
+            encoding: .utf8
+        )
+
+        let expectedDeclaration = "let etdrsLetters = ["
+            + etdrsPool.map { "\"\($0)\"" }.joined(separator: ", ")
+            + "]"
+
+        XCTAssertTrue(
+            source.contains(expectedDeclaration),
+            "The controller's letter pool no longer matches the pool these tests exercise."
+        )
+        XCTAssertGreaterThanOrEqual(etdrsPool.count, 2)
+        XCTAssertEqual(
+            Set(etdrsPool).count,
+            etdrsPool.count,
+            "A duplicated pool entry would let the same glyph be drawn twice in a row."
+        )
+    }
+
+    /* A subject who sees the same letter twice in a row can answer the second
+       trial from memory rather than from vision, which inflates the score at
+       the acuity level being measured. ETDRSViewController.generateNewLetter()
+       is UIKit-bound and cannot be exercised directly, so this drives the pure
+       selection it delegates to, chained exactly the way the controller chains
+       it: the letter drawn for one trial becomes the exclusion for the next.
+     */
+    func testETDRSNeverPresentsTheSameLetterTwiceInARow() throws {
+        // "" is what generateNewLetter() sees on the first trial in viewDidLoad.
+        var previous = ""
+        var drawn: [String] = []
+
+        for _ in 0..<2_000 {
+            previous = try XCTUnwrap(
+                ETDRSViewController.nextLetter(in: etdrsPool, excluding: previous),
+                "The 11-letter pool must always leave a candidate."
+            )
+            drawn.append(previous)
+        }
+
+        XCTAssertNil(
+            zip(drawn, drawn.dropFirst()).first { $0 == $1 },
+            "Two consecutive trials drew the same letter."
+        )
+        XCTAssertEqual(
+            Set(drawn),
+            Set(etdrsPool),
+            "Every ETDRS letter must stay reachable; a missing one means the draw collapsed."
+        )
+    }
+
+    /* The test above pins the selection rule; this pins the wiring. The rule
+       only holds because generateNewLetter() passes the letter currently on
+       screen as the exclusion — reverting to a bare randomElement(), or passing
+       a constant instead of currentLetter, would restore the repeats while
+       every other test still passed.
+     */
+    func testETDRSControllerRoutesLetterChoiceThroughTheNoRepeatHelper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Distance Measure Test/Features/ETDRS/ETDRSViewController.swift"
+            ),
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(
+            source.contains("Self.nextLetter(in: etdrsLetters, excluding: currentLetter)"),
+            "generateNewLetter() must exclude the letter that is currently displayed."
+        )
+        XCTAssertTrue(
+            source.contains("pool.filter { $0 != previous }.randomElement()"),
+            "nextLetter(in:excluding:) must draw from the pool minus the previous letter."
+        )
+        XCTAssertFalse(
+            source.contains("etdrsLetters.randomElement()"),
+            "An unfiltered draw reintroduces back-to-back repeats."
+        )
+    }
 }

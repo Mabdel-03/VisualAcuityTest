@@ -889,11 +889,27 @@ class ETDRSViewController: UIViewController {
         }
     }
     
-    /* Generates a new ETDRS letter randomly.
+    /* Picks a letter from `pool` that differs from `previous`, so the same
+       optotype is never presented on two consecutive trials. `previous` is ""
+       on the first trial, which is not in the pool and so excludes nothing.
+       Returns nil only if `pool` holds nothing but `previous` — unreachable
+       with the 11-letter ETDRS set, which
+       testETDRSLetterPoolSupportsTheNoRepeatRule pins.
+     */
+    nonisolated static func nextLetter(in pool: [String], excluding previous: String) -> String? {
+        pool.filter { $0 != previous }.randomElement()
+    }
+
+    /* Generates a new ETDRS letter randomly, never repeating the letter just
+       shown. Mirrors generateNewE() in TumblingEViewController, whose rotation
+       increments exclude 0 for the same reason: a subject who sees the same
+       stimulus twice in a row can answer the second trial from memory rather
+       than from vision.
      */
     private func generateNewLetter() {
-        // Select a random ETDRS letter
-        currentLetter = etdrsLetters.randomElement() ?? "C"
+        if let nextLetter = Self.nextLetter(in: etdrsLetters, excluding: currentLetter) {
+            currentLetter = nextLetter
+        }
         resetPendingRecognition()
         letterLabel.text = currentLetter
         
