@@ -1,0 +1,63 @@
+//
+//  AppDelegate.swift
+//  Distance Measure Test
+//
+//  Created by Mahmoud Abdelmoneum on 7/19/23.
+//
+
+import UIKit
+
+@main
+class AppDelegate: UIResponder, UIApplicationDelegate {
+
+    var window: UIWindow?
+
+
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        AudioInstructionPreferences.registerDefaults()
+        TestTypePreferences.registerDefaults()
+        // Participants answer ETDRS trials by speaking, so a session can run for
+        // minutes without a single touch. Auto-lock would end the AR face-tracking
+        // distance estimate mid-test, so the idle timer stays off for the whole
+        // life of the app. iOS restores it automatically once we leave the
+        // foreground, so there is no matching re-enable.
+        application.isIdleTimerDisabled = true
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        window.rootViewController = storyboard.instantiateInitialViewController()
+        window.makeKeyAndVisible()
+        self.window = window
+        return true
+    }
+
+    func applicationWillResignActive(_ application: UIApplication) {
+        // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
+        // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+    }
+
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
+    }
+
+    func applicationWillEnterForeground(_ application: UIApplication) {
+        // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+    }
+
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+
+        // Re-assert the keep-awake setting on every return to the foreground, so
+        // an interruption (a call, Control Center, the lock screen) cannot leave
+        // the device free to sleep partway through a test.
+        application.isIdleTimerDisabled = true
+    }
+    
+    // MARK: - URL Handling (reserved for future cloud integrations)
+    
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+        // Handle custom URL schemes for cloud service authentication
+        return false
+    }
+
+
+}
