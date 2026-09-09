@@ -1,70 +1,139 @@
-# Optional Cloud Upload Setup
+# Quick Start: Google Drive Cloud Upload Setup
 
-## Summary
+## 🎯 Goal
+Upload CSV data from your iOS app directly to your Google Drive folder: 
+**https://drive.google.com/drive/folders/1gQNIG23hqthx7XncvycEDuJPaf8yV012**
 
-The iOS application exports CSV files manually by default. Cloud upload is optional and should be enabled only when a study deployment has an approved endpoint. The app reads the endpoint from `CloudUploadURL`; an empty value disables automatic upload.
+## 🚀 5-Minute Setup
 
-## Local Server Setup
+### Step 1: Set up Google Cloud API (2 minutes)
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create new project: "Visual Acuity Upload Server"
+3. Enable **Google Drive API**
+4. Create **OAuth 2.0 credentials** (Desktop application)
+5. Download as `credentials.json`
+
+### Step 2: Deploy Upload Server (2 minutes)
 
 ```bash
+# Navigate to server directory
 cd simple-cloud-server
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements_google.txt
-python app.py
+
+# Run setup script
+./deploy.sh
+
+# Place your credentials.json file here
+# (downloaded from Google Cloud Console)
+
+# Start the server
+python google_drive_uploader.py
 ```
 
-The default local endpoint is:
+### Step 3: Update iOS App (1 minute)
 
-```text
-http://localhost:5000/upload
+The iOS app is already configured with your folder ID: `1gQNIG23hqthx7XncvycEDuJPaf8yV012`
+
+Just update the server URL in `DataCollectionViewController.swift`:
+
+```swift
+// For local testing
+private let cloudUploadURL = "http://localhost:5000/upload"
+
+// For production (after deploying to cloud)
+private let cloudUploadURL = "https://your-app-name.herokuapp.com/upload"
 ```
 
-This address is local to the machine running the server. A physical iOS device will not reach it unless the device can access the host over the local network and the app is configured with that reachable address.
+## 🔄 How It Works
 
-## Enable Upload in the iOS App
-
-Set `CloudUploadURL` in `Distance-Measure-Test-Info.plist` or through target build settings:
-
-```xml
-<key>CloudUploadURL</key>
-<string>https://example-study-server.org/upload</string>
+```
+iOS App → HTTP POST → Python Server → Google Drive API → Your Folder
 ```
 
-Leave the string empty to keep manual export as the default.
+1. User completes 25-letter data collection
+2. App sends CSV data to your server
+3. Server uploads directly to your Google Drive folder
+4. CSV appears instantly in: https://drive.google.com/drive/folders/1gQNIG23hqthx7XncvycEDuJPaf8yV012
 
-## Server Contract
+## 📁 What You'll See in Google Drive
 
-The server accepts JSON:
+Files will appear with names like:
+- `2024-01-15-143022.csv`
+- `2024-01-15-145133.csv`
 
-```json
-{
-  "filename": "example.csv",
-  "content": "Letter_Displayed,Transcribed_Text,Mapped_Result\nC,see,C\n",
-  "timestamp": "2026-07-08T00:00:00Z",
-  "source": "visual_acuity_ios_app"
-}
+Each containing:
+```csv
+Letter_Displayed,Transcribed_Text,Mapped_Result
+C,see,C
+D,dee,D
+F,eff,F
+...
 ```
 
-Expected behavior:
+## 🌐 Deployment Options
 
-1. Validate that the request is JSON.
-2. Validate required fields.
-3. Reject filenames with path components.
-4. Accept only `.csv` uploads.
-5. Store the CSV in the configured upload directory.
-6. Return a JSON response with upload status and processed row count.
+### Local Development
+- Run on your computer: `python google_drive_uploader.py`
+- Access via: `http://localhost:5000/upload`
+- Good for testing
 
-## Verification
+### Cloud Deployment (Recommended)
 
+**Heroku (Free tier available):**
 ```bash
-curl http://localhost:5000/health
+heroku create visual-acuity-upload-server
+git add .
+git commit -m "Add upload server"
+git push heroku main
 ```
 
-```bash
-curl -X POST http://localhost:5000/upload \
-  -H "Content-Type: application/json" \
-  -d '{"filename":"example.csv","content":"a,b\n1,2\n","timestamp":"2026-07-08T00:00:00Z","source":"manual_test"}'
-```
+**Railway:**
+1. Connect GitHub repo
+2. Deploy automatically
+3. Set environment variables
 
-For production or study use, verify network reachability from the iOS device, HTTPS configuration, storage permissions, logging policy, and data retention requirements.
+**Render:**
+1. Connect GitHub repo  
+2. Auto-deploy on push
+3. Free tier available
+
+## 🔧 Server Features
+
+- **Direct Google Drive upload** to your folder
+- **Local backup** of all CSV files
+- **Health monitoring** at `/health`
+- **File listing** at `/files`
+- **Error handling** with detailed logs
+- **Automatic retry** logic
+
+## 📊 Monitoring
+
+Check server status:
+- Health: `http://your-server/health`
+- Files: `http://your-server/files`
+- Logs: Server console output
+
+## 🛠️ Troubleshooting
+
+**"credentials.json not found"**
+- Download OAuth 2.0 credentials from Google Cloud Console
+- Make sure it's named exactly `credentials.json`
+
+**"Permission denied"**
+- Ensure Google Drive folder is accessible
+- Check OAuth scope includes `drive.file`
+
+**"Connection refused"**
+- Make sure server is running
+- Check firewall settings
+- Verify URL in iOS app matches server address
+
+## 🎉 Success!
+
+Once set up, your data collection workflow becomes:
+1. **Tap Data Collection** in iOS app
+2. **Complete 25 letters**
+3. **CSV automatically appears** in Google Drive
+4. **Start analyzing data** immediately!
+
+No more email handling, manual file management, or delays! 🚀

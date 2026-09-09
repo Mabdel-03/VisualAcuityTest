@@ -1,0 +1,4 @@
+module AppAuth {
+umbrella "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuth"
+export *
+}

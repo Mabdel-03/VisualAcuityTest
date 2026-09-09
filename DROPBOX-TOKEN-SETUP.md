@@ -1,40 +1,121 @@
-# Dropbox Credential Policy
+# Dropbox Non-Expiring Access Token Setup Guide
 
-## Current Repository State
+This guide will help you set up a Dropbox access token that never expires for the Visual Acuity Test app.
 
-`Distance Measure Test/Core/DropboxUploadManager.swift` contains a Dropbox access token. The token is intentionally tracked for this controlled repository configuration, as requested by the repository owner.
+## ⚠️ Current Issue
 
-This policy is specific to the current repository context. Public redistribution, external collaboration, or deployment outside the approved environment requires a separate credential policy.
+Your current token starts with `sl.u.` which means it's a **short-lived token** that will expire in a few hours. You need to replace it with a **long-lived (non-expiring) token**.
 
-## Dropbox Upload Role
+## 📝 Step-by-Step Instructions
 
-Dropbox upload support is retained as a legacy workflow. The current default export path in the iOS application is manual export through the iOS share sheet. Dropbox upload code remains available for deployments that explicitly choose to use it.
+### Step 1: Access Dropbox App Console
 
-## Operational Guidance
+1. Go to: [https://www.dropbox.com/developers/apps](https://www.dropbox.com/developers/apps)
+2. Sign in with your Dropbox account
 
-Before using Dropbox upload in a study workflow, confirm:
+### Step 2: Select or Create Your App
 
-1. The token is valid for the intended Dropbox account or app.
-2. The Dropbox app has the minimum required scopes.
-3. The target folder exists and is approved for the study.
-4. Participant identifiers in CSV files are permitted under the protocol.
-5. Access control and retention practices are documented.
+**Option A: If you already have an app**
+- Click on your existing app from the list
 
-## Public Distribution Guidance
+**Option B: If you need to create a new app**
+1. Click the **"Create app"** button
+2. Choose the following settings:
+   - **Choose an API**: Select **"Scoped access"**
+   - **Choose the type of access**: 
+     - Select **"Full Dropbox"** (if you want access to entire Dropbox)
+     - Or **"App folder"** (if you want isolated folder access)
+   - **Name your app**: e.g., "OHSU Visual Acuity Test"
+3. Click **"Create app"**
 
-If the repository is made public or shared outside the controlled group:
+### Step 3: Configure App Permissions
 
-1. Remove the tracked token before distribution.
-2. Rotate the Dropbox credential.
-3. Replace embedded credentials with a study-approved configuration method.
-4. Update documentation to describe the new credential flow.
+1. Go to the **"Permissions"** tab
+2. Enable the following scopes:
+   - ✅ `files.content.write` (Required - to upload CSV files)
+   - ✅ `files.content.read` (Optional - to read files if needed)
+3. Click **"Submit"** at the bottom to save your changes
 
-## Troubleshooting
+### Step 4: Generate Non-Expiring Access Token
 
-`401 Unauthorized`: The token may be expired, revoked, or malformed.
+1. Go to the **"Settings"** tab
+2. Scroll down to the **"OAuth 2"** section
+3. Find **"Access token expiration"**
+4. **CRITICAL**: Make sure it's set to **"No expiration"**
+5. Click the **"Generate"** button under "Generated access token"
+6. **Copy the entire token** that appears
 
-`403 Forbidden`: The Dropbox app may lack the required write scope or folder access.
+**Important Notes:**
+- The token will be very long (several hundred characters)
+- It should **NOT** start with `sl.` - if it does, it's still a short-lived token
+- Keep this token secure - anyone with this token can access your Dropbox
 
-`Path not found`: Confirm the target Dropbox path exists and matches the configured access type.
+### Step 5: Update the App Code
 
-`Network error`: Confirm device connectivity and retry with a test CSV file.
+1. Open the file: `Distance Measure Test/DropboxUploadManager.swift`
+2. Find line 15 where it says: `private let accessToken = "YOUR_TOKEN_HERE"`
+3. Replace `"YOUR_TOKEN_HERE"` with your new token in quotes
+4. Save the file
+
+Example:
+```swift
+private let accessToken = "your-very-long-dropbox-token-here"
+```
+
+### Step 6: Test the Integration
+
+1. Build and run the app
+2. Complete a test trial
+3. Check that the CSV file uploads successfully to your Dropbox folder
+4. Verify the file appears in: `/Mahmoud Abdelmoneum/OHSU/Clinical_Trials/Landolt_C_Only_Trials/`
+
+## 🔒 Security Best Practices
+
+1. **Never commit the token to public repositories**
+   - Keep `DropboxUploadManager.swift` in `.gitignore` if needed
+   - Or use environment variables/configuration files
+
+2. **Regularly review app permissions**
+   - Go to your Dropbox App Console periodically
+   - Check which apps have access to your account
+
+3. **Revoke tokens if compromised**
+   - If you suspect the token is exposed, revoke it immediately
+   - Generate a new token from the App Console
+
+4. **Use minimal permissions**
+   - Only enable the permissions your app actually needs
+
+## 🆘 Troubleshooting
+
+### Token Expired Error
+- If you get "expired_access_token" error, your token has expired
+- Generate a new token and make sure "No expiration" is selected
+
+### Upload Failed (401 Unauthorized)
+- Check that the token is correctly copied (no extra spaces)
+- Verify the token hasn't been revoked in the App Console
+- Make sure permissions are properly set
+
+### Upload Failed (403 Forbidden)
+- Check that `files.content.write` permission is enabled
+- Verify the target folder path exists in your Dropbox
+
+### Path Not Found Error
+- Verify the folder path exists: `/Mahmoud Abdelmoneum/OHSU/Clinical_Trials/Landolt_C_Only_Trials/`
+- Create the folder manually in Dropbox if it doesn't exist
+- Check for typos in the folder path
+
+## 📚 Additional Resources
+
+- [Dropbox API Documentation](https://www.dropbox.com/developers/documentation)
+- [OAuth Guide](https://www.dropbox.com/developers/reference/oauth-guide)
+- [Access Token Types](https://www.dropbox.com/developers/reference/auth-types)
+
+## 📞 Support
+
+If you encounter issues:
+1. Check the Xcode console for detailed error messages
+2. Verify your token in the Dropbox App Console
+3. Test the token using Dropbox's API Explorer
+

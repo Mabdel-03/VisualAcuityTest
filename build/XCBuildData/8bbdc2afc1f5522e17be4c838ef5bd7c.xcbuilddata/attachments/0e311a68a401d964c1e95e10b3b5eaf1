@@ -1,0 +1,4 @@
+module GoogleAPIClientForREST_Drive {
+umbrella "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/google-api-objectivec-client-for-rest/Sources/GeneratedServices/Drive/Public"
+export *
+}

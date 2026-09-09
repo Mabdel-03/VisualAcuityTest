@@ -1,0 +1,4 @@
+module GoogleAPIClientForRESTCore {
+umbrella "/Users/mahmoudabdelmoneum/Library/Developer/Xcode/DerivedData/Distance_Measure_Test-bnwlnmshtrnyaearffodrzeicbga/SourcePackages/checkouts/google-api-objectivec-client-for-rest/Sources/Core/Public"
+export *
+}

@@ -1,0 +1,302 @@
+//
+//  Select_Acuity.swift
+//  Distance Measure Test
+//
+//  Created by Maggie Bao on 5/14/24.
+//
+
+import UIKit
+import AVFoundation
+
+let LETTER = "C" // Landold C-- the letter that is displayed on the acuity selection scene.
+var selectedAcuity: Int?
+
+// Global test type preference - Fixed to Landolt C in this version
+var isETDRSTest: Bool {
+    return false  // Always use Landolt C test
+}
+
+/* Select_Acuity class is designed to display the acuity selection scene.
+    On this page, the user is given a list of acuity levels to start the test at.
+*/
+class Select_Acuity: UIViewController {
+    
+    @IBOutlet weak var B200: UIButton!
+    @IBOutlet weak var B125: UIButton!
+    @IBOutlet weak var B80: UIButton!
+    @IBOutlet weak var B50: UIButton!
+    @IBOutlet weak var B10: UIButton!
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // Set background to teal
+        view.backgroundColor = UIColor(red: 0.224, green: 0.424, blue: 0.427, alpha: 1.0)
+        
+        print("🔍 Select_Acuity averageDistanceCM:", averageDistanceCM)
+        
+        // Ensure we have a valid distance before setting up buttons
+        if averageDistanceCM <= 0 {
+            // Try to load from UserDefaults
+            if let savedDistance = UserDefaults.standard.object(forKey: "SavedTargetDistance") as? Double,
+               savedDistance > 0 {
+                print("🔍 Loading saved distance for acuity selection: \(savedDistance) cm")
+                averageDistanceCM = savedDistance
+                DistanceTracker.shared.targetDistanceCM = savedDistance
+            } else {
+                print("🔍 No valid distance found - using default of 40 cm for acuity selection")
+                averageDistanceCM = 40.0
+                DistanceTracker.shared.targetDistanceCM = 40.0
+            }
+        }
+        
+        print("🔍 Using distance for acuity selection: \(averageDistanceCM) cm")
+        
+        // Choose letter based on test type
+        let displayLetter = isETDRSTest ? "C" : LETTER
+        
+        // Set up all buttons with their appropriate letter sizes
+        Button_ETDRS(B200, dAcuity: 200, letText: displayLetter)
+        Button_ETDRS(B125, dAcuity: 125, letText: displayLetter)
+        Button_ETDRS(B80, dAcuity: 80, letText: displayLetter)
+        Button_ETDRS(B50, dAcuity: 50, letText: displayLetter)
+        Button_ETDRS(B10, dAcuity: 20, letText: displayLetter)
+        
+        // Configure the stack view and buttons for dynamic sizing
+        configureButtonConstraints()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        playAudioInstructions()
+    }
+    
+    /* Plays audio instructions to the user.
+    */
+    private func playAudioInstructions() {
+        let instructionText = "Tap the smallest letter you can clearly see."
+        SharedAudioManager.shared.playText(instructionText, source: "Acuity Selection")
+    }
+    
+    /* Sets up the button text size and display for the acuity selection scene.
+    */
+    func Button_ETDRS(_ button: UIButton, dAcuity: Int, letText: String) {
+        // Standard ETDRS calculation: 5 arcminutes at 20/20 vision at designated testing distance
+        // Visual angle in radians = (size in arcmin / 60) * (pi/180)
+        let arcmin_per_letter = 5.0 // Standard size for 20/20 optotype is 5 arcmin
+        let visual_angle = ((Double(dAcuity) / 20.0) * arcmin_per_letter / 60.0) * Double.pi / 180.0
+        let scaling_correction_factor = 1.0 / 2.54  // Conversion from inches to cm
+        
+        // Calculate size at viewing distance
+        let scale_factor = Double(averageDistanceCM) * tan(visual_angle) * scaling_correction_factor
+        let letterHeight = scale_factor * Double(ppi)
+        
+        // Adjusted font size - reducing by factor of 2 to match physical acuity cards
+        // The 0.3 factor (instead of 0.6) accounts for font rendering differences
+        let fontSize = 0.3 * letterHeight 
+        
+        // Calculate appropriate padding based on letter size for full-width buttons
+        let verticalPadding: CGFloat = 12 + (CGFloat(fontSize) * 0.10) // Scale vertical padding with font size
+        let horizontalPadding: CGFloat = 16 // Minimal horizontal padding since button spans full width
+        
+        // Get or create Sloan font at the calculated size
+        let sloanFont = UIFont(name: "Sloan", size: 100) // Start with a base font
+        let buttonFont: UIFont
+        
+        if let sloanFont = sloanFont {
+            // Use withSize() to preserve font family, just like in TumblingEViewController
+            buttonFont = sloanFont.withSize(CGFloat(fontSize))
+        } else {
+            print("⚠️ Sloan font not available, using system font for acuity \(dAcuity)")
+            buttonFont = UIFont.systemFont(ofSize: CGFloat(fontSize))
+        }
+        
+        // DON'T use UIButton.Configuration - use direct styling for full control
+        // This matches the approach used in TumblingEViewController which works correctly
+        button.setTitle(letText, for: .normal)
+        
+        // Set content edge insets
+        button.contentEdgeInsets = UIEdgeInsets(
+            top: verticalPadding,
+            left: horizontalPadding,
+            bottom: verticalPadding,
+            right: horizontalPadding
+        )
+        
+        // Set button colors - white background with black text
+        button.backgroundColor = .white
+        button.setTitleColor(.black, for: .normal)
+        
+        // CRITICAL: Set font properties AFTER other button setup to ensure they stick
+        // This must be done after contentEdgeInsets and before layout
+        button.titleLabel?.font = buttonFont
+        button.titleLabel?.adjustsFontSizeToFitWidth = false
+        button.titleLabel?.minimumScaleFactor = 1.0
+        button.titleLabel?.numberOfLines = 1
+        button.titleLabel?.lineBreakMode = .byClipping
+        button.titleLabel?.baselineAdjustment = .alignCenters
+        
+        // Force layout with the new font
+        button.setNeedsLayout()
+        button.layoutIfNeeded()
+        
+        // Configure button appearance for connected buttons
+        button.layer.cornerRadius = 0 // No corner radius for connected buttons
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.lightGray.cgColor
+        
+        // Ensure text is centered in the full-width button
+        button.titleLabel?.textAlignment = .center
+        button.contentHorizontalAlignment = .center
+        button.contentVerticalAlignment = .center
+        
+        // Set content hugging and compression priorities for full-width layout
+        button.setContentHuggingPriority(.defaultLow, for: .horizontal)  // Allow horizontal expansion
+        button.setContentHuggingPriority(.required, for: .vertical)      // Keep tight vertical sizing
+        button.setContentCompressionResistancePriority(.defaultLow, for: .horizontal) // Allow compression if needed
+        button.setContentCompressionResistancePriority(.required, for: .vertical)     // Resist vertical compression
+        
+        // Debug output to verify scaling
+        let intrinsicSize = button.intrinsicContentSize
+        let actualFont = button.titleLabel?.font
+        print("📏 Acuity \(dAcuity): Letter height: \(String(format: "%.2f", letterHeight))px, Font size: \(String(format: "%.2f", fontSize))pt, Actual font: \(actualFont?.pointSize ?? 0)pt, Button size: \(String(format: "%.1f", intrinsicSize.width))x\(String(format: "%.1f", intrinsicSize.height))px, Font: \(buttonFont.fontName), adjustsFontSize: \(button.titleLabel?.adjustsFontSizeToFitWidth ?? false)")
+    }
+
+    //DIFFERENT ACUITY LEVELS
+
+    @IBAction func option1(_ sender: Any) {
+        selectedAcuity = 200
+        proceedToTest()
+    }
+    
+    @IBAction func option3(_ sender: Any) {
+        selectedAcuity = 125
+        proceedToTest()
+    }
+
+    @IBAction func option5(_ sender: Any) {
+        selectedAcuity = 80
+        proceedToTest()
+    }
+
+    @IBAction func option7(_ sender: Any) {
+        selectedAcuity = 50
+        proceedToTest()
+    }
+    
+    @IBAction func option10(_ sender: Any) {
+        selectedAcuity = 20
+        proceedToTest()
+    }
+    
+    /* This function ensures that selectedAcuity is saved before transitioning
+        to the test scene.
+    */
+    private func proceedToTest() {
+        print("Proceeding to test with acuity: \(String(describing: selectedAcuity))")
+        
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        
+        if isETDRSTest {
+            // Navigate to ETDRS test
+            if let etdrsVC = storyboard.instantiateViewController(withIdentifier: "ETDRSViewController") as? ETDRSViewController {
+                navigationController?.pushViewController(etdrsVC, animated: true)
+                print("🔤 ✅ Successfully navigating to ETDRS test")
+            } else {
+                print("🔤 ❌ Failed to instantiate ETDRSViewController from storyboard")
+            }
+        } else {
+            // Navigate to Landolt C test
+            if let tumblingVC = storyboard.instantiateViewController(withIdentifier: "TumblingEViewController") as? TumblingEViewController {
+                navigationController?.pushViewController(tumblingVC, animated: true)
+                print("🔄 ✅ Successfully navigating to Landolt C test")
+            } else {
+                print("🔄 ❌ Failed to instantiate TumblingEViewController from storyboard")
+            }
+        }
+    }
+    
+    /* Configures the button constraints for the acuity selection scene.
+    */
+    private func configureButtonConstraints() {
+        // Get all the buttons
+        let buttons = [B200, B125, B80, B50, B10]
+        
+        // Configure the stack view for connected buttons (no spacing)
+        if let firstButton = buttons.compactMap({ $0 }).first,
+           let stackView = firstButton.superview as? UIStackView {
+            stackView.distribution = .fillEqually
+            stackView.alignment = .fill
+            stackView.spacing = 0 // Remove spacing to connect buttons
+            print("✅ Stack view configured: distribution=fillEqually, alignment=fill, spacing=0")
+            
+            // Apply rounded corners only to top and bottom buttons
+            configureConnectedButtonCorners(buttons: buttons.compactMap({ $0 }))
+        } else {
+            print("⚠️ Could not find stack view - buttons may not be in a UIStackView")
+        }
+        
+        for button in buttons {
+            guard let button = button else { continue }
+            
+            // Remove any existing height constraints that were set to 200 in the storyboard
+            button.constraints.forEach { constraint in
+                if constraint.firstAttribute == .height && constraint.constant == 200 {
+                    constraint.isActive = false
+                    print("🔧 Removed 200px height constraint from button")
+                }
+            }
+            
+            // Also check constraints from the superview (stack view)
+            if let stackView = button.superview {
+                stackView.constraints.forEach { constraint in
+                    if (constraint.firstItem as? UIButton) == button && 
+                       constraint.firstAttribute == .height && 
+                       constraint.constant == 200 {
+                        constraint.isActive = false
+                        print("🔧 Removed 200px height constraint from stack view")
+                    }
+                }
+            }
+            
+            // Configure button to expand horizontally while maintaining dynamic height
+            button.setContentHuggingPriority(.defaultLow, for: .horizontal) // Allow horizontal expansion
+            button.setContentHuggingPriority(.required, for: .vertical)     // Keep tight vertical sizing
+            button.setContentCompressionResistancePriority(.defaultLow, for: .horizontal) // Allow compression if needed
+            button.setContentCompressionResistancePriority(.required, for: .vertical)     // Resist vertical compression
+        }
+        
+        // Force layout update to apply the new sizing
+        view.setNeedsLayout()
+        view.layoutIfNeeded()
+        
+        print("✅ Button constraints configured for full-width dynamic sizing")
+    }
+    
+    /*
+     * Configures rounded corners for connected buttons - only top and bottom buttons get rounded corners.
+     */
+    private func configureConnectedButtonCorners(buttons: [UIButton]) {
+        guard !buttons.isEmpty else { return }
+        
+        let cornerRadius: CGFloat = 12
+        
+        for (index, button) in buttons.enumerated() {
+            if index == 0 {
+                // First button - round top corners only
+                button.layer.cornerRadius = cornerRadius
+                button.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+            } else if index == buttons.count - 1 {
+                // Last button - round bottom corners only
+                button.layer.cornerRadius = cornerRadius
+                button.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+            } else {
+                // Middle buttons - no rounded corners
+                button.layer.cornerRadius = 0
+                button.layer.maskedCorners = []
+            }
+        }
+        
+        print("✅ Configured connected button corners: top and bottom buttons rounded, middle buttons square")
+    }
+}
