@@ -17,6 +17,7 @@
 		A30000010000000000000002 /* CalibrationAndDistanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000010000000000000012 /* CalibrationAndDistanceTests.swift */; };
 		A30000010000000000000003 /* PersistenceAndArchitectureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000010000000000000013 /* PersistenceAndArchitectureTests.swift */; };
 		A30000010000000000000004 /* ETDRSProgressionEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000010000000000000015 /* ETDRSProgressionEngineTests.swift */; };
+		A30000010000000000000006 /* ETDRSLetterSequencerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000010000000000000017 /* ETDRSLetterSequencerTests.swift */; };
 		A30000010000000000000005 /* ETDRSSpokenResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000010000000000000016 /* ETDRSSpokenResponseTests.swift */; };
 		B2C3D4E62F6G7H890089DE34 /* Core/DropboxUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E52F6G7H890089DE34 /* Core/DropboxUploadManager.swift */; };
 		C0C987052CC9F141003EEEFF /* Features/LandoltC/TumblingEViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C987042CC9F139003EEEFF /* Features/LandoltC/TumblingEViewController.swift */; };
@@ -48,6 +49,7 @@
 		E0E987052CC9F141003EEEFF /* Features/ETDRS/ETDRSViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E987042CC9F139003EEEFF /* Features/ETDRS/ETDRSViewController.swift */; };
 		E0F987052CC9F141003EEEFF /* Features/Settings/SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0F987042CC9F139003EEEFF /* Features/Settings/SettingsViewController.swift */; };
 		E7D250010000000000000001 /* Features/ETDRS/ETDRSProgressionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D250010000000000000011 /* Features/ETDRS/ETDRSProgressionEngine.swift */; };
+		E7D250010000000000000002 /* Features/ETDRS/ETDRSLetterSequencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D250010000000000000012 /* Features/ETDRS/ETDRSLetterSequencer.swift */; };
 		F1A2B3C42E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C32E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift */; };
 /* End PBXBuildFile section */
 
@@ -73,6 +75,7 @@
 		A30000010000000000000013 /* PersistenceAndArchitectureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceAndArchitectureTests.swift; sourceTree = "<group>"; };
 		A30000010000000000000014 /* Distance Measure TestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Distance Measure TestTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000010000000000000015 /* ETDRSProgressionEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETDRSProgressionEngineTests.swift; sourceTree = "<group>"; };
+		A30000010000000000000017 /* ETDRSLetterSequencerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETDRSLetterSequencerTests.swift; sourceTree = "<group>"; };
 		A30000010000000000000016 /* ETDRSSpokenResponseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ETDRSSpokenResponseTests.swift; sourceTree = "<group>"; };
 		B2C3D4E52F6G7H890089DE34 /* Core/DropboxUploadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/DropboxUploadManager.swift; sourceTree = "<group>"; };
 		C0C987042CC9F139003EEEFF /* Features/LandoltC/TumblingEViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/LandoltC/TumblingEViewController.swift; sourceTree = "<group>"; };
@@ -105,6 +108,7 @@
 		E0E987042CC9F139003EEEFF /* Features/ETDRS/ETDRSViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ETDRS/ETDRSViewController.swift; sourceTree = "<group>"; };
 		E0F987042CC9F139003EEEFF /* Features/Settings/SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Settings/SettingsViewController.swift; sourceTree = "<group>"; };
 		E7D250010000000000000011 /* Features/ETDRS/ETDRSProgressionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ETDRS/ETDRSProgressionEngine.swift; sourceTree = "<group>"; };
+		E7D250010000000000000012 /* Features/ETDRS/ETDRSLetterSequencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/ETDRS/ETDRSLetterSequencer.swift; sourceTree = "<group>"; };
 		F1A2B3C32E4F5D670089AB12 /* Core/TestProgressionDataCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core/TestProgressionDataCollector.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -133,6 +137,7 @@
 			children = (
 				A30000010000000000000012 /* CalibrationAndDistanceTests.swift */,
 				A30000010000000000000015 /* ETDRSProgressionEngineTests.swift */,
+				A30000010000000000000017 /* ETDRSLetterSequencerTests.swift */,
 				A30000010000000000000016 /* ETDRSSpokenResponseTests.swift */,
 				A30000010000000000000011 /* OptotypeSizingTests.swift */,
 				A30000010000000000000013 /* PersistenceAndArchitectureTests.swift */,
@@ -283,6 +288,7 @@
 			isa = PBXGroup;
 			children = (
 				E7D250010000000000000011 /* Features/ETDRS/ETDRSProgressionEngine.swift */,
+				E7D250010000000000000012 /* Features/ETDRS/ETDRSLetterSequencer.swift */,
 				E0E987042CC9F139003EEEFF /* Features/ETDRS/ETDRSViewController.swift */,
 				D1E7D0052FE6200000ED7A01 /* Features/ETDRS/ETDRSWhisperLoadingViewController.swift */,
 				D1E7D0002FE6100000ED7A01 /* Features/ETDRS/ETDRSWhisperLetterService.swift */,
@@ -439,6 +445,7 @@
 			files = (
 				A30000010000000000000002 /* CalibrationAndDistanceTests.swift in Sources */,
 				A30000010000000000000004 /* ETDRSProgressionEngineTests.swift in Sources */,
+				A30000010000000000000006 /* ETDRSLetterSequencerTests.swift in Sources */,
 				A30000010000000000000005 /* ETDRSSpokenResponseTests.swift in Sources */,
 				A30000010000000000000001 /* OptotypeSizingTests.swift in Sources */,
 				A30000010000000000000003 /* PersistenceAndArchitectureTests.swift in Sources */,
@@ -463,6 +470,7 @@
 				C0C987052CC9F141003EEEFF /* Features/LandoltC/TumblingEViewController.swift in Sources */,
 				D126CEEB2FE27F6700951C38 /* Features/TestSetup/DistanceGuidanceController.swift in Sources */,
 				E7D250010000000000000001 /* Features/ETDRS/ETDRSProgressionEngine.swift in Sources */,
+				E7D250010000000000000002 /* Features/ETDRS/ETDRSLetterSequencer.swift in Sources */,
 				E0E987052CC9F141003EEEFF /* Features/ETDRS/ETDRSViewController.swift in Sources */,
 				D1E7D0012FE6100000ED7A01 /* Features/ETDRS/ETDRSWhisperLetterService.swift in Sources */,
 				D1E7D0062FE6200000ED7A01 /* Features/ETDRS/ETDRSWhisperLoadingViewController.swift in Sources */,

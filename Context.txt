@@ -23,7 +23,7 @@
 
 2. **AR-Based Distance Tracking**:
    - Real-time face tracking using ARKit
-   - Dynamic letter scaling based on user distance
+   - Dynamic letter scaling based on user distance during the test (the starting-acuity screen is sized once for the captured distance)
    - Distance optimization calibration
 
 3. **Medical-Grade Accuracy**:
@@ -415,7 +415,7 @@ print("📊 Recorded response: \(letter)")  // Data collection
 ### Other Controllers
 - **SettingsViewController.swift**: Test type and audio preferences
 - **ResultViewController.swift**: Final score display with data persistence
-- **Select_Acuity.swift**: Dynamic button scaling for acuity selection
+- **SelectAcuity.swift**: Starting-acuity choices sized once for the captured holding distance (five different ETDRS letters, or Landolt Cs)
 - **DistanceOptimization.swift**: AR-based distance calibration
 - **OneEyeInstruc.swift**: Eye-specific test instructions
 - **Instructions.swift**: General app instructions

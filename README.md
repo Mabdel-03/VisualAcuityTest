@@ -34,11 +34,13 @@ The application ships with two optotype pipelines. The active one is chosen unde
 | | ETDRS (default) | Landolt C (optional) |
 |---|---|---|
 | Optotype | 11-letter set (`C D F H K N P R X J Z`) rendered in the Sloan typeface | Landolt C at four orientations (0°, 90°, 180°, 270°) |
+| Starting-acuity screen | Five different letters from the set, chosen at random for each eye | A Landolt C on every row |
+| Letter sequence | Chosen letter by letter from the set: no letter twice in a row (acuity level), never the same letter back-to-back, never the letter that held the same position in the previous row, no two rows opening with the same three letters, and trial 1 never repeats the starting-screen letter the participant tapped (`ETDRSLetterSequencer`) | Random orientation, never the same twice in succession |
 | Participant response | Spoken letter, recognized by WhisperKit | Swipe in the direction the C points |
 | Requires microphone | Yes | No |
 | Intended use | Standard participant sessions | Non-verbal participants, or protocols calling for an orientation task |
 
-The selection is persisted in `UserDefaults` under the `etdrs_test_enabled` key, defined by `TestTypePreferences` in [MainMenuViewController.swift](Distance%20Measure%20Test/Features/Home/MainMenuViewController.swift). The registered default is `true`, so a fresh install starts in ETDRS mode. The choice changes only the optotype presentation and response capture; distance calibration, acuity selection, scoring, results, and export are identical in both modes.
+The selection is persisted in `UserDefaults` under the `etdrs_test_enabled` key, defined by `TestTypePreferences` in [MainMenuViewController.swift](Distance%20Measure%20Test/Features/Home/MainMenuViewController.swift). The registered default is `true`, so a fresh install starts in ETDRS mode. The choice changes only the optotype presentation, sequencing, and response capture; distance calibration, starting-acuity sizing, scoring, results, and export are identical in both modes.
 
 ## Repository Layout
 
@@ -122,7 +124,7 @@ The primary participant workflow runs the ETDRS test, which is active by default
 1. Launch the application from the main menu.
 2. Review test instructions.
 3. Complete distance calibration.
-4. Select the starting acuity level.
+4. Select the starting acuity level. The five choices are sized once for the distance captured in step 3; this unscored placement step does not track the live distance.
 5. Complete the right-eye test, followed by the left-eye test when applicable.
 6. Review LogMAR and Snellen-formatted results.
 7. Export CSV data manually through the iOS share sheet if data sharing is required.
@@ -194,7 +196,7 @@ The application requests camera and microphone permissions for test execution. T
 The application is test-ready at the code level, but each deployment should confirm the following on the actual study hardware before participant sessions:
 
 1. Build the iOS target with Xcode or `xcodebuild`.
-2. Run the unit test suite in `Distance Measure TestTests` (optotype sizing, calibration and distance, ETDRS progression engine, persistence).
+2. Run the unit test suite in `Distance Measure TestTests` (optotype sizing, calibration and distance, ETDRS progression engine, ETDRS letter sequencing, persistence).
 3. Confirm AR distance calibration on the intended device model.
 4. Confirm **Settings → Test Type** reads `ETDRS` on a fresh install, and that the intended mode is selected for the session.
 5. Confirm WhisperKit reaches `WhisperKit ready.` and speech recognition behaves acceptably in the intended testing environment, including its ambient noise level.

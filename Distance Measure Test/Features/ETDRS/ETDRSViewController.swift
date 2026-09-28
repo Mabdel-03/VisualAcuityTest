@@ -4,9 +4,8 @@
 //
 //  Created by Visual Acuity Test Assistant
 //
-//  NOTE: This file is not used in the "Landolt-C Only" version of the app.
-//  The app has been modified to only use the Landolt C test (TumblingEViewController).
-//  This file is kept for reference and potential future use.
+//  The default test type (TestTypePreferences). Letters are chosen by
+//  ETDRSLetterSequencer and scored by ETDRSProgressionEngine.
 
 import UIKit
 import AVFoundation
@@ -97,9 +96,11 @@ class ETDRSViewController: UIViewController {
         2000: 2.0
     ]
     
-    /// Standard ETDRS letters
-    let etdrsLetters = ["C", "D", "F", "H", "K", "N", "P", "R", "X", "J", "Z"]
-    
+    /// Draws every letter of this eye's test from ETDRSLetterBank: each letter once per row, never
+    /// twice in succession, never in the slot it held in the previous row, and no two rows opening
+    /// alike. Seeded with the start-size letter the participant tapped so trial 1 differs from it.
+    private var letterSequencer = ETDRSLetterSequencer()
+
     /// Current letter being displayed
     private var currentLetter: String = ""
     
@@ -297,7 +298,12 @@ class ETDRSViewController: UIViewController {
         // Initialize acuity level from the selected value
         initializeAcuityLevel()
         print("🔍 ETDRSViewController - acuity level initialized")
-        
+
+        // The tapped start-size row is trial 1's size, so trial 1 must not show its letter.
+        // Consumed here so a later eye cannot inherit it.
+        letterSequencer = ETDRSLetterSequencer(precedingLetter: VisualAcuitySession.selectedAcuityLetter)
+        VisualAcuitySession.selectedAcuityLetter = nil
+
         // Set up distance tracking and monitoring
         initializeDistanceTracking()
         print("🔍 ETDRSViewController - distance tracking initialized")
@@ -1149,26 +1155,20 @@ class ETDRSViewController: UIViewController {
         }
     }
     
-    /* Picks a letter from `pool` that differs from `previous`, so the same
-       optotype is never presented on two consecutive trials. `previous` is ""
-       on the first trial, which is not in the pool and so excludes nothing.
-       Returns nil only if `pool` holds nothing but `previous` — unreachable
-       with the 11-letter ETDRS set, which
-       testETDRSLetterPoolSupportsTheNoRepeatRule pins.
-     */
-    nonisolated static func nextLetter(in pool: [String], excluding previous: String) -> String? {
-        pool.filter { $0 != previous }.randomElement()
-    }
-
-    /* Generates a new ETDRS letter randomly, never repeating the letter just
-       shown. Mirrors generateNewE() in TumblingEViewController, whose rotation
-       increments exclude 0 for the same reason: a subject who sees the same
-       stimulus twice in a row can answer the second trial from memory rather
-       than from vision.
+    /* Presents the next letter of the test, drawn by letterSequencer. The engine's
+       attempt counter is 0 exactly when this draw opens a row: on the first letter
+       (viewDidLoad) and after .changeAcuity, because the engine resets it on moving.
+       Retries, pauses and distance drops never come through here, so they re-show
+       the current letter.
      */
     private func generateNewLetter() {
-        if let nextLetter = Self.nextLetter(in: etdrsLetters, excluding: currentLetter) {
-            currentLetter = nextLetter
+        var generator = SystemRandomNumberGenerator()
+        currentLetter = letterSequencer.nextLetter(
+            startingNewRow: progressionEngine.attemptsInCurrentAcuity == 0,
+            using: &generator
+        )
+        if letterSequencer.relaxedDrawCount > 0 {
+            print("⚠️ ETDRS letter sequencer relaxed a rule \(letterSequencer.relaxedDrawCount) time(s)")
         }
         resetPendingRecognition()
         unclearRetriesThisLetter = 0

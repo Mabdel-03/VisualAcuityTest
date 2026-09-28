@@ -91,6 +91,9 @@ enum VisualAcuitySession {
     static var finalAcuityResults: [Int: String] = [:]
     static var currentEyeNumber: Int = 2
     static var selectedAcuity: Int?
+    /// ETDRS only: the letter on the start-size row the participant tapped. That row is the size of
+    /// trial 1, so ETDRSViewController consumes this to keep trial 1 from showing the same letter.
+    static var selectedAcuityLetter: String?
     static var logMARValue: Double = -1.000
     static var snellenValue: Double = -1
 

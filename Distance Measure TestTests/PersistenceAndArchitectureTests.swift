@@ -246,7 +246,6 @@ final class PersistenceAndArchitectureTests: XCTestCase {
         let controllerDirectory = repositoryRoot.appendingPathComponent("Distance Measure Test/Features")
         let paths = [
             "TestSetup/DistanceOptimization.swift",
-            "TestSetup/SelectAcuity.swift",
             "ETDRS/ETDRSViewController.swift",
             "LandoltC/TumblingEViewController.swift",
             "Results/DataCollectionViewController.swift"
@@ -432,102 +431,110 @@ final class PersistenceAndArchitectureTests: XCTestCase {
 
     // MARK: - ETDRS letter sequencing
 
-    /// The letter pool the ETDRS test draws from, mirrored from
-    /// ETDRSViewController.etdrsLetters so a silent edit there shows up here.
+    /// The letter bank the ETDRS test and start-size screen draw from, mirrored from
+    /// ETDRSLetterBank.letters so a silent edit there shows up here.
     private let etdrsPool = ["C", "D", "F", "H", "K", "N", "P", "R", "X", "J", "Z"]
 
-    /* The no-repeat rule works by filtering the just-shown letter out of the
-       pool, so it can only fail to return a letter if the pool holds nothing
-       but that letter. Pinning the pool at two-or-more distinct entries is what
-       makes that branch unreachable, and rules out a duplicated glyph slipping
-       past the filter as two different array elements.
-     */
-    func testETDRSLetterPoolSupportsTheNoRepeatRule() throws {
+    private func etdrsControllerSource() throws -> String {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-        let source = try String(
+        return try String(
             contentsOf: repositoryRoot.appendingPathComponent(
                 "Distance Measure Test/Features/ETDRS/ETDRSViewController.swift"
             ),
             encoding: .utf8
         )
-
-        let expectedDeclaration = "let etdrsLetters = ["
-            + etdrsPool.map { "\"\($0)\"" }.joined(separator: ", ")
-            + "]"
-
-        XCTAssertTrue(
-            source.contains(expectedDeclaration),
-            "The controller's letter pool no longer matches the pool these tests exercise."
-        )
-        XCTAssertGreaterThanOrEqual(etdrsPool.count, 2)
-        XCTAssertEqual(
-            Set(etdrsPool).count,
-            etdrsPool.count,
-            "A duplicated pool entry would let the same glyph be drawn twice in a row."
-        )
     }
 
-    /* A subject who sees the same letter twice in a row can answer the second
-       trial from memory rather than from vision, which inflates the score at
-       the acuity level being measured. ETDRSViewController.generateNewLetter()
-       is UIKit-bound and cannot be exercised directly, so this drives the pure
-       selection it delegates to, chained exactly the way the controller chains
-       it: the letter drawn for one trial becomes the exclusion for the next.
+    /* ETDRSLetterBank is the only letter list the test and the start-size screen
+       use. A second copy inside the controller could drift from it and let the
+       two screens present different sets.
      */
-    func testETDRSNeverPresentsTheSameLetterTwiceInARow() throws {
-        // "" is what generateNewLetter() sees on the first trial in viewDidLoad.
-        var previous = ""
-        var drawn: [String] = []
-
-        for _ in 0..<2_000 {
-            previous = try XCTUnwrap(
-                ETDRSViewController.nextLetter(in: etdrsPool, excluding: previous),
-                "The 11-letter pool must always leave a candidate."
-            )
-            drawn.append(previous)
-        }
-
-        XCTAssertNil(
-            zip(drawn, drawn.dropFirst()).first { $0 == $1 },
-            "Two consecutive trials drew the same letter."
-        )
+    func testETDRSLetterBankIsTheSingleSourceOfLetters() throws {
+        XCTAssertEqual(ETDRSLetterBank.letters, etdrsPool)
         XCTAssertEqual(
-            Set(drawn),
-            Set(etdrsPool),
-            "Every ETDRS letter must stay reachable; a missing one means the draw collapsed."
-        )
-    }
-
-    /* The test above pins the selection rule; this pins the wiring. The rule
-       only holds because generateNewLetter() passes the letter currently on
-       screen as the exclusion — reverting to a bare randomElement(), or passing
-       a constant instead of currentLetter, would restore the repeats while
-       every other test still passed.
-     */
-    func testETDRSControllerRoutesLetterChoiceThroughTheNoRepeatHelper() throws {
-        let repositoryRoot = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-        let source = try String(
-            contentsOf: repositoryRoot.appendingPathComponent(
-                "Distance Measure Test/Features/ETDRS/ETDRSViewController.swift"
-            ),
-            encoding: .utf8
-        )
-
-        XCTAssertTrue(
-            source.contains("Self.nextLetter(in: etdrsLetters, excluding: currentLetter)"),
-            "generateNewLetter() must exclude the letter that is currently displayed."
-        )
-        XCTAssertTrue(
-            source.contains("pool.filter { $0 != previous }.randomElement()"),
-            "nextLetter(in:excluding:) must draw from the pool minus the previous letter."
+            Set(ETDRSLetterBank.letters).count,
+            ETDRSLetterBank.letters.count,
+            "A duplicated bank entry would let the same glyph repeat within a row."
         )
         XCTAssertFalse(
-            source.contains("etdrsLetters.randomElement()"),
-            "An unfiltered draw reintroduces back-to-back repeats."
+            try etdrsControllerSource().contains("let etdrsLetters"),
+            "The controller must draw from ETDRSLetterBank, not a private copy."
         )
+    }
+
+    /* ETDRSLetterSequencerTests pin the sequencing rules; this pins the wiring.
+       The rules only hold if every presented letter comes from the sequencer,
+       row openings are signalled from the engine's attempt counter, and the
+       tapped start-size letter seeds it. A bare randomElement() or a second
+       assignment to currentLetter would bypass all of that while every other
+       test still passed.
+     */
+    func testETDRSControllerDrawsEveryLetterThroughTheSequencer() throws {
+        let source = try etdrsControllerSource()
+
+        XCTAssertTrue(source.contains("private var letterSequencer = ETDRSLetterSequencer()"))
+        XCTAssertTrue(
+            source.contains(
+                "ETDRSLetterSequencer(precedingLetter: VisualAcuitySession.selectedAcuityLetter)"
+            ),
+            "Trial 1 must exclude the start-size letter the participant tapped."
+        )
+        XCTAssertTrue(
+            source.contains("VisualAcuitySession.selectedAcuityLetter = nil"),
+            "The tapped letter must be consumed so a later eye cannot inherit it."
+        )
+        XCTAssertTrue(source.contains("currentLetter = letterSequencer.nextLetter("))
+        XCTAssertTrue(
+            source.contains("startingNewRow: progressionEngine.attemptsInCurrentAcuity == 0"),
+            "Rows open exactly when the engine's attempt counter is zero."
+        )
+        XCTAssertEqual(
+            source.components(separatedBy: "currentLetter = ").count - 1,
+            1,
+            "Every presented letter must come from the sequencer."
+        )
+        XCTAssertFalse(source.contains("randomElement("), "An unsequenced draw bypasses the rules.")
+        XCTAssertFalse(source.contains("static func nextLetter(in"))
+    }
+
+    /* The start-size screen is an unscored placement step: it is sized once for
+       the holding distance captured on the previous screen and must not track
+       the live distance, which used to lock every row whenever tracking dropped.
+       In ETDRS mode each row shows a different ETDRSLetterBank letter, and the
+       tapped row's letter is handed to the test.
+     */
+    func testStartSizeScreenSizesOnceForTheCapturedHoldingDistance() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "Distance Measure Test/Features/TestSetup/SelectAcuity.swift"
+            ),
+            encoding: .utf8
+        )
+
+        for required in [
+            "DistanceTracker.shared.preferredHoldingDistanceCM",
+            "previousSpec: nil",
+            "force: true",
+            ".screenCalibrationDidChange",
+            "ETDRSLetterBank.distinctLetters(count:",
+            "VisualAcuitySession.selectedAcuityLetter ="
+        ] {
+            XCTAssertTrue(source.contains(required), required)
+        }
+        for forbidden in [
+            "EyeDistanceProvider",
+            "eyeDistanceDidChange",
+            "validSample(",
+            "Timer.scheduledTimer",
+            "isETDRSTest ? \"C\" : LETTER"
+        ] {
+            XCTAssertFalse(source.contains(forbidden), forbidden)
+        }
+        XCTAssertEqual(LETTER, "C", "Landolt mode and the Landolt test present the C.")
     }
 }
